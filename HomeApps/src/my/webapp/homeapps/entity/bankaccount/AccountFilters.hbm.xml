@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.homeapps.entity.bankaccount">
+	<filter-def name="yearMonthFilter">
+		<filter-param name="year" type="int"/>
+		<filter-param name="month" type="int"/>
+	</filter-def>
+	<filter-def name="hideDeleted" condition="0=delete_Mark" />
+</hibernate-mapping>

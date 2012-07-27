@@ -1,0 +1,39 @@
+body,h1,h2,h3 {margin:0;padding:0}
+input[type=text],input[type=password] {border-radius:3px;border:1px inset #ddd;box-shadow:inset 1px 1px 2px #888}
+.WuiFieldWrapper > * {vertical-align:top}
+
+#viewport {position:fixed;width:100%;height:100%;overflow:hidden}
+
+#main {position:absolute;top:1.7em;width:100%;bottom:2em;overflow:auto}
+#main[show=foodList] #foodList {display:block;position:absolute;top:0;left:0;bottom:0;right:0}
+#main[show=foodForm] #foodForm {display:block;position:absolute;top:0;left:0;bottom:0;right:0}
+#main[show=foodMenu] #foodMenu {display:block;position:absolute;top:0;left:0;bottom:0;right:0}
+#main[show=shoppingList] #shoppingList {display:block;position:absolute;top:0;left:0;bottom:0;right:0}
+
+#foodList li {position:relative}
+#foodList li[checked=false] {list-style-image:url(checkbox1.png)}
+#foodList li[checked=true] {list-style-image:url(checkbox1_checked.png)}
+#foodList li:hover {cursor:pointer}
+#foodList li span {position:absolute;display:inline-block;left:0;right:30px}
+#foodList li a {position:absolute;display:inline-block;right:4px;border:1px solid transparent;padding:3px}
+#foodList li a:hover {border:1px solid #fdd;border-radius:3px;padding:3px;box-shadow:inset 0 0 5px #fdd}
+
+#foodForm .WuiFieldWrapper > label {display:inline-block;width:100px}
+
+#foodMenu {}
+#foodMenu .WuiFieldWrapper {display:inline-block}
+
+#shoppingList {}
+
+#filters {display:block;position:absolute;top:0;width:100%;height:1.7em}
+
+#buttons {position:absolute;width:100%;bottom:0;height:2em;background:rgba(0,0,0,0.2);box-shadow:0 -1px 10px #999}
+#buttons button {display:none}
+#buttons[show=foodList] #btnNewFood {display:inline-block}
+#buttons[show=foodList] #btnFoodMenu {display:inline-block}
+#buttons[show=foodForm] #btnSave {display:inline-block}
+#buttons[show=foodForm] #btnCancel {display:inline-block}
+#buttons[show=foodMenu] #btnFoodList {display:inline-block}
+#buttons[show=foodMenu] #btnShoppingList {display:inline-block}
+#buttons[show=shoppingList] #btnFoodList {display:inline-block}
+#buttons[show=shoppingList] #btnFoodMenu {display:inline-block}

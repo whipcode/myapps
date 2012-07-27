@@ -1,0 +1,149 @@
+body {margin:0}
+table {width:100%}
+
+.Popup {display:none}
+.Popup[show=yes] {display:block;position:fixed;top:0;height:100%;left:0;width:100%;background:rgba(0,0,0,0.5)}
+
+input[type=button],button {border:1px outset buttonface}
+input[type=button]:active,button:active {border:1px inset buttonface}
+
+.grey-glass {background:url(grey-glass.png)}
+.red-glass {background:url(red-glass.png)}
+.green-glass {background:url(green-glass.png)}
+.blue-glass {background:url(blue-glass.png)}
+.yellow-glass {background:url(yellow-glass.png)}
+.neg {color:#ff0000}
+
+div[state=hide] {display:none}
+
+body {background:url(bg.png)}
+.AppsMenu {width:90%;min-width:700px;margin:0 auto;height:10px;border-radius:0 0 5px 5px;background:#bbf}
+.AppSpace {position:fixed;left:0;top:10px;right:0;bottom:0;overflow:hidden}
+
+table tbody tr:hover {background:#eee}
+
+.ExpensesApp {position:absolute;top:10px;bottom:10px;left:20px;right:20px;min-width:980px;font-size:0.8em;border:1px solid #aaa;border-radius:5px;padding:8px;box-shadow:2px 2px 3px rgba(100,100,100,0.85);background:#fff}
+.ExpensesApp > .Menu {width:100%;height:42px;border-radius:2px 2px 0 0;background:#eee}
+.ExpensesApp > .Menu > a {display:inline-block;margin:7px;border:1px outset;border-radius:2px;padding:5px;background:#fbfbfb;cursor:pointer}
+.ExpensesApp[activeSection='accountSummary'] > .Menu > a[sectionName='accountSummary'] {border:1px inset}
+.ExpensesApp[activeSection='incomes'] > .Menu > a[sectionName='incomes'] {border:1px inset}
+.ExpensesApp[activeSection='expenditures'] > .Menu > a[sectionName='expenditures'] {border:1px inset}
+.ExpensesApp[activeSection='shoppings'] > .Menu > a[sectionName='shoppings'] {border:1px inset}
+.ExpensesApp[activeSection='investments'] > .Menu > a[sectionName='investments'] {border:1px inset}
+.ExpensesApp[activeSection='transfers'] > .Menu > a[sectionName='transfers'] {border:1px inset}
+.ExpensesApp[activeSection='monthlySummary'] > .Menu > a[sectionName='monthlySummary'] {border:1px inset}
+.ExpensesApp[activeSection='cardSummary'] > .Menu > a[sectionName='cardSummary'] {border:1px inset}
+.ExpensesApp[activeSection='assetSummary'] > .Menu > a[sectionName='assetSummary'] {border:1px inset}
+.ExpensesApp[activeSection='reminders'] > .Menu > a[sectionName='reminders'] {border:1px inset}
+
+.ExpensesApp > .Filters {height:20px;padding:5px;overflow:show}
+.ExpensesApp > .Filters > div {display:inline-block;margin: 0 20px 0 0}
+.ExpensesApp > .Filters > button {margin: 0 20px 0 0}
+
+.ExpensesApp > .Sections {position:absolute;left:10px;right:10px;top:80px;bottom:10px;border:1px solid #eee;padding:5px;overflow:auto}
+.ExpensesApp > .Sections > * {display:none}
+.ExpensesApp[activeSection='accountSummary'] > .Sections > .AccountSummary {display:block}
+.ExpensesApp[activeSection='incomes'] > .Sections .Incomes {display:block}
+.ExpensesApp[activeSection='expenditures'] > .Sections .Expenditures {display:block}
+.ExpensesApp[activeSection='shoppings'] > .Sections .Shoppings {display:block}
+.ExpensesApp[activeSection='investments'] > .Sections .Investments {display:block}
+.ExpensesApp[activeSection='transfers'] > .Sections .Transfers {display:block}
+.ExpensesApp[activeSection='monthlySummary'] > .Sections .MonthlySummary {display:block}
+.ExpensesApp[activeSection='cardSummary'] > .Sections .CardSummary {display:block}
+.ExpensesApp[activeSection='assetSummary'] > .Sections .AssetSummary {display:block}
+.ExpensesApp[activeSection='reminders'] > .Sections .Reminders {display:block}
+
+.AccountSummary {}
+.AccountSummary > table  {border-collapse:collapse}
+.AccountSummary > table td {text-align:right}
+.AccountSummary > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.AccountSummary > table > thead > tr > th {padding:3px 2px 3px 0;text-align:right}
+.AccountSummary > table > thead > tr > th+th {width:7%}
+.AccountSummary > table > tbody > tr > th {padding-right:1em;text-align:right}
+.AccountSummary > table > tbody input[type=text] {width:96%;border:1px inset;border-radius:2px;text-align:right}
+.AccountSummary > table > tbody > tr {border-bottom:1px solid #fcfcfc}
+.AccountSummary > table > tbody > tr.opening {background:#eee;border-bottom:none}
+.AccountSummary > table > tbody > tr.closing {border-top:1px solid #aaa;border-bottom:3px double #aaa}
+.AccountSummary > table tr.expenseGrp {background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(134,174,204,1)), color-stop(91%,rgba(212,228,239,1)))}
+.AccountSummary > table tr.expenseGrp td {color:#888;font-style:italic}
+.AccountSummary > table tr.expenseDtl th {font-style:italic}
+.AccountSummary > table tr.budgetGrp {}
+.AccountSummary > table tr.budgetDtl {}
+
+.Sections > .Incomes {}
+.Sections > .Incomes > table  {border-collapse:collapse}
+.Sections > .Incomes > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .Incomes > table thead th {text-align:left}
+
+.Sections > .Expenditures {}
+.Sections > .Expenditures > table  {border-collapse:collapse}
+.Sections > .Expenditures > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .Expenditures > table thead th {text-align:left}
+
+.Sections > .Shoppings {}
+.Sections > .Shoppings > table  {border-collapse:collapse}
+.Sections > .Shoppings > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .Shoppings > table thead th {text-align:left}
+
+.Sections > .Investments {}
+.Sections > .Investments > table  {border-collapse:collapse}
+.Sections > .Investments > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .Investments > table thead th {text-align:left}
+
+.Sections > .Transfers {}
+.Sections > .Transfers > table  {border-collapse:collapse}
+.Sections > .Transfers > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .Transfers > table thead th {text-align:left}
+
+.Sections > .MonthlySummary {}
+.Sections > .MonthlySummary > table  {border-collapse:collapse}
+.Sections > .MonthlySummary > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .MonthlySummary > table thead th {text-align:left}
+
+.Sections > .CardSummary {}
+.Sections > .CardSummary > table  {border-collapse:collapse}
+.Sections > .CardSummary > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .CardSummary > table th {text-align:left}
+.Sections > .CardSummary > table > tbody > tr.Card {background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(134,174,204,1)), color-stop(91%,rgba(212,228,239,1)))}
+.Sections > .CardSummary > table > tbody > tr.Card td {color:#888;font-style:italic}
+.Sections > .CardSummary > table > tbody > tr.Transaction {border-bottom:1px solid #fcfcfc}
+
+.Sections > .AssetSummary {}
+.Sections > .AssetSummary > table  {border-collapse:collapse}
+.Sections > .AssetSummary > table thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .AssetSummary > table thead th {width:20%;text-align:left}
+.Sections > .AssetSummary > table thead td {width:10%;text-align:right;font-weight:bold}
+.Sections > .AssetSummary > table thead td:last-child {width:40%}
+.Sections > .AssetSummary > table tbody tr {border-top:1px solid #fcfcfc;border-bottom:1px solid #fcfcfc}
+.Sections > .AssetSummary > table tbody tr:first-child {border-top:none}
+.Sections > .AssetSummary > table tbody th {text-align:left}
+.Sections > .AssetSummary > table tbody tr.Asset th:hover {text-decoration:underline;color:blue;}
+.Sections > .AssetSummary > table tbody td {text-align:right}
+.Sections > .AssetSummary > table tbody td[contentEditable=true]:hover {outline:1px solid #888}
+.Sections > .AssetSummary > table tbody tr.Category {background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(134,174,204,1)), color-stop(91%,rgba(212,228,239,1)))}
+.Sections > .AssetSummary > table tbody tr.Category td {color:#888;font-style:italic}
+.Sections > .AssetSummary > table tbody tr.Asset > th {padding-left:1em}
+.Sections > .AssetSummary > table tfoot tr {border-top:3px double #aaa;border-bottom:3px solid #aaa}
+.Sections > .AssetSummary > table tfoot th {text-align:left}
+.Sections > .AssetSummary > table tfoot td {text-align:right}
+.Sections > .AssetSummary > div.AssetForm {position:fixed;top:0;left:0;width:100%;height:100%;background:url(/wui2/dark50.png) repeat}
+.Sections > .AssetSummary > div.AssetForm .window {position:absolute;width:30%;top:25%;left:35%;background:#fff;border:1px outset;border-radius:5px;padding:10px 20px}
+.Sections > .AssetSummary > div.AssetForm .window .buttons {text-align:right}
+
+.Sections > .Reminders {}
+.Sections > .Reminders > table  {border-collapse:collapse}
+.Sections > .Reminders > table > thead {border-top:1px solid #aaa;border-bottom:1px solid #aaa;background:#eef}
+.Sections > .Reminders > table thead th {text-align:left}
+
+.TransactionForm {position:absolute;top:50%;left:50%;width:400px;height:240px;margin:-120px -200px;background:#fff;border-radius:10px;border:1px solid #888;padding:10px;box-shadow:1px 1px 5px #333}
+.TransactionForm label {display:inline-block;width:100px}
+.TransactionForm input[type=text]+input[type=text] {width:80px}
+.TransactionForm .Buttons {margin: 10px 0;text-align:right}
+
+.RepeatForm {position:absolute;top:50%;left:50%;width:300px;height:80px;margin:-40px -150px;background:#fff;border-radius:10px;border:1px solid #888;padding:10px;box-shadow:1px 1px 5px #333}
+.RepeatForm label {display:inline-block;width:100px}
+.RepeatForm .Buttons {margin: 10px 0;text-align:right}
+
+.AssetForm {position:absolute;top:50%;left:50%;width:300px;height:120px;margin:-60px -150px;background:#fff;border-radius:10px;border:1px solid #888;padding:10px;box-shadow:1px 1px 5px #333}
+.AssetForm label {display:inline-block;width:100px}
+.AssetForm .Buttons {margin: 10px 0;text-align:right}

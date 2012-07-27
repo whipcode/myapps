@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.workman.bo">
+	<class name="JobStage" table="JOB_STAGE">
+		<id name="id" column="id"><generator class="native" /></id>
+		<timestamp name="lastUpdateTs" column="last_update_ts" />
+		<property name="owner" column="owner" />
+		<property name="deleted" column="deleted" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+
+		<property name="name" column="NAME" />
+		<property name="startDate" column="START_DATE" not-null="true" />
+		<property name="endDate" column="END_DATE" not-null="true" />
+		<property name="remarks" column="REMARKS" />
+		
+		<many-to-one name="job" column="JOB_ID" class="Job" not-null="true" />
+		
+		<filter name="hideDeleted" />
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,14 @@
+.QuickCalendar {margin:0;border:0;padding:2px;font-size:10pt}
+.QuickCalendar > .border {border:1px outset;border-top-right-radius:4px;overflow:hidden}
+.QuickCalendar .calendarTable {width:100%;border-collapse:collapse}
+.QuickCalendar .calendarTable thead tr {height:2em;background:#cce}
+.QuickCalendar .calendarTable tbody > tr td {border-top:1px solid #99c}
+.QuickCalendar .calendarTable tbody td {border:1px solid #eee;padding:1px;background:#fff;color:#ccc}
+.QuickCalendar .calendarTable .dayRow {}
+.QuickCalendar .calendarTable .evtRow {min-height:10px}
+.QuickCalendar .calendarTable .currMonth {color:#000}
+.QuickCalendar .calendarTable .saturday {color:#fcc;background:#fff8f8}
+.QuickCalendar .calendarTable .sunday {color:#fcc;background:#fff8f8}
+.QuickCalendar .calendarTable .currMonth.saturday {color:#f00}
+.QuickCalendar .calendarTable .currMonth.sunday {color:#f00}
+.QuickCalendar .calendarTable .today {background:#ffa}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.homeapps.entity.bankaccount">
+	<class name="Shopping" table="ACC_SHOPPING">
+
+		<id name="id" column="id">
+			<generator class="native" />
+		</id>
+		<set name="transactions" lazy="false" inverse="true" cascade="none" >
+			<key column="shopping_id" />
+			<one-to-many class="Transaction" />
+		</set>
+
+		<property name="deleteMark" column="delete_mark" />
+		<property name="deleteTs" column="delete_ts" />
+		<property name="deleteUr" column="delete_ur" />
+		<property name="lastUpdateTs" column="last_update_ts" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.homeapps.entity.bankaccount">
+	<class name="Transaction" table="ACC_TRANSACTION">
+
+		<id name="id" column="id">
+			<generator class="native" />
+		</id>
+		<property name="amount" column="amount" />
+		<property name="bankDate" column="bank_date" />
+		<property name="desc" column="descr" />
+		<property name="tranxCatg" column="tranx_catg" />
+		<property name="tranxSubcatg" column="tranx_subcatg" />
+		<property name="remarks" column="remarks" />
+		<property name="repeatKey" column="repeat_key" />
+		<property name="creditCard" column="CREDIT_CARD" />
+		<property name="remind" column="REMIND" />
+		<property name="reminderMsg" column="REMINGER_MSG" />
+		<property name="remindDate" column="REMIND_DATE" />
+
+		<many-to-one name="account" column="account_id" class="Account" not-null="true" />
+		<many-to-one name="shopping" column="shopping_id" class="Shopping" not-null="false" />
+		<many-to-one name="transfer" column="transfer_id" class="Transfer" not-null="false" />
+		<many-to-one name="installment" column="installment_id" class="Installment" not-null="false" />
+		<many-to-one name="budget" column="budget_id" class="Budget" not-null="false" />
+
+		<property name="deleteMark" column="delete_mark" />
+		<property name="deleteTs" column="delete_ts" />
+		<property name="deleteUr" column="delete_ur" />
+		<property name="lastUpdateTs" column="last_update_ts" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+		
+		<filter name="hideDeleted" />
+	</class>
+</hibernate-mapping>

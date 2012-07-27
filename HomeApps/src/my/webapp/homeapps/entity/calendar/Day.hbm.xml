@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.homeapps.entity.calendar">
+	<class name="Day" table="DAY">
+
+		<id name="id" column="id">
+			<generator class="native" />
+		</id>
+		<property name="date" column="date" />
+		<property name="dayType" column="day_type" />
+		<property name="engName" column="eng_name" />
+		<property name="chnName" column="chn_name" />
+	</class>
+</hibernate-mapping>

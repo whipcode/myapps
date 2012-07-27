@@ -1,0 +1,217 @@
+body,h1,h2,h3,p {margin:0;padding:0;vertical-align:top;color:#444;text-shadow:0 0 1px rgba(0,0,0,0.01)}
+ul,ol {margin:0;padding-left:1.5em}
+button {margin:0}
+input[type=text],input[type=password] {border-radius:5px;padding:2px 4px;border:0;box-shadow:inset 1px 1px 5px #666}
+div {overflow:hidden}
+div:focus {outline:none}
+
+.Popup {display:none}
+.Popup[show=yes] {display:block;position:fixed;top:0;height:100%;left:0;width:100%;background:rgba(0,0,0,0.5);z-index:9}
+
+#appView {position:fixed;width:100%;height:100%;overflow:hidden}
+
+#appView[view=normal] .AppStatus {display:inline-block;position:absolute;top:0;left:50%;width:100px;margin:0 -50px;border-radius:3px;background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,234,187,0.4)), color-stop(50%,rgba(252,205,77,0.7)), color-stop(51%,rgba(248,181,0,0.71)), color-stop(100%,rgba(251,223,147,1)));text-align:center;z-index:3}
+#appView[view=normal] .AppMenu {position:absolute;top:0;left:0;height:22px;right:0;padding:0 10px;background: -webkit-linear-gradient(top, #d0e4f7 0%,#0a77d5 73%);box-shadow:0 0 3px #555;z-index:2;text-align:right;overflow:hidden}
+#appView[view=normal] .TaskPlanner {position:absolute;top:22px;left:0;height:260px;right:0;border-bottom:1px solid #888}
+#appView[view=normal] .Handbook {position:absolute;left:0;right:0;top:283px;bottom:0;overflow:hidden}
+
+#appView[view=planner] .AppStatus {display:inline-block;position:absolute;top:0;left:50%;width:100px;margin:0 -50px;border-radius:3px;background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,234,187,0.4)), color-stop(50%,rgba(252,205,77,0.7)), color-stop(51%,rgba(248,181,0,0.71)), color-stop(100%,rgba(251,223,147,1)));text-align:center;z-index:3}
+#appView[view=planner] .AppMenu {position:absolute;top:0;left:0;height:22px;right:0;padding:0 10px;background: -webkit-linear-gradient(top, #d0e4f7 0%,#0a77d5 73%);box-shadow:0 0 3px #555;z-index:2;text-align:right;overflow:hidden}
+#appView[view=planner] .TaskPlanner {position:absolute;top:22px;left:0;bottom:30px;right:0;border-bottom:1px solid #888}
+#appView[view=planner] .Handbook {position:absolute;left:0;right:0;height:30px;bottom:0;overflow:hidden}
+
+.AppMenu > div {display:inline-block;margin:0 10px;vertical-align:top}
+.AppMenu button {font-size:10px;margin:0 10px;vertical-align:top}
+.AppMenu .JobFileSelector {position:absolute;top:0;left:34px;margin:1px}
+
+.TaskPlanner[view=weekPlanner] .WeekPlanner {position:absolute;left:0;top:0;right:16px;bottom:0}
+.WeekPlanner .WeekPlannerMenu {position:absolute;top:0;left:0;right:0;height:19px;overflow:hidden;background: -webkit-linear-gradient(top, rgba(238,238,238,1) 0%,rgba(204,204,204,1) 100%);box-shadow:0 0 5px #555;z-index:1;font-size:14px}
+.WeekPlanner .WeekPlannerMenu button {font-size:10px}
+.WeekPlannerMenu .HeaderDiv {display:inline-block;padding-left:37px}
+.WeekPlannerMenu .HeaderDiv .WeekdayLabel {display:inline-block;width:53px;text-indent:2px}
+.WeekPlannerMenu button {position:absolute;top:0;left:373px}
+
+.WeekPlannerCalendar {position:absolute;top:19px;bottom:0;left:0;right:0;overflow:auto}
+.WeekPlannerCalendar table {width:100%;border-collapse:collapse;font-size:14px;text-shadow:0 0 1px rgba(0,0,0,0.01)}
+.WeekPlannerCalendar tr {height:40px}
+.WeekPlannerCalendar tr.OddMonth {background:rgba(0,0,255,0.03)}
+.WeekPlannerCalendar tr.EvenMonth {background:#fff8f8}
+.WeekPlannerCalendar tr.EvenMonth + tr.OddMonth .MonthCell {border-top:1px solid #dda}
+.WeekPlannerCalendar tr.OddMonth + tr.EvenMonth .MonthCell {border-top:1px solid #dda}
+.WeekPlannerCalendar td {vertical-align:top;text-shadow:0 0 1px rgba(0,0,0,0.01);position:relative}
+.WeekPlannerCalendar .MonthCell {width:2.5em}
+.WeekPlannerCalendar .DayCell {width:50px;border:1px solid #dda}
+.WeekPlannerCalendar .DayCell.Yesterday {color:rgb(192,192,192);background:rgba(128,128,128,0.05)}
+.WeekPlannerCalendar .DayCell[weekend] {background:rgba(128,128,128,0.05)}
+.WeekPlannerCalendar .DayCell[weekend] .Day {color:rgb(192,192,192)}
+.WeekPlannerCalendar .DayCell[evt=ph] {color:red}
+.WeekPlannerCalendar .DayCell:hover {box-shadow:inset 0 0 10px rgba(0,0,255,0.5);border-radius:5px}
+.WeekPlannerCalendar .DayCell .Day {position:absolute;left:2px}
+.WeekPlannerCalendar .DayCell.Today .Day {text-decoration:underline}
+.WeekPlannerCalendar .DayCell .PH {position:absolute;right:3px}
+.WeekPlannerCalendar .DayCell .Evt {position:absolute;top:20px;left:0;right:0;bottom:0;text-align:center;overflow:hidden}
+.WeekPlannerCalendar .WeekFocusCell {width:150px;border:1px solid #dda}
+.WeekPlannerCalendar .WeekTaskCell {border:1px solid #dda}
+.WeekPlannerCalendar .Yesterday+.WeekFocusCell {color:rgb(192,192,192);background:rgba(128,128,128,0.05)}
+.WeekPlannerCalendar .Yesterday+.WeekFocusCell+.WeekTaskCell {color:rgb(192,192,192);background:rgba(128,128,128,0.05)}
+.WeekPlannerCalendar .Yesterday+.WeekFocusCell+.WeekTaskCell p {color:rgb(192,192,192)}
+.WeekPlannerCalendar tr:first-child td {border-top:none}
+.WeekPlannerCalendar tr:last-child td {border-bottom:none}
+
+.WeekFocus {font-size:16px}
+.WeekFocus li {position:relative;margin-right:24px}
+.WeekFocus .AddTask {position:absolute;top:2px;right:-24px;width:16px;height:16px;background:url(add.png)}
+.WeekFocus .AddTask:hover {cursor:pointer}
+
+.WeekTask {font-size:16px}
+.WeekTask ul {margin-left:0px;padding-left:0;list-style:none}
+.WeekTask li {position:relative}
+.WeekTask li:hover {background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.12) 51%,rgba(0,0,0,0.04) 100%);cursor:pointer}
+.WeekTask li input[type=checkbox] {position:absolute;left:0}
+.WeekTask li p.DueDate {position:absolute;left:1em;width:2.2em;text-align:right}
+.WeekTask li p.TaskDesc {margin-left:3.4em}
+.WeekTask li .EditTask {position:absolute;right:0;top:0;width:16px;height:16px;background:url(pen1.png)}
+.WeekTask li .EditTask:hover {cursor:pointer}
+.WeekTask li .DelTask {position:absolute;right:0;top:0;width:16px;height:16px;background:url(trash_16x16.gif)}
+.WeekTask li .DelTask:hover {cursor:pointer}
+.WeekTask .NoteLink {display:inline-block;width:16px;height:16px;margin-left:4px}
+.NoteLink[withNote=no] {background:url(note4-grey2.png)}
+.NoteLink[withNote=yes] {background:url(note4-1.png)}
+
+.TaskPlanner[view=weekPlanner] .PlannerSwitch {position:absolute;top:0;right:0;width:16px;bottom:0;font-size:8px;text-shadow:0px 1px 1px #888;padding:2px;font-size:10px}
+.TaskPlanner[view=weekPlanner] .DayPlanner {display:none}
+
+.TaskPlanner[view=dayPlanner] .WeekPlanner {position:absolute;left:0;top:0;width:427px;bottom:0}
+.TaskPlanner[view=dayPlanner] .WeekFocusCell {display:none}
+.TaskPlanner[view=dayPlanner] .WeekTaskCell {display:none}
+.TaskPlanner[view=dayPlanner] .PlannerSwitch {position:absolute;top:0;left:427px;width:16px;bottom:0;font-size:8px;text-shadow:0px 1px 1px #888;padding:2px;font-size:10px}
+
+.TaskPlanner[view=dayPlanner] .DayPlanner {position:absolute;top:0;bottom:0;left:443px;right:0}
+.DayPlanner .DayHighlight {position:absolute;top:0;bottom:0;left:0;width:50px;background:url(bg1.jpg);box-shadow:1px 0 5px rgba(0,0,0,0.3)}
+.DayPlanner .DayHighlight label {display:block;padding-right:5px;text-align:right}
+.DayPlanner .DayHighlight[evt=ph] {color:red}
+.DayPlanner .DayHighlight .Evt {min-height:1em;padding-right:5px;text-align:right}
+.DayPlanner .DayHighlight .Evt:hover {outline:1px solid #888}
+.DayPlanner .TaskEditor {position:absolute;top:0;bottom:0;left:50px;right:0;overflow:auto}
+.DayPlanner .TaskEditor ul {list-style-image:url(checkbox1.png)}
+.DayPlanner .TaskEditor li[checked=true] {list-style-image:url(checkbox1_checked.png)}
+
+.Settings.Popup {background:#fff}
+.Settings .View {position:absolute;top:10px;bottom:10px;left:10px;right:10px;background:#fff;border:1px solid #000;border-radius:5px;box-shadow:1px 1px 8px rgba(0,0,0,0.6);overflow:hidden}
+.Settings .Menu {position:absolute;top:5px;height:20px;left:10px;right:10px}
+.Settings .Menu .CloseBtn {position:absolute;top:0px;right:3px;width:10px;height:10px;border:1px solid #bbb;border-radius:3px}
+.Settings .Menu .CloseBtn:hover {box-shadow:inset 0 0 3px #aaa}
+.Settings .Sections {position:absolute;top:22px;bottom:10px;left:10px;right:10px;overflow:auto}
+.Settings .Sections > div {margin:0 0 20px 0}
+
+.JobFileMaint {position:relative}
+.JobFileMaint h2 {display:inline-block}
+.JobFileMaint button {}
+.JobFileMaint table {width:100%}
+.JobFileMaint table tbody tr:hover {background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.12) 51%,rgba(0,0,0,0.04) 100%)}
+.JobFileMaint table .colShow {width:50px}
+
+.JobFileForm .View {position:absolute;top:50%;left:50%;width:400px;height:150px;margin:-75px -200px;background:#fff;border:1px solid #000;border-radius:5px;padding:10px;box-shadow:1px 1px 8px rgba(0,0,0,0.6);overflow:hidden}
+.JobFileForm .WuiFieldWrapper label {display:inline-block;width:120px;vertical-align:top}
+.JobFileForm textarea {width:250px;height:60px}
+
+.PrefMaint {}
+
+.CalendarMaintView {position:absolute;left:20px;top:20px;width:1150px;height:620px;background:#fff;border-radius:10px;padding:20px;overflow:auto;box-shadow:2px 2px 8px #000}
+.CalendarMaintView .MonthDiv {display:inline-block;margin:5px 10px;vertical-align:top}
+.CalendarMaintView .WeekDayLabel {display:inline-block;font-size:10px;width:2em}
+.CalendarMaintView .DayLabel {display:inline-block;font-size:10px;width:2em}
+.CalendarMaintView .DayLabel.PH {color:red;font-weight:bold}
+.CalendarMaintView .DayLabel:hover {cursor:pointer}
+
+.PublicHolidayEditForm > div {position:absolute;top:50%;left:50%;width:250px;height:120px;margin:-70px -135px;border:2px solid #fff;border-radius:5px;padding:10px;background:rgba(238,238,238,0.8);box-shadow:1px 1px 10px #000}
+
+#m {position:absolute;bottom:-5px;left:0;right:0;height:5px}
+#m:hover {cursor:s-resize;bottom:-7px;height:7px}
+
+.Handbook .HandbookMenu {position:absolute;left:0;top:0;height:30px;right:0;background: -webkit-linear-gradient(top, #f2f5f6 0%,#e3eaed 37%,#c8d7dc 100%);box-shadow:0 1px 4px #555;padding-left:10px;z-index:2}
+.Handbook .HandbookSections {position:absolute;left:0;right:0;top:30px;bottom:0;background:url(bg2.png)}
+
+.Handbook .HandbookMenu .SectionSwitch {display:inline-block;margin:5px;border:1px outset;border-radius:2px;padding:0 5px;background:#fbfbfb;cursor:pointer}
+.Handbook[activeSection=planner] .SectionSwitch.Planner {border:1px inset}
+.Handbook[activeSection=jobbook] .SectionSwitch.Jobs {border:1px inset}
+.Handbook[activeSection=notebook] .SectionSwitch.Notes {border:1px inset}
+
+.HandbookSections > div {display:none}
+.Handbook[activeSection=jobbook] .Jobbook {display:block}
+.Handbook[activeSection=notebook] .Notebook {display:block}
+
+.Jobbook > div {position:absolute;border:1px solid #ccc;background:#fff;border-radius:4px;box-shadow:1px 2px 3px #444}
+.Jobbook .JobList {left:40px;top:10px;bottom:10px;width:200px}
+.Jobbook .StageList {left:260px;top:10px;bottom:10px;width:360px}
+.Jobbook .TaskList {left:640px;top:10px;bottom:10px;right:40px}
+
+.Jobbook div.BtnEdit {position:absolute;top:1px;right:1px;width:16px;height:16px;background:url(pen1.png)}
+
+.Jobbook .JobList h2 {padding:4px;box-shadow:0px 1px 3px #555;background: -webkit-linear-gradient(top, #eaefb5 0%,#e1e9a0 100%);font-size:18px}
+.Jobbook .JobList .BtnNew {position:absolute;top:6px;right:4px}
+.Jobbook .JobList ul {position:absolute;left:0;top:38px;right:0;bottom:0;list-style:none;overflow:auto}
+.Jobbook .JobList li {position:relative}
+.Jobbook .JobList li:hover {background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.12) 51%,rgba(0,0,0,0.04) 100%);cursor:pointer}
+.Jobbook .JobList input[type=radio] {position:absolute;left:-24px}
+
+.Jobbook .StageList h2 {padding:4px;box-shadow:0px 1px 3px #555;background: -webkit-linear-gradient(top, #eaefb5 0%,#e1e9a0 100%);font-size:18px}
+.Jobbook .StageList .BtnNew {position:absolute;top:6px;right:4px}
+.Jobbook .StageList ul {position:absolute;left:0;top:38px;right:0;bottom:0;list-style:none;overflow:auto}
+.Jobbook .StageList li {position:relative}
+.Jobbook .StageList li:hover {background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.12) 51%,rgba(0,0,0,0.04) 100%);cursor:pointer}
+.Jobbook .StageList input[type=radio] {position:absolute;left:-24px}
+
+.Jobbook .TaskList h2 {padding:4px;box-shadow:0px 1px 3px #555;background: -webkit-linear-gradient(top, #eaefb5 0%,#e1e9a0 100%);font-size:18px}
+.Jobbook .TaskList .BtnNew {position:absolute;top:6px;right:4px;}
+.Jobbook .TaskList ul {position:absolute;left:0;top:38px;right:0;bottom:0;list-style:none;overflow:auto}
+.Jobbook .TaskList li {position:relative}
+.Jobbook .TaskList li:hover {background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.12) 51%,rgba(0,0,0,0.04) 100%);cursor:pointer}
+.Jobbook .TaskList input[type=checkbox] {position:absolute;left:-24px}
+
+.JobForm {position:absolute;left:50%;top:50%;width:350px;height:190px;margin:-95px -175px;background:#fff;box-shadow:3px 3px 10px #333;border-radius:10px;padding:10px}
+.JobForm > div > label {display:inline-block;width:100px}
+
+.StageForm {position:absolute;left:50%;top:50%;width:350px;height:190px;margin:-95px -175px;background:#fff;box-shadow:3px 3px 10px #333;border-radius:10px;padding:10px}
+.StageForm > div > label {display:inline-block;width:100px}
+
+.TaskForm {position:absolute;left:50%;top:50%;width:350px;height:230px;margin:-95px -175px;background:#fff;box-shadow:3px 3px 10px #333;border-radius:10px;padding:10px}
+.TaskForm > div > label {display:inline-block;width:100px}
+.TaskForm .Desc input {width:230px;margin:2px}
+
+.Notebook {position:absolute;left:0;right:0;top:0;bottom:0}
+.Notebook .NoteEntryListDiv {position:absolute;left:0;width:250px;top:0;bottom:0;border-bottom-right-radius:5px;background:#fff;box-shadow:2px 2px 4px #444;overflow:hidden}
+.Notebook .NoteEditDiv {position:absolute;left:270px;right:20px;top:10px;bottom:10px;border-radius:5px;background:#fff;box-shadow:2px 2px 4px #444}
+
+.NoteEntryListDiv .NotebookMenu {position:absolute;left:0;right:0;height:36px;bottom:0;border-bottom-right-radius:5px;background: -webkit-linear-gradient(top, rgba(125,126,125,1) 0%,rgba(14,14,14,1) 100%);box-shadow:0 -1px 3px #555}
+.NoteEntryListDiv .NoteEntryList {position:absolute;left:0;right:0;top:0;bottom:36px;list-style:none;padding:0;overflow:auto}
+
+.NoteEntryItem {position:relative;border-bottom:1px dotted #ccc;padding:6px 100px 6px 4px}
+.NoteEntryItem:hover {background:-webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.12) 51%,rgba(0,0,0,0.04) 100%);cursor:pointer}
+.NoteEntryItem .Timestamp {position:absolute;right:4px;bottom:0;font-size:0.5em;color:#aaa;font-style:italic} 
+
+.NoteEditDiv[show=no] {display:none}
+.NoteEditDiv .NoteEntry {position:absolute;left:0;right:0;top:0;height:50px;border-bottom:1px solid #aaa}
+.NoteEditDiv .NoteArea {position:absolute;left:0;right:0;top:52px;bottom:30px}
+.NoteEditDiv .NoteMenu {position:absolute;left:0;right:0;height:30px;bottom:0;border-top:1px solid #aaa;text-align:center}
+
+.NoteArea[type=text] textarea {position:absolute;left:0;right:0;top:0;bottom:0;background:none;border:none;outline:none;resize:none}
+
+.NoteEntry > div {display:inline-block}
+
+.NoteMenu button {margin:0 10px}
+
+.JobTaskNoteForm {position:absolute;left:50%;top:50%;width:800px;height:500px;margin:-250px -400px;background:#fff;border-radius:10px;box-shadow:1px 1px 8px rgba(0,0,0,0.6)}
+.JobTaskNoteForm .NoteEntryListDiv {position:absolute;left:0;top:0;width:250px;bottom:0;border-right:1px solid #aaa}
+.JobTaskNoteForm .NoteDiv {position:absolute;left:250px;top:0;right:0;bottom:0}
+
+.JobTaskNoteForm .NoteEntryListDiv .TaskDesc {position:absolute;left:0;right:0;top:0;height:28px;border-top-left-radius:10px;padding:0 10px;overflow:hidden}
+.JobTaskNoteForm .NoteEntryListDiv .NoteEntryList {position:absolute;left:0;right:0;top:28px;bottom:24px;overflow:auto}
+.JobTaskNoteForm .NoteEntryListDiv .NoteEntryMenu {position:absolute;left:0;right:0;height:28px;bottom:0;border-bottom-left-radius:10px;padding:0 10px;background: -webkit-linear-gradient(top, rgba(125,126,125,1) 0%,rgba(14,14,14,1) 100%);text-align:right}
+.JobTaskNoteEntryItem {position:relative;border-bottom:1px dotted #ccc;padding:6px 100px 6px 4px}
+.JobTaskNoteEntryItem:hover {background:-webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.06) 50%,rgba(0,0,0,0.12) 51%,rgba(0,0,0,0.04) 100%);cursor:pointer}
+.JobTaskNoteEntryItem .Timestamp {position:absolute;right:4px;bottom:0;font-size:0.5em;color:#aaa;font-style:italic} 
+
+.JobTaskNoteForm .NoteDiv .NoteEntry {position:absolute;left:0;top:0;height:50px;right:0;border-bottom:1px solid #aaa}
+.JobTaskNoteForm .NoteDiv .NoteArea {position:absolute;left:0;top:50px;bottom:30px;right:0}
+.JobTaskNoteForm .NoteDiv .NoteMenu {position:absolute;left:0;bottom:0;height:30px;right:0;border-top:1px solid #aaa;text-align:center}

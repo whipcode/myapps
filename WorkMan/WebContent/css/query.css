@@ -1,0 +1,13 @@
+body,h1,h2,h3,p {margin:0;padding:0}
+
+#appView {position:fixed;top:0;left:0;width:100%;height:100%}
+
+.CommandDiv {position:absolute;top:0;height:70px;left:0;right:0;border-top:1px solid #ccc;border-bottom:1px solid #888;box-shadow:0 1px 1px #888;background:-webkit-gradient(linear, 0 30%, 0 100%, from(rgb(200,200,200)), to(rgb(160,160,160)))}
+.CommandDiv .WuiTextField {display:inline-block;margin:5px 10px}
+.CommandDiv .WuiWrapper input[type=text] {width:800px}
+
+.ResultDiv {position:absolute;top:80px;bottom:40px;left:0;right:0;padding:5px;overflow:auto}
+.ResultDiv table {width:100%;border-collapse:collapse}
+.ResultDiv table thead {border-top:1px solid #88f;border-bottom:1px solid #88f;background:-webkit-gradient(linear,0 50%, 0 100%, from(#88f), to(#88c));box-shadow:0 1px 1px rgba(0,0,0,0.2)}
+
+.PaginateDiv {position:absolute;bottom:0;left:0;right:0;height:32px}

@@ -1,0 +1,32 @@
+* {
+	margin:0;
+}
+
+div.inline-blocks-wrapper {
+}
+
+div.inline-blocks-wrapper>* {
+	display:inline-block;
+	vertical-align:top;
+}
+
+div.columns-wrapper {
+	display:table;
+}
+
+div.columns-wrapper>* {
+	display:table-cell;
+}
+
+div.rows-wrapper {
+	display:table;
+}
+
+div.rows-wrapper>* {
+	display:table-row;
+}
+
+div.top-left-wrapper, div.top-right-wrapper, div.bottom-left-wrapper, div.bottom-right-wrapper {
+	position:fixed;
+	visibility:hidden;
+}

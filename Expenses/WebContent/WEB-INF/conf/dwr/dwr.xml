@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://getahead.org/dwr/dwr20.dtd">
+<dwr>
+	<allow>
+		<convert converter="hibernate3" match="my.webapp.expenses.entity.*" />
+
+		<create creator="new" javascript="ServerApi">
+			<param name="class" value="my.webapp.expenses.dwr.ServerApi" />
+		</create>
+	</allow>
+</dwr>

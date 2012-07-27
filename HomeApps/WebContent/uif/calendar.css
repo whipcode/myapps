@@ -1,0 +1,23 @@
+div.event-calendar {background:#bcf;border-radius:4px;padding:4px;}
+
+div.event-calendar>.comm-bar {}
+div.event-calendar>.calendar-ctrl {}
+
+div.event-calendar>.calendar-roll>.scroll-backward {display:none}
+div.event-calendar>.calendar-roll>.scroll-backward>input[type=button] {width:100%}
+
+div.event-calendar>.calendar-roll>.calendar>table>thead {background: #e3e9ff}
+div.event-calendar>.calendar-roll>.calendar>table td {width:999px;text-align:left;padding:0}
+div.event-calendar>.calendar-roll>.calendar>table>tbody {background:#fff;}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td {border:1px solid #ddd}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td>p {border-bottom:1px solid #eee;font-size:0.6em;text-align:left}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td.odd-month>p {background:#f0f0ff;color:#666}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td.even-month>p {background:#fff0f0;color:#666}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td>div {height:4em}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td.odd-month.today>p {background:#f0f088;border-bottom:1px solid #ee8}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td.even-month.today>p {background:#fff080;border-bottom:1px solid #ee8}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td.today>div {background:#ff8}
+div.event-calendar>.calendar-roll>.calendar>table>tbody td>div>p {margin:0 0 1px 0;border-radius:4px;background:#eef;font-size:0.8em}
+
+div.event-calendar>.calendar-roll>.scroll-forward {display:none}
+div.event-calendar>.calendar-roll>.scroll-forward>input[type=button] {width:100%}

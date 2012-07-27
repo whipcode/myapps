@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.homeapps.entity.cooking">
+	<class name="Food" table="FOOD">
+		<id name="id" column="id"><generator class="native" /></id>
+		<timestamp name="lastUpdTs" column="LAST_UPD_TS" />
+		<property name="deleteMark" column="DELETE_MARK" />
+		<property name="lastUpdUr" column="LAST_UPD_UR" />
+
+		<property name="name" column="NAME" />
+		<set name="foodTypes" table="FOOD_FOOD_TYPE" lazy="true" >
+			<key column="FOOD_ID" />
+			<many-to-many class="FoodType" column="FOOD_TYPE_ID" />
+		</set>
+		<set name="foodIngredients" lazy="true" >
+			<key column="FOOD_ID" />
+			<one-to-many class="FoodIngredient" />
+		</set>
+		<set name="descriptions" lazy="true" >
+			<key column="FOOD_ID" />
+			<one-to-many class="FoodDescription" />
+		</set>
+		<property name="selected" column="SELECTED" />
+<!-- 		<set name="pictures" lazy="false" > -->
+<!-- 			<key column="FOOD_ID" /> -->
+<!-- 			<one-to-many class="FoodPicture" /> -->
+<!-- 		</set> -->
+	</class>
+</hibernate-mapping>

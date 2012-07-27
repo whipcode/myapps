@@ -1,0 +1,69 @@
+<style>
+* {
+	margin: 0;
+}
+
+body {
+	margin: 0 auto;
+	width: 1024px;
+	height: 768px;
+	background: #000 url(/img/P1020523.jpg) no-repeat center;
+}
+
+.clear {
+	clear:both;
+	height: 0px;
+}
+
+div.calendar1 {
+	position:relative;
+	padding:40px 5px 0px 5px;
+	font-family: "calibri",serif;
+}
+
+div.calendar1 .month {
+	margin: 4px;
+	background: #fff;
+	border-radius: 4px;
+	width: 175px;
+	height: 115px;
+	overflow: hidden;
+	background: url(/img/month_bg.png);
+}
+
+div.calendar1 h1 {
+	padding-left: 6px;
+	font-size: 1.5em;
+}
+
+div.calendar1 h2 {
+	padding-left: 4px;
+	border-radius: 4px 4px 0px 0px;
+	font-size: 1em;
+	color: #fff;
+}
+
+div.calendar1 table {
+	border-collapse: collapse;
+	border: 0px;
+	border-spacing: 0px;
+}
+
+div.calendar1 td {
+	text-align: right;
+	padding: 0px 5px;
+	font-size:13px;
+	font-weight:bold;
+	color: #fff;
+}
+
+div.calendar1 td.holiday {
+	color:#e00;
+}
+
+div.calendar1 td.pub-holiday {
+	color:#e00;
+	background: url(/img/holiday_bg.png) repeat;
+	border-radius:3px;
+}
+</style>

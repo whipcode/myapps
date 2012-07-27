@@ -1,0 +1,8 @@
+body,ul,ol {margin:0}
+.appView {position:fixed;top:0;bottom:0;left:0;right:0}
+table.partition {border:0;padding:0;width:100%;border-collapse:collapse}
+table.partition td {border:0;padding:0;vertical-align:top}
+
+button {border-radius:3px;border-width:1px;background-color:#eee}
+input[type=text] {}
+textarea {resize:none}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.workman.bo">
+	<class name="TextNote" table="TEXT_NOTE">
+		<id name="id" column="id"><generator class="native" /></id>
+		<timestamp name="lastUpdateTs" column="last_update_ts" />
+		<property name="owner" column="owner" />
+		<property name="deleted" column="deleted" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+
+		<property name="text" column="TEXT" />
+		
+		<many-to-one name="noteEntry" column="NOTE_ID" class="NoteEntry" not-null="true" />
+		
+		<filter name="hideDeleted" />
+	</class>
+</hibernate-mapping>

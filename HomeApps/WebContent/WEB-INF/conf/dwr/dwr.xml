@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://getahead.org/dwr/dwr20.dtd">
+<dwr>
+	<allow>
+		<convert converter="hibernate3" match="my.webapp.homeapps.entity.system.*" />
+		<convert converter="hibernate3" match="my.webapp.homeapps.entity.calendar.*" />
+		<convert converter="hibernate3" match="my.webapp.homeapps.entity.houseitem.*" />
+		<convert converter="hibernate3" match="my.webapp.homeapps.entity.bankaccount.*" />
+		<convert converter="hibernate3" match="my.webapp.homeapps.entity.cooking.*" />
+
+		<create creator="new" javascript="calendarDao">
+			<param name="class" value="my.webapp.homeapps.dao.CalendarDao" />
+		</create>
+
+		<create creator="new" javascript="HouseItemDao">
+			<param name="class" value="my.webapp.homeapps.dao.HouseItemDao" />
+		</create>
+
+		<create creator="new" javascript="BankAccountDao">
+			<param name="class" value="my.webapp.homeapps.dao.BankAccountDao" />
+		</create>
+
+		<create creator="new" javascript="CookingDao">
+			<param name="class" value="my.webapp.homeapps.dao.CookingDao" />
+		</create>
+
+		<create creator="new" javascript="QueryDao">
+			<param name="class" value="my.webapp.homeapps.dao.QueryDao" />
+		</create>
+	</allow>
+</dwr>

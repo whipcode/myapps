@@ -1,0 +1,6 @@
+body {width:300px;margin:0 auto}
+h1 {text-align:center}
+input[type=text],input[type=password] {border-radius:5px;padding:2px 4px;border:0;box-shadow:inset 1px 1px 5px #666}
+.WuiTextField > label {display:inline-block;width:100px;text-align:left}
+.WuiPasswordField > label {display:inline-block;width:100px;text-align:left}
+#buttonPanel {padding-top:15px;padding-left:50px}

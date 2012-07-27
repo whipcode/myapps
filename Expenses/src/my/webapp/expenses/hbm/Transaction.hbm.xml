@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.expenses.entity">
+	<class name="Transaction" table="TRANX">
+		<id name="id" column="id"><generator class="native" /></id>
+		<timestamp name="lastUpdateTs" column="last_update_ts" />
+		<property name="owner" column="owner" />
+		<property name="deleted" column="deleted" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+
+		<property name="tranDate" column="TRAN_DATE" />
+		<property name="tranType" column="TRAN_TYPE" />
+		<property name="amount" column="AMOUNT" />
+		<property name="desc" column="DESCR" />
+		<property name="tranxCatg" column="TRANX_CATG" />
+		<property name="remarks" column="REMARKS" />
+		<property name="repeatKey" column="REPEAT_KEY" />
+		
+		<many-to-one name="tranxAcc" column="TRANX_ACC_ID" class="Account" />
+		<many-to-one name="settleAcc" column="SETTLE_ACC_ID" class="Account" />
+		<property name="settleDate" column="SETTLE_DATE" />
+		<many-to-one name="claimAcc" column="CLAIM_ACC_ID" class="Account" />
+		<property name="claimDate" column="CLAIM_DATE" />
+		<many-to-one name="transferAcc" column="TRANSFER_ACC_ID" class="Account" />
+		<many-to-one name="investmentAcc" column="INVESTMENT_ACC_ID" class="Account" />
+
+		<many-to-one name="reminder" column="REMINDER_ID" class="Reminder" />
+		
+		<filter name="hideDeleted" />
+	</class>
+</hibernate-mapping>

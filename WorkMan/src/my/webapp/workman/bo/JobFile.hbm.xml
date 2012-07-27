@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.workman.bo">
+	<class name="JobFile" table="JOBFILE">
+		<id name="id" column="id"><generator class="native" /></id>
+		<timestamp name="lastUpdateTs" column="last_update_ts" />
+		<property name="owner" column="owner" />
+		<property name="deleted" column="deleted" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+
+		<property name="filename" column="FILENAME" />
+		<property name="status" column="STATUS" />
+		<property name="startDate" column="START_DATE" />
+		<property name="endDate" column="END_DATE" />
+		<property name="remarks" column="REMARKS" />
+		
+		<set name="weekFocuses" inverse="true">
+			<key column="JOBFILE_ID" />
+			<one-to-many class="WeekFocus" />
+		</set>
+		
+		<set name="weekTasks" inverse="true">
+			<key column="JOBFILE_ID" />
+			<one-to-many class="WeekTask" />
+		</set>
+		
+		<set name="todayTasks" inverse="true">
+			<key column="JOBFILE_ID" />
+			<one-to-many class="TodayTask" />
+		</set>
+		
+		<set name="jobs" inverse="true">
+			<key column="JOBFILE_ID" />
+			<one-to-many class="Job" />
+		</set>
+		
+		<set name="noteEntries" inverse="true">
+			<key column="JOBFILE_ID" />
+			<one-to-many class="NoteEntry" />
+		</set>
+		
+		<filter name="hideDeleted" />
+		<filter name="owner" condition=":owner = OWNER" />
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.homeapps.entity.bankaccount">
+	<class name="Balance" table="ACC_BALANCE">
+
+		<id name="id" column="id">
+			<generator class="native" />
+		</id>
+		<property name="month" column="month" />
+		<property name="type" column="type" />
+		<property name="amount" column="amount" />
+		<property name="remarks" column="remarks" />
+		<many-to-one name="account" column="account_id" class="Account" not-null="true" />
+
+		<property name="deleteMark" column="delete_mark" />
+		<property name="deleteTs" column="delete_ts" />
+		<property name="deleteUr" column="delete_ur" />
+		<property name="lastUpdateTs" column="last_update_ts" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+	</class>
+</hibernate-mapping>

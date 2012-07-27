@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.workman.bo">
+	<class name="CountryDay" table="COUNTRY_DAY">
+
+		<id name="id" column="id">
+			<generator class="native" />
+		</id>
+		<property name="date" column="DATE" />
+		<property name="name" column="NAME" />
+		<property name="abv" column="ABV" />
+		<property name="checked" column="CHECKED" />
+		<property name="pubHoliday" column="PUB_HOLIDAY" />
+		<many-to-one name="countryCalendar" column="country_caln_id" class="CountryCalendar" not-null="true" />
+
+		<property name="verNo" column="ver_no" />
+		<property name="ownerId" column="owner_id" />
+		<property name="deleteMark" column="delete_mark" />
+		<property name="lastUpdateTs" column="last_update_ts" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+
+		<filter name="deleteMarkFilter" />
+	</class>
+</hibernate-mapping>

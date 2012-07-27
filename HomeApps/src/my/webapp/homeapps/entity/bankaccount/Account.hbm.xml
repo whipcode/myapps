@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="my.webapp.homeapps.entity.bankaccount">
+	<class name="Account" table="BANKACC">
+
+		<id name="id" column="id">
+			<generator class="native" />
+		</id>
+		<timestamp name="lastUpdateTs" column="last_update_ts" />
+		<property name="accName" column="acc_name" />
+		<property name="assetCategory" column="ASSET_CATG" />
+		<property name="assetName" column="ASSET_NAME" />
+		<property name="owner" column="OWNER" />
+		<property name="mailTo" column="MAILTO" />
+		
+		<set name="monthlyBalances" order-by="month" lazy="false" inverse="true" cascade="all" >
+			<key column="account_id" />
+			<one-to-many class="Balance" />
+			<filter name="yearMonthFilter" condition=":year = year(month) and :month = month(month)"/>
+		</set>
+		<set name="transactions" order-by="bankDate" lazy="false" inverse="true" cascade="all" >
+			<key column="account_id" />
+			<one-to-many class="Transaction" />
+			<filter name="yearMonthFilter" condition=":year = year(bank_date) and :month = month(bank_date)"/>
+		</set>
+		<set name="budgets" order-by="date" lazy="false" inverse="true" cascade="all" >
+			<key column="account_id" />
+			<one-to-many class="Budget" />
+			<filter name="yearMonthFilter" condition=":year = year(budget_date) and :month = month(budget_date)"/>
+		</set>
+
+		<property name="deleteMark" column="delete_mark" />
+		<property name="deleteTs" column="delete_ts" />
+		<property name="deleteUr" column="delete_ur" />
+		<property name="lastUpdateUr" column="last_update_ur" />
+		
+		<filter name="hideDeleted" />
+	</class>
+</hibernate-mapping>
