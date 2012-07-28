@@ -4,6 +4,7 @@ View = Backbone.View.extend({
 		if (!this.views) this.views = {};
 		if (typeof(id) != 'undefined') this.views[id] = view;
 		this.$el.append(view.el);
+		view.parent = this; 
 		
 		return view;
 	},
@@ -12,8 +13,18 @@ View = Backbone.View.extend({
 		var view = new View(options);
 		if (typeof(id) != 'undefined') this.views[id] = view;
 		this.$el.before(view.$el);
+		view.parent = this.parent;
 		
 		return view;
+	},
+	
+	findParent:function(Parent) {
+		if (this.parent instanceof Parent)
+			return this.parent;
+		else if (this.parent)
+			return this.parent.findParent(Parent);
+		else
+			return null;
 	},
 	
 	getView:function(id) {
@@ -21,6 +32,19 @@ View = Backbone.View.extend({
 			return this.views[id];
 		else
 			return null;
+	},
+	
+	findView:function(id) {
+		if (this.views[id])
+			return this.views[id];
+		
+		for (var a in this.views) {
+			var view = this.views[a].findView(id);
+			if (view)
+				return view;
+		}
+		
+		return null;
 	},
 	
 	html:function(innerHTML) {

@@ -45,15 +45,15 @@ Main = View.extend({
 	},
 	
 	getSelectedAccount:function() {
-		return this.getView('appWrapper').getView('pageMenu').getView('accountPicker').getSelectedModel();
+		return this.findView('pageMenu').findView('accountPicker').getSelectedModel();
 	},
 	
 	getSelectedYear:function() {
-		return this.getView('appWrapper').getView('pageMenu').getView('year').val();
+		return this.findView('pageMenu').findView('year').val();
 	},
 	
 	getSelectedMonth:function() {
-		return this.getView('appWrapper').getView('taskViews').getView('transactionView').getView('menu').getView('monthPicker').getSelectedMonth();
+		return this.findView('taskViews').findView('transactionView').findView('menu').findView('monthPicker').getSelectedMonth();
 	},
 	
 	editAccount:function(account) {
@@ -95,7 +95,7 @@ Main = View.extend({
 		},
 		
 		cbBtnEditAccClick:function() {
-			var accountPicker = this.getView('accountPicker');
+			var accountPicker = this.findView('accountPicker');
 			var account = accountPicker.getSelectedModel();
 			
 			page.editAccount(account);
@@ -143,7 +143,7 @@ Main = View.extend({
 				},
 				
 				getSelectedMonth:function() {
-					return this.getView('picker').getSelectedIdx();
+					return this.findView('picker').getSelectedIdx();
 				},
 				
 				events:{
@@ -255,6 +255,21 @@ Main = View.extend({
 				this.append(Link, {label:'Reminders', className:'LnkReminders'}, 'lnkReminders');
 				
 				return this;
+			},
+			
+			events:{
+				'click .LnkAccountSummary':'cbLnkAccountSummaryClick',
+				'click .LnkAssetSummary':'cbLnkAssetSummaryClick',
+				'click .LnkReminders':'cbLnkRemindersClick',
+			},
+			
+			cbLnkAccountSummaryClick:function() {
+			},
+			
+			cbLnkAssetSummaryClick:function() {
+			},
+			
+			cbLnkRemindersClick:function() {
 			}
 		}),
 		
@@ -358,7 +373,7 @@ Main = View.extend({
 		},
 		
 		save:function(cbSuccess, cbFailed) {
-			var editor = this.getView('editor');
+			var editor = this.findView('editor');
 			var defSettleAcc = editor.get('fldDefSettleAcc').getSelectedModel();
 			
 			this.model.set({
@@ -434,7 +449,7 @@ Main = View.extend({
 		},
 		
 		save:function(cbSuccess, cbFailed) {
-			var editor = this.getView('editor');
+			var editor = this.findView('editor');
 			var tranxAcc = page.getSelectedAccount();
 			var settleAcc = editor.get('fldSettleAcc').getSelectedModel();
 			
