@@ -131,8 +131,8 @@ AmountInput = View.extend({
 	
 	initialize:function() {
 		this.$el.attr('type','text');
-		if (typeof(this.options.date) != 'undefined')
-			this.val(this.options.value);
+		if (typeof(this.options.amount) != 'undefined')
+			this.val(this.options.amount);
 		else
 			this.val(0);
 	},

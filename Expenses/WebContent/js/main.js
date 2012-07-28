@@ -191,6 +191,14 @@ Main = View.extend({
 					this.append(Paragraph, {text:util.formatDate(this.model.get('tranDate'), "$(Mmm) $(dd)")}, 'tranDate');
 					this.append(Paragraph, {text:this.model.get('desc')}, 'desc');
 					this.append(Paragraph, {text:util.formatAmount(this.model.get('amount'))}, 'amount');
+				},
+				
+				events:{
+					'click':'cbClick'
+				},
+				
+				cbClick:function() {
+					page.editTransaction(this.model);
 				}
 			})
 		}),
@@ -386,7 +394,7 @@ Main = View.extend({
 				editor.add(PickerField, {label:'Transaction Type', options:bu.getTranTypes(), value:this.model.get('tranType')}, 'fldTranType');
 				editor.add(TextField, {label:'Category', text:this.model.get('tranxCatg')}, 'fldTranxCatg');
 				editor.add(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
-				editor.add(AmountField, {label:'Amount', text:this.model.get('amount')}, 'fldAmount');
+				editor.add(AmountField, {label:'Amount', amount:this.model.get('amount')}, 'fldAmount');
 				editor.add(TextField, {label:'Remarks', text:this.model.get('remarks')}, 'fldRemarks');
 				editor.add(CollectionPickerField, 
 					{
