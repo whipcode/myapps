@@ -239,6 +239,10 @@ Main = View.extend({
 			return this;
 		},
 		
+		switchView:function(id) {
+			this.findView('summaries').setActiveView(id);
+		},
+		
 		Navigator:View.extend({
 			tagName:'div',
 			className:'Navigator',
@@ -264,12 +268,21 @@ Main = View.extend({
 			},
 			
 			cbLnkAccountSummaryClick:function() {
+				var summaryView = this.findParent('summaryView');
+				if (summaryView)
+					summaryView.switchView('accountSummary');
 			},
 			
 			cbLnkAssetSummaryClick:function() {
+				var summaryView = this.findParent('summaryView');
+				if (summaryView)
+					summaryView.switchView('assettSummary');
 			},
 			
 			cbLnkRemindersClick:function() {
+				var summaryView = this.findParent('summaryView');
+				if (summaryView)
+					summaryView.switchView('reminders');
 			}
 		}),
 		

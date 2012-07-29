@@ -2,7 +2,10 @@ View = Backbone.View.extend({
 	append:function(View, options, id) {
 		var view = new View(options);
 		if (!this.views) this.views = {};
-		if (typeof(id) != 'undefined') this.views[id] = view;
+		if (typeof(id) != 'undefined') {
+			view.id = id;
+			this.views[id] = view;
+		}
 		this.$el.append(view.el);
 		view.parent = this; 
 		
@@ -11,15 +14,18 @@ View = Backbone.View.extend({
 	
 	insertAbove:function(View, options, id) {
 		var view = new View(options);
-		if (typeof(id) != 'undefined') this.views[id] = view;
+		if (typeof(id) != 'undefined') {
+			view.id = id;
+			this.views[id] = view;
+		}
 		this.$el.before(view.$el);
 		view.parent = this.parent;
 		
 		return view;
 	},
 	
-	findParent:function(Parent) {
-		if (this.parent instanceof Parent)
+	findParent:function(id) {
+		if (this.parent.id == id)
 			return this.parent;
 		else if (this.parent)
 			return this.parent.findParent(Parent);
