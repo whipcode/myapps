@@ -12,6 +12,19 @@ View = Backbone.View.extend({
 		return view;
 	},
 	
+	prepend:function(View, options, id) {
+		var view = new View(options);
+		if (!this.views) this.views = {};
+		if (typeof(id) != 'undefined') {
+			view.id = id;
+			this.views[id] = view;
+		}
+		this.$el.prepend(view.el);
+		view.parent = this; 
+		
+		return view;
+	},
+		
 	insertAbove:function(View, options, id) {
 		var view = new View(options);
 		if (typeof(id) != 'undefined') {
@@ -94,6 +107,23 @@ Paragraph = View.extend({
 	}
 });
 
+Amount = View.extend({
+	tagName:'span',
+	dp:2,
+	
+	initialize:function() {
+		if (typeof(this.options.value) != 'undefined')
+			this.val(this.options.value);
+	},
+	
+	val:function(value) {
+		if (typeof(value) != 'undefined')
+			this.html(util.formatAmount(value, this.dp));
+		else
+			return util.str2Amount(this.html());
+	}
+});
+
 Span = View.extend({
 	tagName:'span',
 	
@@ -113,6 +143,74 @@ Link = View.extend({
 		if (typeof(this.options.href) != 'undefined')
 			this.$el.attr('href', this.options.href);
 	}
+});
+
+Table = View.extend({
+	tagName:'table',
+	
+	addHeader:function(options) {
+		return this.append(Table.Header, options, 'header');
+	},
+	
+	addBody:function(options) {
+		return this.append(Table.Body, options, 'body');
+	},
+	
+	addFooter:function(options) {
+		return this.append(Table.Footer, options, 'footer');
+	},
+	
+	addRow:function(options) {
+		if (this.views.footer)
+			return this.views.footer.addRow(options);
+		else if (this.views.body)
+			return this.views.body.addRow(options);
+		else if (this.views.header)
+			return this.views.header.addRow(options);
+		else {
+			return this.addBody().addRow(options);
+		}
+	}
+});
+
+
+TableHeader = View.extend({
+	tagName:'thead',
+	
+	addRow:function(options) {
+		return this.append(Table.Row, options);
+	}
+});
+
+TableBody = View.extend({
+	tagName:'tbody'
+});
+
+TableFooter = View.extend({
+	tagName:'tfoot'
+});
+
+TableRow = View.extend({
+	tagName:'tr'
+});
+
+TableHeaderCell = View.extend({
+	tagName:'th',
+	
+	initialize:function() {
+		if (this.options.text)
+			this.html(this.options.text);
+	}
+});
+
+TableCell = View.extend({
+	tagName:'td',
+	
+	initialize:function() {
+		if (this.options.text)
+			this.html(this.options.text);
+	}
+
 });
 
 TextInput = View.extend({
@@ -533,6 +631,8 @@ ViewsWrapper = View.extend({
 		
 		if (this.views[this.$el.attr('activeView')] && this.views[this.$el.attr('activeView')].onActivate)
 			this.views[this.$el.attr('activeView')].onActivate();
+
+		this.$el.attr('class', this.$el.attr('class'));
 
 		return this;
 	},

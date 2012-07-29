@@ -1,6 +1,13 @@
 bu = {
 	businessCodes:{},
 	
+	TRANTYPE:{
+		EXPENDITURE:0,
+		INCOME:1,
+		INVESTMENT:2,
+		TRANSFER:3
+	},
+	
 	init:function(cbSuccess, cbFailed) {
 		var _this = this;
 		
@@ -24,5 +31,9 @@ bu = {
 	
 	getTranTypes:function() {
 		return this.businessCodes.tranTypes;
+	},
+	
+	getTranType:function(idx) {
+		return this.businessCodes.tranTypes[idx];
 	}
 };

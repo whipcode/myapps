@@ -9,6 +9,7 @@ datastore = {
 		this.data.balances = new Balances();
 		this.data.transactions = new Transactions();
 		this.data.listedTransactions = new Transactions();
+		this.data.accountSummary = this.initAccountSummary();
 		this.data.transactionsByMonthByAccount = {};
 		this.data.reminders = new Reminders();
 	},
@@ -83,11 +84,14 @@ datastore = {
 		var _this = this;
 		
 		this.selectedYear = year;
+		this.selectedAccount = selectedAccount;
+		this.selectedMonth = selectedMonth;
 		
 		ServerApi.loadTransactions(this.selectedYear, {
 			callback:function (_data) {
 				_this.data.transactions.reset(_data);
-				_this.resetListedTransactions(selectedAccount, selectedMonth);
+				_this.resetListedTransactions();
+				_this.resetAccountSummary();
 				if (cbSuccess) cbSuccess();
 			},
 			errorHandler:function(msg) {
@@ -97,16 +101,46 @@ datastore = {
 		});
 	},
 	
-	resetListedTransactions:function(selectedAccount, selectedMonth) {
+	resetListedTransactions:function() {
 		var listedTransactions = [];
-		this.selectedAccount = selectedAccount;
-		this.selectedMonth = selectedMonth;
 
 		for (var i=0; i<this.data.transactions.length; i++) {
 			listedTransactions.push(this.data.transactions.at(i));
 		}
 		
 		this.data.listedTransactions.reset(listedTransactions);
+	},
+	
+	initAccountSummary:function() {
+		var accountSummary = new Model();
+		var openings = new Collection();
+		var sections = new Collection();
+		var closings = new Collection();
+		
+//		for (var i=0; i<12; i++) {
+//			openings.add(new Model());
+//			closings.add(new Model());
+//		}
+//		
+		/* Prepare sections */
+		var tranTypes = bu.getTranTypes();
+		for (var i=0; i<tranTypes.length; i++) {
+			var section = new Collection();
+			sections.add(section);
+		}
+		
+		accountSummary.set('openings', openings);
+		accountSummary.set('sections', sections);
+		accountSummary.set('closings', closings);
+		
+		return accountSummary;
+	},
+	
+	resetAccountSummary:function() {
+		var openings = this.data.accountSummary.get('openings');
+		var sections = this.data.accountSummary.get('sections');
+		var closings = this.data.accountSummary.get('closings');
+		
 	},
 	
 	getTransactions:function() {
@@ -117,15 +151,8 @@ datastore = {
 		return this.data.listedTransactions;
 	},
 	
-	getAccountTransactions:function(account, month) {
-		if (!this.data.transactionByMonthByAccount[month])
-			this.data.transactionByMonthByAccount[month] = {};
-		
-		if (!this.data.transactionByMonthByAccount[month][account.get('id')]) {
-			this.data.transactionByMonthByAccount[month][account.get('id')] = new Transactions();
-		}
-		
-		return this.data.transactionByMonthByAccount[month][account.get('id')];
+	getAccountSummary:function() {
+		return this.data.accountSummary;
 	},
 	
 	getTransaction:function(i) {

@@ -19,6 +19,10 @@ util = {
 		return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 	},
 	
+	getMonthName:function(idx) {
+		return this.getMonthNames()[idx];
+	},
+	
 	showError:function(msg) {
 		console.error(msg);
 		alert(msg);

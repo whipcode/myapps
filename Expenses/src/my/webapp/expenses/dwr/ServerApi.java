@@ -54,6 +54,7 @@ public class ServerApi {
 		Session session = DbUtil.beginTranx();
 		
 		try {
+			/* Get transactions of all accounts in a year to facilitate Asset Summary */
 			System.out.println("year:" + year);
 			transactions = session.createCriteria(Transaction.class).list();
 			DbUtil.commit(session);

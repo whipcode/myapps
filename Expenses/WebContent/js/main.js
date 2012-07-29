@@ -72,6 +72,7 @@ Main = View.extend({
 		className:'PageMenu',
 		
 		initialize:function() {
+			this.append(TextField, {label:'Year', className:'PickYear', text:new Date().getFullYear()}, 'year');
 			this.append(CollectionPickerField, 
 				{
 					label:'Account', 
@@ -80,7 +81,6 @@ Main = View.extend({
 					displayField:'name'
 				}, 
 				'accountPicker');
-			this.append(TextField, {label:'Year', className:'PickYear', text:new Date().getFullYear()}, 'year');
 			this.append(Button, {label:'New',className:'BtnNewAcc'}, 'btnNewAcc');
 			this.append(Button, {label:'Edit',className:'BtnEditAcc'}, 'btnEditAcc');
 		},
@@ -107,15 +107,9 @@ Main = View.extend({
 		className:'TransactionView',
 		
 		initialize:function() {
-			this.render();
-		},
-		
-		render:function() {
 			this.append(this.Menu, {}, 'menu');
 			this.append(this.TransactionList, {}, 'transactionList');
 			this.append(this.FootMenu, {}, 'footMenu');
-			
-			return this;
 		},
 		
 		Menu:View.extend({
@@ -123,14 +117,8 @@ Main = View.extend({
 			className:'Menu',
 			
 			initialize:function() {
-				this.render();
-			},
-			
-			render:function() {
 				this.append(this.MonthPicker, {}, 'monthPicker');
 				this.append(PickerField, {label:'Filter', className:'PickFilter', options:[]}, 'pickFilter');
-				
-				return this;
 			},
 			
 			MonthPicker:View.extend({
@@ -226,17 +214,11 @@ Main = View.extend({
 		className:'SummaryView',
 		
 		initialize:function() {
-			this.render();
-		},
-		
-		render:function() {
 			this.append(this.Navigator, {}, 'navigator');
 			this.append(ViewsWrapper, {className:'Summaries'}, 'summaries')
 				.addView(this.AccountSummary, {}, 'accountSummary')
 				.addView(this.AssetSummary, {}, 'assetSummary')
 				.setActiveView('accountSummary');
-			
-			return this;
 		},
 		
 		switchView:function(id) {
@@ -248,17 +230,9 @@ Main = View.extend({
 			className:'Navigator',
 			
 			initialize:function() {
-				this.render();
-			},
-			
-			render:function() {
-				this.html('');
-				
 				this.append(Link, {label:'Account Summary', className:'LnkAccountSummary'}, 'lnkAccountSummary');
 				this.append(Link, {label:'Asset Summary', className:'LnkAssetSummary'}, 'lnkAssetSummary');
 				this.append(Link, {label:'Reminders', className:'LnkReminders'}, 'lnkReminders');
-				
-				return this;
 			},
 			
 			events:{
@@ -291,20 +265,161 @@ Main = View.extend({
 			className:'AccountSummary',
 			
 			initialize:function() {
-				this.render();
-			},
-			
-			render:function() {
-				this.html('');
-				
-				return this;
+				this.model = datastore.getAccountSummary();
+
+				var table = this.append(Table, {}, 'table');
+				if (table) {
+					table.append(this.AccountSummaryHeader, {}, 'header');
+					table.append(this.AccountSummaryOpening, {collection:this.model.get('openings')}, 'opening');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INCOME), collection:this.model.get('sections').at(bu.TRANTYPE.INCOME)}, 'incomes');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.EXPENDITURE), collection:this.model.get('sections').at(bu.TRANTYPE.EXPENDITURE)}, 'expenditures');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INVESTMENT), collection:this.model.get('sections').at(bu.TRANTYPE.INVESTMENT)}, 'investments');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.TRANSFER), collection:this.model.get('sections').at(bu.TRANTYPE.TRANSFER)}, 'transfers');
+					table.append(this.AccountSummaryClosing, {collection:this.model.get('closings')}, 'closing');
+				}
 			},
 			
 			onActivate:function() {
 			},
 			
 			onInactivate:function() {
-			}
+			},
+			
+			AccountSummaryHeader:View.extend({
+				tagName:'thead',
+				className:'Header',
+				
+				initialize:function() {
+					var row = this.append(TableRow);
+					
+					row.append(TableCell, {className:'ColName'});
+					
+					for (var i=0; i<12; i++)
+						row.append(TableCell, {className:'ColMonth'}).html(util.getMonthName(i));
+				}
+			}),
+			
+			AccountSummaryOpening:View.extend({
+				tagName:'thead',
+				className:'Opening',
+				
+				initialize:function() {
+					this.collection.bind('reset', this.refresh, this);
+					var row = this.append(TableRow, {}, 'row');
+					
+					row.append(TableHeaderCell, {className:'ColName',text:'Opening'});
+					
+					for (var i=0; i<this.collection.length; i++) {
+						row.append(this.OpeningCell, {className:'ColMonth', model:this.collection.at(i)});
+					}
+				},
+				
+				refresh:function() {
+				},
+				
+				OpeningCell:View.extend({
+					tagName:'td',
+					
+					initialize:function() {
+						this.model.bind('change', this.cbChange, this);
+						
+						this.append(AmountInput);
+					},
+					
+					refresh:function() {
+					}
+				})
+			}),
+			
+			AccountSummarySection:View.extend({
+				tagName:'tbody',
+				className:'Section',
+				
+				initialize:function() {
+					this.collection.bind('reset', this.refresh, this);
+					this.refresh();
+				},
+				
+				refresh:function() {
+					this.html('');
+
+					this.subtotals = new Collection();
+					for (var i=0; i<12; i++) {
+						var subtotal = new Model();
+						subtotal.set('amount',0.00);
+						this.subtotals.add(subtotal);
+					}
+
+					for (var i=0; i<this.collection.length; i++) {
+						var catg = this.collection.at(i);
+						var subtotals = catg.get('subtotals');
+						
+						var row = this.append(TableRow);
+						if (row) {
+							row.append(TableHeaderCell, {className:'ColName',text:cat.get('name')});
+							
+							for (var i=0; i<subtotals.length; i++) {
+								row.append(this.AmountCell, {className:'ColMonth', model:subtotals.at(i)});
+							}
+						}
+					}
+					
+					var row = this.prepend(TableRow);
+					if (row) {
+						row.append(TableHeaderCell, {className:'ColName',text:this.options.sectionName});
+						
+						for (var i=0; i<12; i++) {
+							row.append(this.AmountCell, {className:'ColMonth', model:this.subtotals.at(i)});
+						}
+					}
+				},
+				
+				AmountCell:View.extend({
+					tagName:'td',
+					
+					initialize:function() {
+						this.model.bind('change', this.cbChange, this);
+						
+						this.append(Amount, {value:this.model.get('amount')}, 'amount');
+					},
+					
+					refresh:function() {
+						this.findView('amount').val(this.model.get('amount'));
+					}
+				})
+			}),
+			
+			AccountSummaryClosing:View.extend({
+				tagName:'tfoot',
+				className:'Closing',
+				
+				initialize:function() {
+					this.collection.bind('reset', this.refresh, this);
+					var row = this.append(TableRow, {}, 'row');
+					
+					row.append(TableHeaderCell, {className:'ColName',text:'Closing'});
+					
+					for (var i=0; i<this.collection.length; i++) {
+						row.append(this.ClosingCell, {className:'ColMonth', model:this.collection.at(i)});
+					}
+				},
+				
+				refresh:function() {
+				},
+				
+				ClosingCell:View.extend({
+					tagName:'td',
+					
+					initialize:function() {
+						this.model.bind('change', this.cbChange, this);
+						
+						this.append(AmountInput);
+					},
+					
+					refresh:function() {
+					}
+				})
+			})
 		}),
 		
 		AssetSummary:View.extend({
@@ -312,13 +427,6 @@ Main = View.extend({
 			className:'AssetSummary',
 			
 			initialize:function() {
-				this.render();
-			},
-			
-			render:function() {
-				this.html('');
-				
-				return this;
 			},
 			
 			onActivate:function() {

@@ -6,8 +6,8 @@ public class Transaction extends Base {
 	public static final String[] TRANTYPES = {
 		"Expenditure",	/* support settleAcc and claimAcc. settleAcc will debit the same amount as the transaction; claimAcc will be debit with the amount but the tranxAcc/settleAcc will be level-set */
 		"Income",
-		"Transfer",	/* transferAcc will be credited */
-		"Investment"	/* amount will be transfered to investmentAcc */
+		"Investment",	/* amount will be transfered to investmentAcc */
+		"Transfer"	/* transferAcc will be credited */
 	};
 	
 	private Date tranDate;
