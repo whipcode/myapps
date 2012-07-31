@@ -125,13 +125,12 @@ datastore = {
 		/* Prepare sections */
 		var tranTypes = bu.getTranTypes();
 		for (var i=0; i<tranTypes.length; i++) {
-			var section = new Collection();
+			var section = new Model();
+			section.set({transactions:new Transactions()});
 			sections.add(section);
 		}
 		
-		accountSummary.set('openings', openings);
-		accountSummary.set('sections', sections);
-		accountSummary.set('closings', closings);
+		accountSummary.set({openings:openings, sections:sections, closings:closings});
 		
 		return accountSummary;
 	},
@@ -140,6 +139,12 @@ datastore = {
 		var openings = this.data.accountSummary.get('openings');
 		var sections = this.data.accountSummary.get('sections');
 		var closings = this.data.accountSummary.get('closings');
+		
+		var tranTypes = bu.getTranTypes();
+		for (var i=0; i<tranTypes.length; i++) {
+			var section = sections.at(i);
+			section.set({'transactions':this.data.transactions});
+		}
 		
 	},
 	

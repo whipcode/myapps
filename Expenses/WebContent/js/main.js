@@ -271,10 +271,10 @@ Main = View.extend({
 				if (table) {
 					table.append(this.AccountSummaryHeader, {}, 'header');
 					table.append(this.AccountSummaryOpening, {collection:this.model.get('openings')}, 'opening');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INCOME), collection:this.model.get('sections').at(bu.TRANTYPE.INCOME)}, 'incomes');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.EXPENDITURE), collection:this.model.get('sections').at(bu.TRANTYPE.EXPENDITURE)}, 'expenditures');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INVESTMENT), collection:this.model.get('sections').at(bu.TRANTYPE.INVESTMENT)}, 'investments');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.TRANSFER), collection:this.model.get('sections').at(bu.TRANTYPE.TRANSFER)}, 'transfers');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INCOME), model:this.model.get('sections').at(bu.TRANTYPE.INCOME)}, 'incomes');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.EXPENDITURE), model:this.model.get('sections').at(bu.TRANTYPE.EXPENDITURE)}, 'expenditures');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INVESTMENT), model:this.model.get('sections').at(bu.TRANTYPE.INVESTMENT)}, 'investments');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.TRANSFER), model:this.model.get('sections').at(bu.TRANTYPE.TRANSFER)}, 'transfers');
 					table.append(this.AccountSummaryClosing, {collection:this.model.get('closings')}, 'closing');
 				}
 			},
@@ -336,57 +336,49 @@ Main = View.extend({
 				className:'Section',
 				
 				initialize:function() {
-					this.collection.bind('reset', this.refresh, this);
+					this.model.bind('change', this.refresh, this);
 					this.refresh();
 				},
 				
 				refresh:function() {
 					this.html('');
 
-					this.subtotals = new Collection();
-					for (var i=0; i<12; i++) {
-						var subtotal = new Model();
-						subtotal.set('amount',0.00);
-						this.subtotals.add(subtotal);
-					}
-
-					for (var i=0; i<this.collection.length; i++) {
-						var catg = this.collection.at(i);
-						var subtotals = catg.get('subtotals');
+					var transactions = this.model.get('transactions');
+					var subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
+					var categories = {};
+					for (var i=0; i<transactions.length; i++) {
+						var transaction = transactions.at(i);
+						var tranxCatg = transaction.get('tranxCatg');
+						var tranMonth = transaction.get('tranDate').getMonth();
+						var amount = transaction.get('amount');
 						
-						var row = this.append(TableRow);
-						if (row) {
-							row.append(TableHeaderCell, {className:'ColName',text:cat.get('name')});
-							
-							for (var i=0; i<subtotals.length; i++) {
-								row.append(this.AmountCell, {className:'ColMonth', model:subtotals.at(i)});
-							}
-						}
+						if (!categories[tranxCatg]) 
+							categories[tranxCatg] = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
+						
+						categories[tranxCatg][tranMonth] += amount;
+						subtotals[tranMonth] += amount;
 					}
 					
-					var row = this.prepend(TableRow);
+					var row = this.append(TableRow);
 					if (row) {
 						row.append(TableHeaderCell, {className:'ColName',text:this.options.sectionName});
 						
 						for (var i=0; i<12; i++) {
-							row.append(this.AmountCell, {className:'ColMonth', model:this.subtotals.at(i)});
+							row.append(TableCell, {className:'ColMonth', text:util.formatAmount(subtotals[i],2)});
 						}
 					}
-				},
-				
-				AmountCell:View.extend({
-					tagName:'td',
 					
-					initialize:function() {
-						this.model.bind('change', this.cbChange, this);
-						
-						this.append(Amount, {value:this.model.get('amount')}, 'amount');
-					},
-					
-					refresh:function() {
-						this.findView('amount').val(this.model.get('amount'));
+					for (var a in categories) {
+						var row = this.append(TableRow);
+						if (row) {
+							row.append(TableHeaderCell, {className:'ColName',text:a});
+							
+							for (var i=0; i<categories[a].length; i++) {
+								row.append(TableCell, {className:'ColMonth', text:util.formatAmount(categories[a][i],2)});
+							}
+						}
 					}
-				})
+				}
 			}),
 			
 			AccountSummaryClosing:View.extend({
