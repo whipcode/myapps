@@ -204,7 +204,7 @@ Main = View.extend({
 			},
 			
 			cbBtnAddTranxClick:function() {
-				page.editTransaction(new Transaction);
+				page.editTransaction(new Transaction({tranxAcc:page.getSelectedAccount().toJSON()}));
 			}
 		})
 	}),
@@ -271,10 +271,10 @@ Main = View.extend({
 				if (table) {
 					table.append(this.AccountSummaryHeader, {}, 'header');
 					table.append(this.AccountSummaryOpening, {collection:this.model.get('openings')}, 'opening');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INCOME), model:this.model.get('sections').at(bu.TRANTYPE.INCOME)}, 'incomes');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.EXPENDITURE), model:this.model.get('sections').at(bu.TRANTYPE.EXPENDITURE)}, 'expenditures');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INVESTMENT), model:this.model.get('sections').at(bu.TRANTYPE.INVESTMENT)}, 'investments');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.TRANSFER), model:this.model.get('sections').at(bu.TRANTYPE.TRANSFER)}, 'transfers');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INCOME), collection:this.model.get('sections').at(bu.TRANTYPE.INCOME).get('transactions')}, 'incomes');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.EXPENDITURE), collection:this.model.get('sections').at(bu.TRANTYPE.EXPENDITURE).get('transactions')}, 'expenditures');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INVESTMENT), collection:this.model.get('sections').at(bu.TRANTYPE.INVESTMENT).get('transactions')}, 'investments');
+					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.TRANSFER), collection:this.model.get('sections').at(bu.TRANTYPE.TRANSFER).get('transactions')}, 'transfers');
 					table.append(this.AccountSummaryClosing, {collection:this.model.get('closings')}, 'closing');
 				}
 			},
@@ -336,14 +336,14 @@ Main = View.extend({
 				className:'Section',
 				
 				initialize:function() {
-					this.model.bind('change', this.refresh, this);
+					this.collection.bind('reset', this.refresh, this);
 					this.refresh();
 				},
 				
 				refresh:function() {
 					this.html('');
 
-					var transactions = this.model.get('transactions');
+					var transactions = this.collection;
 					var subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
 					var categories = {};
 					for (var i=0; i<transactions.length; i++) {
@@ -517,7 +517,16 @@ Main = View.extend({
 				else
 					editor.setTitle(this.model.get('desc'));
 				
-				editor.add(Paragraph, {tagName:'h2', text:page.getSelectedAccount().get('name')});
+				editor.add(Paragraph, {tagName:'h2', text:this.model.get('tranxAcc').name});
+				editor.add(CollectionPickerField, 
+					{
+						label:'Account', 
+						collection:datastore.getAccounts(), 
+						displayField:'name', 
+						withBlank:false, 
+						selectedId:this.model.get('tranxAcc')?this.model.get('tranxAcc').id:0
+					}, 
+					'fldTranxAcc');
 				editor.add(DateField, {label:'Transaction Date', date:this.model.get('tranDate')}, 'fldTranDate');
 				editor.add(PickerField, {label:'Transaction Type', options:bu.getTranTypes(), value:this.model.get('tranType')}, 'fldTranType');
 				editor.add(TextField, {label:'Category', text:this.model.get('tranxCatg')}, 'fldTranxCatg');
@@ -530,7 +539,7 @@ Main = View.extend({
 						collection:datastore.getAccounts(), 
 						displayField:'name', 
 						withBlank:true, 
-						selectModel:this.model.get('settleAcc')
+						selectedId:this.model.get('settleAcc')?this.model.get('settleAcc').id:0
 					}, 
 					'fldSettleAcc');
 				editor.add(CheckboxField, {label:'Delete?', checked:this.model.get('deleted')}, 'fldDelete');
@@ -563,7 +572,7 @@ Main = View.extend({
 		
 		save:function(cbSuccess, cbFailed) {
 			var editor = this.findView('editor');
-			var tranxAcc = page.getSelectedAccount();
+			var tranxAcc = editor.get('fldTranxAcc').getSelectedModel();
 			var settleAcc = editor.get('fldSettleAcc').getSelectedModel();
 			
 			this.model.set({

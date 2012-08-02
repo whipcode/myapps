@@ -399,6 +399,8 @@ CollectionPicker = View.extend({
 			this.add(this.collection.at(i));
 			if (this.options.selectModel && this.collection.at(i).get('id') == this.options.selectModel.get('id'))
 				this.idx(i + this.options.withBlank?1:0);
+			else if (this.options.selectedId && this.collection.at(i).get('id') == this.options.selectedId)
+				this.idx(i + this.options.withBlank?1:0);
 		}
 		
 		if (this.options.idx)

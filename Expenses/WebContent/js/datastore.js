@@ -141,11 +141,23 @@ datastore = {
 		var closings = this.data.accountSummary.get('closings');
 		
 		var tranTypes = bu.getTranTypes();
+		var tranxCatg = [];
 		for (var i=0; i<tranTypes.length; i++) {
-			var section = sections.at(i);
-			section.set({'transactions':this.data.transactions});
+			tranxCatg.push([]);
 		}
 		
+		var currentAccountId = this.selectedAccount.get('id');
+		for (var i=0; i<this.data.transactions.length; i++) {
+			var transaction = this.data.transactions.at(i);
+			if (transaction.get('tranxAcc') && transaction.get('tranxAcc').id == currentAccountId)
+				tranxCatg[transaction.get('tranType')].push(transaction);
+			else if (transaction.get('settleAcc') && transaction.get('settleAcc').id == currentAccountId)
+				tranxCatg[transaction.get('tranType')].push(transaction);
+		}
+		
+		for (var i=0; i<tranTypes.length; i++) {
+			sections.at(i).get('transactions').reset(tranxCatg[i]);
+		}
 	},
 	
 	getTransactions:function() {
