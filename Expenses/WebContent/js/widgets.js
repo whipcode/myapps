@@ -41,7 +41,7 @@ View = Backbone.View.extend({
 		if (this.parent.id == id)
 			return this.parent;
 		else if (this.parent)
-			return this.parent.findParent(Parent);
+			return this.parent.findParent(id);
 		else
 			return null;
 	},

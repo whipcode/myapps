@@ -135,6 +135,13 @@ Main = View.extend({
 				},
 				
 				events:{
+					'change':'cbChange'
+				},
+				
+				cbChange:function() {
+					var transactionView = this.findParent('transactionView');
+					if (transactionView)
+						transactionView.findView('transactionList').refresh();
 				}
 			})
 		}),
