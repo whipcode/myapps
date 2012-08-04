@@ -37,6 +37,22 @@ bu = {
 		return this.businessCodes.tranTypes[idx];
 	},
 	
+	isSelectedYear:function(transaction, selectedYear) {
+		var tranDateYear = transaction.get('tranDate')?transaction.get('tranDate').getFullYear():-1;
+		var settleDateYear = transaction.get('settleDate')?transaction.get('settleDate').getFullYear():-1;
+		var claimDateYear = transaction.get('claimDate')?transaction.get('claimDate').getFullYear():-1;
+		var transferDateYear = transaction.get('tranDate')?transaction.get('tranDate').getFullYear():-1;
+		var investmentDateYear = transaction.get('tranDate')?transaction.get('tranDate').getFullYear():-1;
+		
+		return (
+			tranDateYear==selectedYear ||
+			settleDateYear==selectedYear ||
+			claimDateYear==selectedYear ||
+			transferDateYear==selectedYear ||
+			investmentDateYear==selectedYear
+			);
+	},
+	
 	isSelectedAccount:function(transaction, selectedAccount) {
 		var selectedAccId = selectedAccount.get('id');
 		

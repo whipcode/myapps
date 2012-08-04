@@ -147,8 +147,8 @@ Main = View.extend({
 				this.collection = datastore.getTransactions();
 				
 				this.collection.bind('reset', this.refresh, this);
-				this.collection.bind('add', this.add, this);
-				this.collection.bind('remove', this.remove, this);
+				this.collection.bind('add', this.refresh, this);
+				this.collection.bind('remove', this.refresh, this);
 			},
 			
 			refresh:function() {

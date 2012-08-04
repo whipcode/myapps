@@ -1,5 +1,6 @@
 datastore = {
 	data:{},
+	selectedYear:0,
 	
 	init:function() {
 		this.data.accounts = new Accounts();
@@ -77,7 +78,8 @@ datastore = {
 	loadTransactions:function(year, cbSuccess, cbFailed) {
 		var _this = this;
 		
-		ServerApi.loadTransactions(year, {
+		this.selectedYear = year;
+		ServerApi.loadTransactions(this.selectedYear, {
 			callback:function (_data) {
 				_this.data.transactions.reset(_data);
 				if (cbSuccess) cbSuccess();
@@ -99,14 +101,8 @@ datastore = {
 		ServerApi.saveTransaction(transaction.toJSON(), {
 			callback:function(_data) {
 				if (!transaction.get('id') && !transaction.get('deleted')) {
-					if (transaction.get('tranDate').getFullYear() == _this.selectedYear) {
+					if (bu.isSelectedYear(transaction, _this.selectedYear)) {
 						_this.data.transactions.add(transaction);
-						
-						if (transaction.get('tranxAcc').id == _this.selectedAccount.get('id')) {
-							if (transaction.get('tranDate').getMonth() == _this.selectedMonth) {
-								_this.data.listedTransactions.add(transaction);
-							}
-						}
 					}
 				}
 				else if (transaction.get('deleted'))
