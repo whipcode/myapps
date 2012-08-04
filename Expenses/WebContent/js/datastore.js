@@ -80,49 +80,13 @@ datastore = {
 	},
 	
 	/* Transactions */
-	loadTransactions:function(year, selectedAccount, selectedMonth, cbSuccess, cbFailed) {
-		var _this = this;
-		
-		this.selectedYear = year;
-		this.selectedAccount = selectedAccount;
-		this.selectedMonth = selectedMonth;
-		
-		ServerApi.loadTransactions(this.selectedYear, {
-			callback:function (_data) {
-				_this.data.transactions.reset(_data);
-				_this.resetListedTransactions();
-				_this.resetAccountSummary();
-				if (cbSuccess) cbSuccess();
-			},
-			errorHandler:function(msg) {
-				util.showError(msg);
-				if (cbFailed) cbFailed(msg);
-			}
-		});
-	},
-	
-	resetListedTransactions:function() {
-		var listedTransactions = [];
-
-		for (var i=0; i<this.data.transactions.length; i++) {
-			listedTransactions.push(this.data.transactions.at(i));
-		}
-		
-		this.data.listedTransactions.reset(listedTransactions);
-	},
-	
 	initAccountSummary:function() {
 		var accountSummary = new Model();
 		var openings = new Collection();
 		var sections = new Collection();
 		var closings = new Collection();
 		
-//		for (var i=0; i<12; i++) {
-//			openings.add(new Model());
-//			closings.add(new Model());
-//		}
-//		
-		/* Prepare sections */
+		/* Prepare Account Summary Sections */
 		var tranTypes = bu.getTranTypes();
 		for (var i=0; i<tranTypes.length; i++) {
 			var section = new Model();
@@ -135,33 +99,81 @@ datastore = {
 		return accountSummary;
 	},
 	
-	resetAccountSummary:function() {
-		var openings = this.data.accountSummary.get('openings');
-		var sections = this.data.accountSummary.get('sections');
-		var closings = this.data.accountSummary.get('closings');
+	loadTransactions:function(year, selectedAccount, selectedMonth, cbSuccess, cbFailed) {
+		var _this = this;
 		
+		this.selectedYear = year;
+		this.selectedAccount = selectedAccount;
+		this.selectedMonth = selectedMonth;
+		
+		ServerApi.loadTransactions(this.selectedYear, {
+			callback:function (_data) {
+				_this.data.transactions.reset(_data);
+				_this.resetTransactions();
+				if (cbSuccess) cbSuccess();
+			},
+			errorHandler:function(msg) {
+				util.showError(msg);
+				if (cbFailed) cbFailed(msg);
+			}
+		});
+	},
+	
+	resetTransactions:function() {
+		var selectedAccId = this.selectedAccount.get('id');
+		var selectedMonth = this.selectedMonth;
+		var listedTransactions = [];
+		var openings = this.data.accountSummary.get('openings');
+		var closings = this.data.accountSummary.get('closings');
+		var sections = this.data.accountSummary.get('sections');
+
+		/* Prepare Account Summary Section arrays */
 		var tranTypes = bu.getTranTypes();
 		var tranxCatg = [];
 		for (var i=0; i<tranTypes.length; i++) {
 			tranxCatg.push([]);
 		}
 		
-		var currentAccountId = this.selectedAccount.get('id');
 		for (var i=0; i<this.data.transactions.length; i++) {
 			var transaction = this.data.transactions.at(i);
-			if (transaction.get('tranxAcc') && transaction.get('tranxAcc').id == currentAccountId)
+			var tranxAccId = transaction.get('tranxAcc')?transaction.get('tranxAcc').id:0;
+			var tranDateMonth = transaction.get('tranDate')?transaction.get('tranDate').getMonth():-1;
+			var settleAccId = transaction.get('settleAcc')?transaction.get('settleAcc').id:0;
+			var settleDateMonth = transaction.get('settleDate')?transaction.get('settleDate').getMonth():-1;
+			var claimAccId = transaction.get('claimAcc')?transaction.get('claimAcc').id:0;
+			var claimDateMonth = transaction.get('claimDate')?transaction.get('claimDate').getMonth():-1;
+			var transferAccId = transaction.get('transferAcc')?transaction.get('transferAcc').id:0;
+			var transferDateMonth = transaction.get('tranDate')?transaction.get('tranDate').getMonth():-1;
+			var investmentAccId = transaction.get('investmentAcc')?transaction.get('investmentAcc').id:0;
+			var investmentDateMonth = transaction.get('tranDate')?transaction.get('tranDate').getMonth():-1;
+
+			/* Set Listed Transactions array */
+			if ((tranxAccId==selectedAccId && tranDateMonth==selectedMonth) || 
+				(settleAccId==selectedAccId  && settleDateMonth==selectedMonth) || 
+				(claimAccId==selectedAccId  && claimDateMonth==selectedMonth) || 
+				(transferAccId==selectedAccId  && transferDateMonth==selectedMonth) || 
+				(investmentAccId==selectedAccId && investmentDateMonth==selectedMonth)
+				) {
+				listedTransactions.push(transaction);
+			}
+			
+			/* Set Account Summary arrays */
+			if (tranxAccId==selectedAccId || settleAccId==selectedAccId || claimAccId==selectedAccId || transferAccId==selectedAccId || investmentAccId==selectedAccId) {
 				tranxCatg[transaction.get('tranType')].push(transaction);
-			else if (transaction.get('settleAcc') && transaction.get('settleAcc').id == currentAccountId)
-				tranxCatg[transaction.get('tranType')].push(transaction);
+			}
+			
+			/* Set Balance array */
 		}
+
+		/* Fill Listed Transactions */
+		this.data.listedTransactions.reset(listedTransactions);
 		
+		/* Fill Account Summary Sections */
 		for (var i=0; i<tranTypes.length; i++) {
 			sections.at(i).get('transactions').reset(tranxCatg[i]);
 		}
-	},
-	
-	getTransactions:function() {
-		return this.data.transactions;
+		
+		/* Fill Balances */
 	},
 	
 	getListedTransactions:function() {
@@ -170,10 +182,6 @@ datastore = {
 	
 	getAccountSummary:function() {
 		return this.data.accountSummary;
-	},
-	
-	getTransaction:function(i) {
-		return this.data.transactions.at(i);
 	},
 	
 	saveTransaction:function(transaction, cbSuccess, cbFailed) {
