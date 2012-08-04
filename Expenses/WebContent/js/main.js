@@ -32,7 +32,7 @@ Main = View.extend({
 	run:function() {
 		datastore.loadAccounts(
 			function /*success*/() {
-				datastore.loadTransactions(page.getSelectedYear(), page.getSelectedAccount(), page.getSelectedMonth(),
+				datastore.loadTransactions(page.getSelectedYear(),
 					function /*success*/() {
 					},
 					function /*failed*/() {
@@ -144,23 +144,24 @@ Main = View.extend({
 			className:'TransactionList',
 			
 			initialize:function() {
-				this.collection = datastore.getListedTransactions();
+				this.collection = datastore.getTransactions();
 				
-				this.collection.bind('add', this.add, this);
 				this.collection.bind('reset', this.refresh, this);
+				this.collection.bind('add', this.add, this);
 				this.collection.bind('remove', this.remove, this);
 			},
 			
 			refresh:function() {
 				this.html('');
-				
+
 				for (var i=0; i<this.collection.length; i++) {
 					this.add(this.collection.at(i));
 				}
 			},
 			
 			add:function(transaction) {
-				this.append(this.TransactionItem, {model:transaction});
+				if (bu.isSelectedMonthAccount(transaction, page.getSelectedAccount(), page.getSelectedMonth()))
+					this.append(this.TransactionItem, {model:transaction});
 			},
 			
 			TransactionItem:View.extend({
@@ -265,17 +266,15 @@ Main = View.extend({
 			className:'AccountSummary',
 			
 			initialize:function() {
-				this.model = datastore.getAccountSummary();
-
 				var table = this.append(Table, {}, 'table');
 				if (table) {
 					table.append(this.AccountSummaryHeader, {}, 'header');
-					table.append(this.AccountSummaryOpening, {collection:this.model.get('openings')}, 'opening');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INCOME), collection:this.model.get('sections').at(bu.TRANTYPE.INCOME).get('transactions')}, 'incomes');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.EXPENDITURE), collection:this.model.get('sections').at(bu.TRANTYPE.EXPENDITURE).get('transactions')}, 'expenditures');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.INVESTMENT), collection:this.model.get('sections').at(bu.TRANTYPE.INVESTMENT).get('transactions')}, 'investments');
-					table.append(this.AccountSummarySection, {sectionName:bu.getTranType(bu.TRANTYPE.TRANSFER), collection:this.model.get('sections').at(bu.TRANTYPE.TRANSFER).get('transactions')}, 'transfers');
-					table.append(this.AccountSummaryClosing, {collection:this.model.get('closings')}, 'closing');
+					table.append(this.AccountSummaryOpening, {}, 'opening');
+					table.append(this.AccountSummarySection, {tranType:bu.TRANTYPE.INCOME}, 'incomes');
+					table.append(this.AccountSummarySection, {tranType:bu.TRANTYPE.EXPENDITURE}, 'expenditures');
+					table.append(this.AccountSummarySection, {tranType:bu.TRANTYPE.INVESTMENT}, 'investments');
+					table.append(this.AccountSummarySection, {tranType:bu.TRANTYPE.TRANSFER}, 'transfers');
+					table.append(this.AccountSummaryClosing, {}, 'closing');
 				}
 			},
 			
@@ -304,17 +303,25 @@ Main = View.extend({
 				className:'Opening',
 				
 				initialize:function() {
+					this.collection = datastore.getBalances();
+					
 					this.collection.bind('reset', this.refresh, this);
-					var row = this.append(TableRow, {}, 'row');
+					this.collection.bind('add', this.refresh, this);
+					this.collection.bind('remove', this.refresh, this);
 					
-					row.append(TableHeaderCell, {className:'ColName',text:'Opening'});
-					
-					for (var i=0; i<this.collection.length; i++) {
-						row.append(this.OpeningCell, {className:'ColMonth', model:this.collection.at(i)});
-					}
 				},
 				
 				refresh:function() {
+					this.html('');
+
+					var row = this.append(TableRow, {}, 'row');
+					if (row) {
+						row.append(TableHeaderCell, {className:'ColName',text:'Opening'});
+						
+						for (var i=0; i<this.collection.length; i++) {
+							row.append(this.OpeningCell, {className:'ColMonth', model:this.collection.at(i)});
+						}
+					}
 				},
 				
 				OpeningCell:View.extend({
@@ -336,8 +343,11 @@ Main = View.extend({
 				className:'Section',
 				
 				initialize:function() {
+					this.collection = datastore.getTransactions();
+					
 					this.collection.bind('reset', this.refresh, this);
-					this.refresh();
+					this.collection.bind('add', this.refresh, this);
+					this.collection.bind('remove', this.refresh, this);
 				},
 				
 				refresh:function() {
@@ -346,22 +356,26 @@ Main = View.extend({
 					var transactions = this.collection;
 					var subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
 					var categories = {};
+					
 					for (var i=0; i<transactions.length; i++) {
 						var transaction = transactions.at(i);
-						var tranxCatg = transaction.get('tranxCatg');
-						var tranMonth = transaction.get('tranDate').getMonth();
-						var amount = transaction.get('amount');
-						
-						if (!categories[tranxCatg]) 
-							categories[tranxCatg] = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
-						
-						categories[tranxCatg][tranMonth] += amount;
-						subtotals[tranMonth] += amount;
+
+						if (transaction.get('tranType')==this.options.tranType && bu.isSelectedAccount(transaction, page.getSelectedAccount())) {
+							var tranxCatg = transaction.get('tranxCatg');
+							var tranMonth = bu.getSelectedAccountTranDate(transaction, page.getSelectedAccount()).getMonth();
+							var amount = transaction.get('amount');
+							
+							if (!categories[tranxCatg])
+								categories[tranxCatg] = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
+							
+							categories[tranxCatg][tranMonth] += amount;
+							subtotals[tranMonth] += amount;
+						}
 					}
 					
 					var row = this.append(TableRow);
 					if (row) {
-						row.append(TableHeaderCell, {className:'ColName',text:this.options.sectionName});
+						row.append(TableHeaderCell, {className:'ColName',text:bu.getTranType(this.options.tranType)});
 						
 						for (var i=0; i<12; i++) {
 							row.append(TableCell, {className:'ColMonth', text:util.formatAmount(subtotals[i],2)});
@@ -386,17 +400,22 @@ Main = View.extend({
 				className:'Closing',
 				
 				initialize:function() {
+					this.collection = datastore.getBalances();
+					
 					this.collection.bind('reset', this.refresh, this);
-					var row = this.append(TableRow, {}, 'row');
-					
-					row.append(TableHeaderCell, {className:'ColName',text:'Closing'});
-					
-					for (var i=0; i<this.collection.length; i++) {
-						row.append(this.ClosingCell, {className:'ColMonth', model:this.collection.at(i)});
-					}
 				},
 				
 				refresh:function() {
+					this.html('');
+					
+					var row = this.append(TableRow, {}, 'row');
+					if (row) {
+						row.append(TableHeaderCell, {className:'ColName',text:'Closing'});
+						
+						for (var i=0; i<this.collection.length; i++) {
+							row.append(this.ClosingCell, {className:'ColMonth', model:this.collection.at(i)});
+						}
+					}
 				},
 				
 				ClosingCell:View.extend({
