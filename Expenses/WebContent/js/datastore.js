@@ -81,7 +81,7 @@ datastore = {
 		this.selectedYear = year;
 		ServerApi.loadTransactions(this.selectedYear, {
 			callback:function (_data) {
-				_this.data.transactions.reset(_data);
+				_this.data.transactions.reset(_data.transactions);
 				if (cbSuccess) cbSuccess();
 			},
 			errorHandler:function(msg) {

@@ -34,7 +34,7 @@
 
 		<!-- Mappings -->
 		<mapping resource="my/webapp/expenses/hbm/Account.hbm.xml" />
-		<mapping resource="my/webapp/expenses/hbm/Balance.hbm.xml" />
+		<mapping resource="my/webapp/expenses/hbm/Closing.hbm.xml" />
 		<mapping resource="my/webapp/expenses/hbm/Transaction.hbm.xml" />
 		<mapping resource="my/webapp/expenses/hbm/Reminder.hbm.xml" />
 	</session-factory>

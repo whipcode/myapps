@@ -4,19 +4,16 @@
 	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="my.webapp.expenses.entity">
-	<class name="Balance" table="BALANCE">
+	<class name="Closing" table="CLOSING">
 		<id name="id" column="id"><generator class="native" /></id>
 		<timestamp name="lastUpdateTs" column="last_update_ts" />
 		<property name="owner" column="owner" />
 		<property name="deleted" column="deleted" />
 		<property name="lastUpdateUr" column="last_update_ur" />
 
-		<property name="year" column="YR" />
-		<property name="month" column="MONTH" />
-		<property name="opening" column="OPENING" />
-		<property name="closing" column="CLOSING" />
-		<property name="calctedOpening" column="CALCTED_OPENING" />
-		<property name="calctedClosing" column="CALCTED_CLOSING" />
+		<property name="date" column="DATE" />
+		<property name="amount" column="AMOUNT" />
+		<property name="overriden" column="OVERRIDEN" />
 		
 		<many-to-one name="account" column="ACC_ID" class="Account" />
 		
