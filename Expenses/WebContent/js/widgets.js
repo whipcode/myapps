@@ -114,6 +114,8 @@ Amount = View.extend({
 	initialize:function() {
 		if (typeof(this.options.value) != 'undefined')
 			this.val(this.options.value);
+		else
+			this.val(0);
 	},
 	
 	val:function(value) {

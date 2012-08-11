@@ -4,7 +4,7 @@ datastore = {
 	
 	init:function() {
 		this.data.accounts = new Accounts();
-		this.data.balances = new Balances();
+		this.data.closings = new Closings();
 		this.data.transactions = new Transactions();
 		this.data.reminders = new Reminders();
 	},
@@ -69,9 +69,36 @@ datastore = {
 		});
 	},
 	
-	/* Balances */
-	getBalances:function() {
-		return this.data.balances;
+	/* Closings */
+	getClosings:function() {
+		return this.data.closings;
+	},
+	
+	getClosing:function(account, year, month) {
+		for (var i=0; i<this.data.closings.length; i++) {
+			var closing = this.data.closings.at(i);
+			if (closing.get('account').id == account.get('id') && closing.get('date').getFullYear() == year && closing.get('date').getMonth() == month)
+				return closing;
+		}
+		
+		var closing = new Closing();
+		closing.set({account:account.toJSON(), date:new Date(year, month+1, 0), amount:0, overriden:false});
+		this.data.closings.add(closing);
+		return closing;
+	},
+	
+	saveClosing:function(closing, cbSuccess, cbFailed) {
+		ServerApi.saveClosing(closing.toJSON(), {
+			callback:function(_data) {
+				if (!closing.get('deleted'))
+					closing.set(_data, {silent:true});
+				if (cbSuccess) cbSuccess();
+			},
+			errorHandler:function(msg) {
+				util.showError(msg);
+				if (cbFailed) cbFailed(msg);
+			}
+		});
 	},
 	
 	/* Transactions */
@@ -81,6 +108,7 @@ datastore = {
 		this.selectedYear = year;
 		ServerApi.loadTransactions(this.selectedYear, {
 			callback:function (_data) {
+				_this.data.closings.reset(_data.closings);
 				_this.data.transactions.reset(_data.transactions);
 				if (cbSuccess) cbSuccess();
 			},
@@ -105,8 +133,10 @@ datastore = {
 						_this.data.transactions.add(transaction);
 					}
 				}
-				else if (transaction.get('deleted'))
+				else if (transaction.get('id') && transaction.get('deleted'))
 					_this.data.transactions.remove(transaction);
+				else if (transaction.get('id') && !transaction.get('deleted'))
+					_this.data.transactions.trigger('reset');
 				
 				if (!transaction.get('deleted'))
 					transaction.set(_data, {silent:true});

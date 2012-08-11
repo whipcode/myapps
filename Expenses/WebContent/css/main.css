@@ -1,4 +1,7 @@
-.AppWrapper {position:fixed;left:0;right:0;top:0;bottom:0;background:url(img/bg.png) repeat;font-size:small}
+body {font-size:0.8em}
+input {font-size:0.8em}
+
+.AppWrapper {position:fixed;left:0;right:0;top:0;bottom:0;background:url(img/bg.png) repeat}
 
 .PageMenu {position:absolute;left:0;right:0;top:0;height:2em;background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(224,224,224,1)), color-stop(50%,rgba(224,224,224,1)), color-stop(100%,rgba(192,192,192,1)));box-shadow:0 1px 5px rgb(128,128,128);z-index:2}
 .TaskViews {position:absolute;left:0;right:0;top:2.1em;bottom:0}

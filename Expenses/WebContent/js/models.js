@@ -7,8 +7,8 @@ Collection = Backbone.Collection.extend({
 Account = Model.extend({});
 Accounts = Collection.extend({model:Account});
 
-Balance = Model.extend({});
-Balances = Collection.extend({model:Balance});
+Closing = Model.extend({});
+Closings = Collection.extend({model:Closing});
 
 Transaction = Model.extend({});
 Transactions = Collection.extend({model:Transaction});

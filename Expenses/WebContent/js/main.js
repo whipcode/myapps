@@ -118,7 +118,6 @@ Main = View.extend({
 			
 			initialize:function() {
 				this.append(this.MonthPicker, {}, 'monthPicker');
-				this.append(PickerField, {label:'Filter', className:'PickFilter', options:[]}, 'pickFilter');
 			},
 			
 			MonthPicker:View.extend({
@@ -205,6 +204,7 @@ Main = View.extend({
 			
 			initialize:function() {
 				this.append(Button, {label:'Add', className:'BtnAddTranx'}, 'btnAddTranx');
+				this.append(Button, {label:'Find', className:'BtnFindTranx'}, 'btnFindTranx');
 			},
 			
 			events:{
@@ -285,6 +285,28 @@ Main = View.extend({
 				}
 			},
 			
+			calClosings:function() {
+				var yearlyIncomes = this.findView('incomes').getSubtotals();
+				var yearlyExpenditures = this.findView('expenditures').getSubtotals();
+				var yearlyInvestments = this.findView('investments').getSubtotals();
+				var yearlyTransfers = this.findView('transfers').getSubtotals();
+				
+				var opening = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear()-1, 11);
+				var closing;
+				var total;
+				for (var i=0; i<12; i++) {
+					closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
+					total = yearlyIncomes[i] + yearlyExpenditures[i] + yearlyInvestments[i] + yearlyTransfers[i];
+					if (closing.get('overriden') == false) {
+						closing.set({amount:opening.get('amount')+total});
+					}
+					else {
+						closing.set({diff:opening.get('amount')+total-closing.get('amount')});
+					}
+					opening = closing;
+				}
+			},
+			
 			onActivate:function() {
 			},
 			
@@ -310,11 +332,9 @@ Main = View.extend({
 				className:'Opening',
 				
 				initialize:function() {
-					this.collection = datastore.getBalances();
+					this.collection = datastore.getClosings();
 					
 					this.collection.bind('reset', this.refresh, this);
-					this.collection.bind('add', this.refresh, this);
-					this.collection.bind('remove', this.refresh, this);
 					
 				},
 				
@@ -325,22 +345,40 @@ Main = View.extend({
 					if (row) {
 						row.append(TableHeaderCell, {className:'ColName',text:'Opening'});
 						
-						for (var i=0; i<this.collection.length; i++) {
-							row.append(this.OpeningCell, {className:'ColMonth', model:this.collection.at(i)});
+						var opening = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear()-1, 11);
+						row.append(this.OpeningCell, {model:opening});
+						
+						for (var i=0; i<11; i++) {
+							opening = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
+							row.append(this.OpeningCell, {model:opening});
 						}
 					}
 				},
 				
 				OpeningCell:View.extend({
 					tagName:'td',
+					className:'ColMonth',
 					
 					initialize:function() {
-						this.model.bind('change', this.cbChange, this);
+						this.model.bind('change', this.refresh, this);
 						
-						this.append(AmountInput);
+						this.append(AmountInput, {amount:this.model.get('amount')}, 'input');
 					},
 					
 					refresh:function() {
+						var amount = this.findView('input');
+						amount.val(this.model.get('amount'));
+					},
+					
+					events:{
+						'change':'cbChange'
+					},
+					
+					cbChange:function() {
+						var amount = this.findView('input').val();
+						this.model.set({amount:amount, overriden:true});
+						this.findParent('accountSummary').calClosings();
+						datastore.saveClosing(this.model);
 					}
 				})
 			}),
@@ -355,15 +393,19 @@ Main = View.extend({
 					this.collection.bind('reset', this.refresh, this);
 					this.collection.bind('add', this.refresh, this);
 					this.collection.bind('remove', this.refresh, this);
+					
+					this.subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
 				},
 				
 				refresh:function() {
 					this.html('');
 
+					/* initialize summary tables variables */
 					var transactions = this.collection;
-					var subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
+					this.subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
 					var categories = {};
 					
+					/* formulate summary table contents */
 					for (var i=0; i<transactions.length; i++) {
 						var transaction = transactions.at(i);
 
@@ -376,19 +418,21 @@ Main = View.extend({
 								categories[tranxCatg] = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
 							
 							categories[tranxCatg][tranMonth] += amount;
-							subtotals[tranMonth] += amount;
+							this.subtotals[tranMonth] += amount;
 						}
 					}
 					
+					/* render category summary row */
 					var row = this.append(TableRow);
 					if (row) {
 						row.append(TableHeaderCell, {className:'ColName',text:bu.getTranType(this.options.tranType)});
 						
 						for (var i=0; i<12; i++) {
-							row.append(TableCell, {className:'ColMonth', text:util.formatAmount(subtotals[i],2)});
+							row.append(TableCell, {className:'ColMonth', text:util.formatAmount(this.subtotals[i],2)});
 						}
 					}
 					
+					/* render category summary detail rows */
 					for (var a in categories) {
 						var row = this.append(TableRow);
 						if (row) {
@@ -399,6 +443,12 @@ Main = View.extend({
 							}
 						}
 					}
+					
+					this.findParent('accountSummary').calClosings();
+				},
+				
+				getSubtotals:function() {
+					return this.subtotals;
 				}
 			}),
 			
@@ -407,7 +457,7 @@ Main = View.extend({
 				className:'Closing',
 				
 				initialize:function() {
-					this.collection = datastore.getBalances();
+					this.collection = datastore.getClosings();
 					
 					this.collection.bind('reset', this.refresh, this);
 				},
@@ -415,26 +465,69 @@ Main = View.extend({
 				refresh:function() {
 					this.html('');
 					
+					/* Closing row */
 					var row = this.append(TableRow, {}, 'row');
 					if (row) {
 						row.append(TableHeaderCell, {className:'ColName',text:'Closing'});
 						
-						for (var i=0; i<this.collection.length; i++) {
-							row.append(this.ClosingCell, {className:'ColMonth', model:this.collection.at(i)});
+						for (var i=0; i<12; i++) {
+							var closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
+							row.append(this.ClosingCell, {model:closing});
+						}
+					}
+
+					/* Diff row */
+					row = this.append(TableRow, {}, 'row');
+					if (row) {
+						row.append(TableHeaderCell, {className:'ColName',text:'Differences'});
+						
+						for (var i=0; i<12; i++) {
+							var closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
+							row.append(this.DiffCell, {model:closing});
 						}
 					}
 				},
 				
 				ClosingCell:View.extend({
 					tagName:'td',
+					className:'ColMonth',
 					
 					initialize:function() {
-						this.model.bind('change', this.cbChange, this);
+						this.model.bind('change', this.refresh, this);
 						
-						this.append(AmountInput);
+						this.append(AmountInput, {amount:this.model.get('amount')}, 'input');
 					},
 					
 					refresh:function() {
+						var amount = this.findView('input');
+						amount.val(this.model.get('amount'));
+					},
+					
+					events:{
+						'change':'cbChange'
+					},
+					
+					cbChange:function() {
+						var amount = this.findView('input').val();
+						this.model.set({amount:amount, overriden:true});
+						this.findParent('accountSummary').calClosings();
+						datastore.saveClosing(this.model);
+					}
+				}),
+				
+				DiffCell:View.extend({
+					tagName:'td',
+					className:'ColMonth',
+					
+					initialize:function() {
+						this.model.bind('change', this.refresh, this);
+						
+						this.append(Amount, {amount:this.model.get('diff')}, 'amount');
+					},
+					
+					refresh:function() {
+						var amount = this.findView('amount');
+						amount.val(this.model.get('diff'));
 					}
 				})
 			})
@@ -614,7 +707,7 @@ Main = View.extend({
 				settleAcc:(settleAcc?settleAcc.toJSON():null),
 				deleted:editor.get('fldDelete').checked()
 			});
-			
+						
 			datastore.saveTransaction(this.model, cbSuccess, cbFailed);
 		}
 	})
