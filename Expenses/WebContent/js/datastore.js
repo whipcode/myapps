@@ -3,10 +3,20 @@ datastore = {
 	selectedYear:0,
 	
 	init:function() {
+		this.data.owners = new Collections();
 		this.data.accounts = new Accounts();
 		this.data.closings = new Closings();
 		this.data.transactions = new Transactions();
 		this.data.reminders = new Reminders();
+	},
+	
+	/* Owners */
+	getOwners:function() {
+		if (this.data.owners.length == 0) {
+			this.data.owners.reset([{name:'Home'}, {name:'Papa'}, {name:'Mama'}, {name:'Lok Lok'}]);
+		}
+		
+		return this.data.owners;
 	},
 	
 	/* Accounts */

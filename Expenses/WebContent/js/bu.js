@@ -107,3 +107,14 @@ bu = {
 		else if (investmentAccId == selectedAccId) return transaction.get('investmentDate');
 	}
 };
+
+function AssetCalculator() {}
+
+AssetCalculator.prototype.put = function(assetType, owner, amount) {
+};
+
+AssetCalculator.prototype.getOwners = function() {
+};
+
+AssetCalculator.prototype.getAssetTable = function() {
+};

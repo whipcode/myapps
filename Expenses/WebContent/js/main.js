@@ -538,6 +538,29 @@ Main = View.extend({
 			className:'AssetSummary',
 			
 			initialize:function() {
+				var table = this.append(Table, {}, 'table');
+				if (table) {
+					table.append(this.AssetSummaryHeader, {}, 'header');
+				}
+			},
+			
+			refresh:function() {
+				var year = page.getSelectedYear();
+				var month = page.getSelectedMonth();
+				var assetCalculator = new AssetCalculator();
+				
+				/* put account closings into assetCalculator */
+				var accounts = datastore.getAccounts();
+				for (var i=0; i<accounts.length; i++) {
+					var account = accounts.at(i);
+					if (account.get('assetType') != '') {
+						var closing = datastore.getClosing(account, year, month);
+						assetCalculator.put(account.get('assetType'), account.get('accOwner'), closing.get('amount'));
+					}
+				}
+				
+				var table = this.findView('table');
+				table.html('');
 			},
 			
 			onActivate:function() {
@@ -563,7 +586,6 @@ Main = View.extend({
 					editor.setTitle(this.model.get('name'));
 				
 				editor.add(TextField, {label:'Account Name', text:this.model.get('name')}, 'fldName');
-				editor.add(PickerField, {label:'Account Type', options:bu.getAccTypes(), value:this.model.get('accType')}, 'fldAccType');
 				editor.add(TextField, {label:'Asset Type', text:this.model.get('assetType')}, 'fldAssetType');
 				editor.add(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
 				editor.add(TextField, {label:'Owner', text:this.model.get('accOwner')}, 'fldAccOwner');
@@ -610,7 +632,6 @@ Main = View.extend({
 			
 			this.model.set({
 				name:editor.get('fldName').val(),
-				accType:editor.get('fldAccType').getSelectedIdx(),
 				assetType:editor.get('fldAssetType').val(),
 				desc:editor.get('fldDesc').val(),
 				accOwner:editor.get('fldAccOwner').val(),

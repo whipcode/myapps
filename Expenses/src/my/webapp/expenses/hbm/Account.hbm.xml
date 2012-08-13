@@ -12,7 +12,6 @@
 		<property name="lastUpdateUr" column="last_update_ur" />
 
 		<property name="name" column="NAME" />
-		<property name="accType" column="ACC_TYPE" />
 		<property name="assetType" column="ASSET_TYPE" />
 		<property name="desc" column="DESCR" />
 		<property name="accOwner" column="ACC_OWNER" />

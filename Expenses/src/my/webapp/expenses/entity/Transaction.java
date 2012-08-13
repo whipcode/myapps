@@ -24,7 +24,7 @@ public class Transaction extends Base {
 	private Account claimAcc;
 	private Date claimDate;
 	private Account transferAcc;
-	private Account investmentAcc;
+//	private Account investmentAcc;
 	
 	private Reminder reminder;
 
@@ -114,14 +114,6 @@ public class Transaction extends Base {
 
 	public void setTransferAcc(Account transferAcc) {
 		this.transferAcc = transferAcc;
-	}
-
-	public Account getInvestmentAcc() {
-		return investmentAcc;
-	}
-
-	public void setInvestmentAcc(Account investmentAcc) {
-		this.investmentAcc = investmentAcc;
 	}
 
 	public Reminder getReminder() {

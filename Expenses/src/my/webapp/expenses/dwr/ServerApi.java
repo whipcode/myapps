@@ -20,7 +20,6 @@ public class ServerApi {
 	public Map<String, String[]> loadBusinessCodes() {
 		Map<String, String[]> codes = new HashMap<String, String[]>();
 		
-		codes.put("accTypes", Account.ACCTYPES);
 		codes.put("tranTypes", Transaction.TRANTYPES);
 		
 		return codes;

@@ -1,14 +1,7 @@
 package my.webapp.expenses.entity;
 
 public class Account extends Base {
-	public static final String[] ACCTYPES = {
-		"Saving Account",
-		"Credit Card Account",
-		"Investment Account"
-	};
-	
 	private String name;
-	private int accType;
 	private String assetType;
 	private String desc;
 	private String accOwner;
@@ -21,14 +14,6 @@ public class Account extends Base {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public int getAccType() {
-		return accType;
-	}
-
-	public void setAccType(int accType) {
-		this.accType = accType;
 	}
 
 	public String getAssetType() {
