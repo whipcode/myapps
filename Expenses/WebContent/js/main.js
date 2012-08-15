@@ -285,28 +285,6 @@ Main = View.extend({
 				}
 			},
 			
-			calClosings:function() {
-				var yearlyIncomes = this.findView('incomes').getSubtotals();
-				var yearlyExpenditures = this.findView('expenditures').getSubtotals();
-				var yearlyInvestments = this.findView('investments').getSubtotals();
-				var yearlyTransfers = this.findView('transfers').getSubtotals();
-				
-				var opening = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear()-1, 11);
-				var closing;
-				var total;
-				for (var i=0; i<12; i++) {
-					closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
-					total = yearlyIncomes[i] + yearlyExpenditures[i] + yearlyInvestments[i] + yearlyTransfers[i];
-					if (closing.get('overriden') == false) {
-						closing.set({amount:opening.get('amount')+total});
-					}
-					else {
-						closing.set({diff:opening.get('amount')+total-closing.get('amount')});
-					}
-					opening = closing;
-				}
-			},
-			
 			onActivate:function() {
 			},
 			
@@ -377,7 +355,6 @@ Main = View.extend({
 					cbChange:function() {
 						var amount = this.findView('input').val();
 						this.model.set({amount:amount, overriden:true});
-						this.findParent('accountSummary').calClosings();
 						datastore.saveClosing(this.model);
 					}
 				})
@@ -443,8 +420,6 @@ Main = View.extend({
 							}
 						}
 					}
-					
-					this.findParent('accountSummary').calClosings();
 				},
 				
 				getSubtotals:function() {
@@ -510,7 +485,6 @@ Main = View.extend({
 					cbChange:function() {
 						var amount = this.findView('input').val();
 						this.model.set({amount:amount, overriden:true});
-						this.findParent('accountSummary').calClosings();
 						datastore.saveClosing(this.model);
 					}
 				}),
@@ -540,7 +514,6 @@ Main = View.extend({
 			initialize:function() {
 				var table = this.append(Table, {}, 'table');
 				if (table) {
-					table.append(this.AssetSummaryHeader, {}, 'header');
 				}
 			},
 			
@@ -550,13 +523,12 @@ Main = View.extend({
 				var assetCalculator = new AssetCalculator();
 				
 				/* put account closings into assetCalculator */
-				var accounts = datastore.getAccounts();
-				for (var i=0; i<accounts.length; i++) {
-					var account = accounts.at(i);
-					if (account.get('assetType') != '') {
-						var closing = datastore.getClosing(account, year, month);
-						assetCalculator.put(account.get('assetType'), account.get('accOwner'), closing.get('amount'));
-					}
+				var closingsOfTheMonth = datastore.getClosingsOfMonth(year, month);
+				for (var i=0; i<closingsOfTheMonth.length; i++) {
+					var closing = closingsOfTheMonth.at(i);
+					var account = closing.get('account');
+					if (account.assetType != '')
+						assetCalculator.addAccountAsset(closing);
 				}
 				
 				var table = this.findView('table');

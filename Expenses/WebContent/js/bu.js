@@ -92,6 +92,57 @@ bu = {
 		);
 	},
 	
+	getAmountsByAccountByMonth:function(transaction) {
+		var amountsByAccountByMonth = {};
+		
+		var amount = transaction.get('amount');
+		var tranxAccId = transaction.get('tranxAcc')?transaction.get('tranxAcc').id:0;
+		var tranDateMonth = transaction.get('tranDate').getMonth();
+		var settleAccId = transaction.get('settleAcc')?transaction.get('settleAcc').id:0;
+		var settleDateMonth = transaction.get('settleDate')?transaction.get('settleDate').getMonth():tranDateMonth;
+		var claimAccId = transaction.get('claimAcc')?transaction.get('claimAcc').id:0;
+		var claimDateMonth = transaction.get('claimDate')?transaction.get('claimDate').getMonth():settleDateMonth;
+		var transferAccId = transaction.get('transferAcc')?transaction.get('transferAcc').id:0;
+		var transferDateMonth = tranDateMonth;
+
+		/* step 1 - tranxAcc */
+		amountsByAccountByMonth[tranxAccId] = {};
+		amountsByAccountByMonth[tranxAccId][tranDateMonth] = amount;
+		
+		/* step 2 - settleAcc */
+		if (settleAccId) {
+			amountsByAccountByMonth[settleAccId] = {};
+			amountsByAccountByMonth[settleAccId][settleDateMonth] = amount;
+		}
+		
+		/* step 3 - settleAcc */
+		if (claimAccId) {
+			amountsByAccountByMonth[claimAccId] = {};
+			amountsByAccountByMonth[claimAccId][claimDateMonth] = amount;
+			
+			if (settleAccId) {
+				if (claimDateMonth == settleDateMonth)
+					amountsByAccountByMonth[settleAccId][settleDateMonth] = 0;
+				else
+					amountsByAccountByMonth[settleAccId][claimDateMonth] = -amount;
+			}
+			else {
+				if (tranDateMonth == settleDateMonth)
+					amountsByAccountByMonth[tranxAccId][tranDateMonth] = 0;
+				else
+					amountsByAccountByMonth[settleAccId][claimDateMonth] = -amount;
+			}
+		}
+		
+		/* step 4 - transferAcc */
+		if (transferAccId) {
+			amountsByAccountByMonth[transferAccId] = {};
+			amountsByAccountByMonth[transferAccId][transferDateMonth] = -amount;
+		}
+
+		return amountsByAccountByMonth;
+	},
+	
 	getSelectedAccountTranDate:function(transaction, selectedAccount) {
 		var selectedAccId = selectedAccount.get('id');
 		var tranxAccId = transaction.get('tranxAcc')?transaction.get('tranxAcc').id:0;
@@ -110,7 +161,10 @@ bu = {
 
 function AssetCalculator() {}
 
-AssetCalculator.prototype.put = function(assetType, owner, amount) {
+AssetCalculator.prototype.addAccountAsset = function(closing) {
+};
+
+AssetCalculator.prototype.addAsset = function(asset) {
 };
 
 AssetCalculator.prototype.getOwners = function() {

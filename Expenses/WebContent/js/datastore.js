@@ -3,7 +3,7 @@ datastore = {
 	selectedYear:0,
 	
 	init:function() {
-		this.data.owners = new Collections();
+		this.data.owners = new Collection();
 		this.data.accounts = new Accounts();
 		this.data.closings = new Closings();
 		this.data.transactions = new Transactions();
@@ -98,10 +98,14 @@ datastore = {
 	},
 	
 	saveClosing:function(closing, cbSuccess, cbFailed) {
+		var _this = this;
+		
 		ServerApi.saveClosing(closing.toJSON(), {
 			callback:function(_data) {
-				if (!closing.get('deleted'))
+				if (!closing.get('deleted')) {
 					closing.set(_data, {silent:true});
+					_this.calcClosings();
+				}
 				if (cbSuccess) cbSuccess();
 			},
 			errorHandler:function(msg) {
@@ -120,6 +124,7 @@ datastore = {
 			callback:function (_data) {
 				_this.data.closings.reset(_data.closings);
 				_this.data.transactions.reset(_data.transactions);
+				_this.calcClosings();
 				if (cbSuccess) cbSuccess();
 			},
 			errorHandler:function(msg) {
@@ -127,6 +132,28 @@ datastore = {
 				if (cbFailed) cbFailed(msg);
 			}
 		});
+	},
+	
+	calcClosings:function() {
+		var accountsMonthlyTotal = this.getTotalsByAccountByMonth();
+		
+		var accounts = this.getAccounts();
+		for (var i=0; i<accounts.length; i++) {
+			var account = accounts.at(i);
+			var opening = this.getClosing(account, this.selectedYear-1, 11);
+			
+			for (var m=0; m<12; m++) {
+				var total = accountsMonthlyTotal[account.get('id')]?accountsMonthlyTotal[account.get('id')][m]:0;
+				var closing = this.getClosing(account, this.selectedYear, m);
+				if (closing.get('overriden') == false) {
+					closing.set({amount:opening.get('amount')+total});
+				}
+				else {
+					closing.set({diff:opening.get('amount')+total-closing.get('amount')});
+				}
+				opening = closing;
+			}
+		}
 	},
 	
 	getTransactions:function() {
@@ -150,6 +177,9 @@ datastore = {
 				
 				if (!transaction.get('deleted'))
 					transaction.set(_data, {silent:true});
+
+				_this.calcClosings();
+				
 				if (cbSuccess) cbSuccess();
 			},
 			errorHandler:function(msg) {
@@ -157,6 +187,24 @@ datastore = {
 				if (cbFailed) cbFailed(msg);
 			}
 		});
+	},
+	
+	getTotalsByAccountByMonth:function() {
+		var totalsByAccountByMonth = {};
+		var transactions = this.getTransactions();
+		for (var i=0; i<transactions.length; i++) {
+			var transaction = transactions.at(i);
+			var amountsByAccountByMonth = bu.getAmountsByAccountByMonth(transaction);
+			
+			for (var a in amountsByAccountByMonth) {
+				if (!totalsByAccountByMonth[a]) totalsByAccountByMonth[a] = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
+				
+				for (var m in amountsByAccountByMonth[a])
+					totalsByAccountByMonth[a][m] += amountsByAccountByMonth[a][m];
+			}
+		}
+		
+		return totalsByAccountByMonth;
 	},
 	
 	/* Reminders */
