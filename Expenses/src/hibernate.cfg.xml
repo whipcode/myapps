@@ -36,7 +36,9 @@
 		<mapping resource="my/webapp/expenses/hbm/Account.hbm.xml" />
 		<mapping resource="my/webapp/expenses/hbm/Closing.hbm.xml" />
 		<mapping resource="my/webapp/expenses/hbm/Transaction.hbm.xml" />
-		<mapping resource="my/webapp/expenses/hbm/Reminder.hbm.xml" />
+		<mapping resource="my/webapp/expenses/hbm/Asset.hbm.xml" />
+		<mapping resource="my/webapp/expenses/hbm/AssetRate.hbm.xml" />
+		<mapping resource="my/webapp/expenses/hbm/AssetAmount.hbm.xml" />
 	</session-factory>
 
 

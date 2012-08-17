@@ -13,5 +13,11 @@ Closings = Collection.extend({model:Closing});
 Transaction = Model.extend({});
 Transactions = Collection.extend({model:Transaction});
 
-Reminder = Model.extend({});
-Reminders = Collection.extend({modle:Reminder});
+Asset = Model.extend({});
+Assets = Collection.extend({modle:Asset});
+
+AssetRate = Model.extend({});
+AssetRates = Collection.extend({modle:AssetRate});
+
+AssetAmount = Model.extend({});
+AssetAmounts = Collection.extend({modle:AssetAmount});

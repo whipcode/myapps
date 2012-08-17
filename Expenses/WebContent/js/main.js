@@ -240,13 +240,11 @@ Main = View.extend({
 			initialize:function() {
 				this.append(Link, {label:'Account Summary', className:'LnkAccountSummary'}, 'lnkAccountSummary');
 				this.append(Link, {label:'Asset Summary', className:'LnkAssetSummary'}, 'lnkAssetSummary');
-				this.append(Link, {label:'Reminders', className:'LnkReminders'}, 'lnkReminders');
 			},
 			
 			events:{
 				'click .LnkAccountSummary':'cbLnkAccountSummaryClick',
-				'click .LnkAssetSummary':'cbLnkAssetSummaryClick',
-				'click .LnkReminders':'cbLnkRemindersClick',
+				'click .LnkAssetSummary':'cbLnkAssetSummaryClick'
 			},
 			
 			cbLnkAccountSummaryClick:function() {
@@ -259,12 +257,6 @@ Main = View.extend({
 				var summaryView = this.findParent('summaryView');
 				if (summaryView)
 					summaryView.switchView('assettSummary');
-			},
-			
-			cbLnkRemindersClick:function() {
-				var summaryView = this.findParent('summaryView');
-				if (summaryView)
-					summaryView.switchView('reminders');
 			}
 		}),
 		

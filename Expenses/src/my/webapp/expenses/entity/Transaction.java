@@ -26,8 +26,6 @@ public class Transaction extends Base {
 	private Account transferAcc;
 //	private Account investmentAcc;
 	
-	private Reminder reminder;
-
 	public Date getTranDate() {
 		return tranDate;
 	}
@@ -114,14 +112,6 @@ public class Transaction extends Base {
 
 	public void setTransferAcc(Account transferAcc) {
 		this.transferAcc = transferAcc;
-	}
-
-	public Reminder getReminder() {
-		return reminder;
-	}
-
-	public void setReminder(Reminder reminder) {
-		this.reminder = reminder;
 	}
 
 	public Date getSettleDate() {

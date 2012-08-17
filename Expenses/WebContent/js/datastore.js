@@ -3,20 +3,9 @@ datastore = {
 	selectedYear:0,
 	
 	init:function() {
-		this.data.owners = new Collection();
 		this.data.accounts = new Accounts();
 		this.data.closings = new Closings();
 		this.data.transactions = new Transactions();
-		this.data.reminders = new Reminders();
-	},
-	
-	/* Owners */
-	getOwners:function() {
-		if (this.data.owners.length == 0) {
-			this.data.owners.reset([{name:'Home'}, {name:'Papa'}, {name:'Mama'}, {name:'Lok Lok'}]);
-		}
-		
-		return this.data.owners;
 	},
 	
 	/* Accounts */
@@ -207,8 +196,29 @@ datastore = {
 		return totalsByAccountByMonth;
 	},
 	
-	/* Reminders */
-	getReminders:function() {
-		return this.data.reminders;
+	getAssetOwners:function() {
+		return ['Home','Papa','Mama','Lok Lok'];
+	},
+	
+	getAssetValuesOfMonthByTypeByAssessByOwner:function(month) {
+		var assetValues = {};
+		
+		/* Add Account Assets */
+		var closings = this.getClosingsOfMonth(month);
+		for (var i=0; i<closings.length; i++) {
+			var closing = closings.at(i);
+			var account = closing.get('account');
+			var assetType = account.assetType;
+			var accountName = account.name;
+			var accountOwner = account.owner;
+
+			if (assetType && accountOwner) {
+				if (!assetValues[assetType]) assetValues[assetType] = {};
+				if (!assetValues[assetType][accountName]) assetValues[assetType][accountName] = {asset:new Asset({name:accountName}), rate:new AssetRate({rate:1}), assetAmounts:{}};
+				assetValues[assetType][accountName].assetAmounts[accountOwner] = new AssetAmount({amount:closing.get('amount')});
+			}
+		}
+		
+		return assetValues;
 	}
 };

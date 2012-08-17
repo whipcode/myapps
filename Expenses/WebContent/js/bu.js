@@ -158,17 +158,3 @@ bu = {
 		else if (investmentAccId == selectedAccId) return transaction.get('investmentDate');
 	}
 };
-
-function AssetCalculator() {}
-
-AssetCalculator.prototype.addAccountAsset = function(closing) {
-};
-
-AssetCalculator.prototype.addAsset = function(asset) {
-};
-
-AssetCalculator.prototype.getOwners = function() {
-};
-
-AssetCalculator.prototype.getAssetTable = function() {
-};
