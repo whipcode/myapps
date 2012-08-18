@@ -16,14 +16,73 @@ Main = View.extend({
 	},
 	
 	initViewModels:function() {
-		this.getViewModel('assetSummary.assetOwners', Collection, [{name:'Home'},{name:'Papa'},{name:'Mama'},{name:'Lok Lok'}]);
-		
+		this.setupAssetSummaryViewModel();
 	},
 	
-	getViewModel:function(modelName, ModelType, data) {
-		if (!this.viewModels[modelName] && typeof(ModelType) != 'undefined')
-			this.viewModels[modelName] = new ModelType(data);
+	setViewModel:function(modelName, ModelType, data) {
+		this.viewModels[modelName] = new ModelType(data);
+	},
+	
+	getViewModel:function(modelName) {
 		return this.viewModels[modelName];
+	},
+	
+	setupAssetSummaryViewModel:function() {
+		this.setViewModel('assetSummary', Model, {
+			assetOwners:new Collection([{name:'Home'},{name:'Papa'},{name:'Mama'},{name:'Lok Lok'}]),
+			accountAssetTypes:new Collection(),
+			individualAssetTypes:new Collection(),
+			ownerTotals:new Model({Home:0.00, Papa:0.00, Mama:0.00, 'Lok Lok':0.00}),
+			total:new Model({amount:0.00})
+		});
+		
+		datastore.bind('accounts', 'reset', this.resetAccountAssetTypes, this);
+		datastore.bind('accounts', 'change', this.resetAccountAssetTypes, this);
+		datastore.bind('transactions', 'reset', this.resetAccountAssetTypes, this);
+		datastore.bind('transactions', 'change', this.resetAccountAssetTypes, this);
+		datastore.bind('closings', 'reset', this.resetAccountAssetTypes, this);
+		datastore.bind('closings', 'change', this.resetAccountAssetTypes, this);
+		
+		datastore.bind('assets', 'reset', this.resetIndividualAssetTypes, this);
+		datastore.bind('assets', 'change', this.resetIndividualAssetTypes, this);
+		datastore.bind('assetRates', 'reset', this.resetIndividualAssetTypes, this);
+		datastore.bind('assetRates', 'change', this.resetIndividualAssetTypes, this);
+		datastore.bind('assetAmounts', 'reset', this.resetIndividualAssetTypes, this);
+		datastore.bind('assetAmounts', 'change', this.resetIndividualAssetTypes, this);
+	},
+	
+	resetAccountAssetTypes:function() {
+		var _accountAssetTypes = {};
+		var selectedYear = page.getSelectedYear();
+		var selectedMonth = page.getSelectedMonth();
+		
+		var accounts = datastore.getAccounts();
+		for (var i=0; i<accounts.length; i++) {
+			var account = accounts.at(i);
+			var assetType = account.get('assetType');
+			var accOwner = account.get('accOwner');
+
+			if (assetType && accOwner) {
+				var closing = datastore.getClosing(account, selectedYear, selectedMonth);
+				
+				if (!_accountAssetTypes[assetType]) 
+					_accountAssetTypes[assetType] = {
+						name:assetType, 
+						ownerTotals:{Home:null,Papa:null,Mama:null,'Lok Lok':null},
+						total:0.0,
+						assets:[]
+					};
+				
+				_accountAssetTypes[assetType].ownerTotals[accOwner] += closing.get('amount');
+				_accountAssetTypes[assetType].total += closing.get('amount');
+				_accountAssetTypes[assetType].assets.push({account:account, closing:closing, total:closing.get('amount')});
+			}
+		}
+		
+		page.getViewModel('assetSummary').get('accountAssetTypes').reset(util.toArray(_accountAssetTypes));
+	},
+	
+	resetIndividualAssetTypes:function() {
 	},
 	
 	render:function() {
@@ -517,12 +576,12 @@ Main = View.extend({
 			className:'AssetSummary',
 			
 			initialize:function() {
-				var table = this.append(Table, {}, 'table');
+				var table = this.append(Table);
 				if (table) {
-					table.append(this.Header, {assetOwners:this.assetOwners}, 'header');
-					table.append(this.AccountAssetSection, {assetOwners:this.assetOwners}, 'accountAssetSection');
-					table.append(this.IndividualAssetSection, {assetOwners:this.assetOwners}, 'individualAssetSection');
-					table.append(this.Total, {assetOwners:this.assetOwners}, 'total');
+					table.append(this.Header);
+					table.append(this.AccountAssetSection);
+					table.append(this.IndividualAssetSection);
+					table.append(this.Total);
 				}
 			},
 			
@@ -536,7 +595,7 @@ Main = View.extend({
 				tagName:'thead',
 				
 				initialize:function() {
-					this.collection = page.getViewModel('assetSummary.assetOwners');
+					this.collection = page.getViewModel('assetSummary').get('assetOwners');
 					this.collection.bind('reset', this.refresh, this);
 					
 					this.refresh();
@@ -551,7 +610,7 @@ Main = View.extend({
 						for (var i=0; i<this.collection.length; i++) {
 							tr.append(TableHeaderCell, {text:this.collection.at(i).get('name')});
 						}
-						tr.append(TableHeaderCell, {className:'TotalCol'});
+						tr.append(TableHeaderCell, {className:'TotalCol', text:'Total'});
 					}
 				}
 			}),
@@ -560,9 +619,66 @@ Main = View.extend({
 				tagName:'tbody',
 				
 				initialize:function() {
+					this.collection = page.getViewModel('assetSummary').get('accountAssetTypes');
+					this.collection.bind('reset', this.refresh, this);
+					
+					this.refresh();
 				},
 				
 				refresh:function() {
+					this.html('');
+					
+					var assetOwners = page.getViewModel('assetSummary').get('assetOwners');
+					
+					for (var i=0; i<this.collection.length; i++) {
+						var accountAssetType = this.collection.at(i);
+						var assetTypeName = accountAssetType.get('name');
+						var ownerTotals = accountAssetType.get('ownerTotals');
+						var total = accountAssetType.get('total');
+						var assets = accountAssetType.get('assets');
+						
+						/* render assetType row */
+						var tr = this.append(TableRow, {className:'AssetType'});
+						if (tr) {
+							tr.append(TableHeaderCell, {className:'AssetCol', text:assetTypeName});
+							
+							for (var o=0; o<assetOwners.length; o++) {
+								var ownerTotal = ownerTotals[assetOwners.at(o).get('name')];
+								if (ownerTotal != null)
+									tr.append(TableCell).append(Amount, {value:ownerTotal});
+								else
+									tr.append(TableCell);
+							}
+
+							if (total != null)
+								tr.append(TableHeaderCell, {className:'TotalCol'}).append(Amount, {value:total});
+							else
+								tr.append(TableHeaderCell, {className:'TotalCol'});
+						}
+						
+						/* render account rows */
+						for (var j=0; j<assets.length; j++) {
+							var asset = assets[j];
+							var account = asset.account;
+							var closing = asset.closing;
+							var total = asset.total;
+							
+							var tr = this.append(TableRow, {className:'Account'});
+							if (tr) {
+								tr.append(TableHeaderCell, {className:'AssetCol', text:account.get('name')});
+								
+								for (var o=0; o<assetOwners.length; o++) {
+									if (account.get('accOwner') == assetOwners.at(o).get('name'))
+										tr.append(TableCell).append(Amount, {value:closing.get('amount')});
+									else
+										tr.append(TableCell);
+								}
+
+								tr.append(TableHeaderCell, {className:'TotalCol'}).append(Amount, {value:total});
+							}
+							
+						}
+					}
 				}
 			}),
 			

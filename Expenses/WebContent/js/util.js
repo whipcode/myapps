@@ -112,5 +112,15 @@ util = {
 	str2Amount:function(str) {
 		return Number(str.replace(/,/g,''));
 
+	},
+	
+	toArray:function(obj) {
+		var array = [];
+		
+		for (var a in obj) {
+			array.push(obj[a]);
+		}
+		
+		return array;
 	}
 };

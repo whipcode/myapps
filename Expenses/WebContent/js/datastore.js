@@ -6,6 +6,13 @@ datastore = {
 		this.data.accounts = new Accounts();
 		this.data.closings = new Closings();
 		this.data.transactions = new Transactions();
+		this.data.assets = new Assets();
+		this.data.assetRates = new AssetRates();
+		this.data.assetAmounts = new AssetAmounts();
+	},
+	
+	bind:function(model, event, callback, caller) {
+		return this.data[model].bind(event, callback, caller);
 	},
 	
 	/* Accounts */
