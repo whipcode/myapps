@@ -1,4 +1,5 @@
 Main = View.extend({
+	viewModels:{},
 	working:{
 	},
 	
@@ -7,10 +8,22 @@ Main = View.extend({
 		bu.init(
 			function /*success*/() {
 				datastore.init();
+				_this.initViewModels();
 				_this.render();
 				_this.run();
 			}
 		);
+	},
+	
+	initViewModels:function() {
+		this.getViewModel('assetSummary.assetOwners', Collection, [{name:'Home'},{name:'Papa'},{name:'Mama'},{name:'Lok Lok'}]);
+		
+	},
+	
+	getViewModel:function(modelName, ModelType, data) {
+		if (!this.viewModels[modelName] && typeof(ModelType) != 'undefined')
+			this.viewModels[modelName] = new ModelType(data);
+		return this.viewModels[modelName];
 	},
 	
 	render:function() {
@@ -506,32 +519,58 @@ Main = View.extend({
 			initialize:function() {
 				var table = this.append(Table, {}, 'table');
 				if (table) {
+					table.append(this.Header, {assetOwners:this.assetOwners}, 'header');
+					table.append(this.AccountAssetSection, {assetOwners:this.assetOwners}, 'accountAssetSection');
+					table.append(this.IndividualAssetSection, {assetOwners:this.assetOwners}, 'individualAssetSection');
+					table.append(this.Total, {assetOwners:this.assetOwners}, 'total');
 				}
-			},
-			
-			refresh:function() {
-				var year = page.getSelectedYear();
-				var month = page.getSelectedMonth();
-				var assetCalculator = new AssetCalculator();
-				
-				/* put account closings into assetCalculator */
-				var closingsOfTheMonth = datastore.getClosingsOfMonth(year, month);
-				for (var i=0; i<closingsOfTheMonth.length; i++) {
-					var closing = closingsOfTheMonth.at(i);
-					var account = closing.get('account');
-					if (account.assetType != '')
-						assetCalculator.addAccountAsset(closing);
-				}
-				
-				var table = this.findView('table');
-				table.html('');
 			},
 			
 			onActivate:function() {
 			},
 			
 			onInactivate:function() {
-			}
+			},
+			
+			Header:View.extend({
+				tagName:'thead',
+				
+				initialize:function() {
+					this.collection = page.getViewModel('assetSummary.assetOwners');
+					this.collection.bind('reset', this.refresh, this);
+					
+					this.refresh();
+				},
+				
+				refresh:function() {
+					this.html('');
+					
+					var tr = this.append(TableRow);
+					if (tr) {
+						tr.append(TableHeaderCell, {className:'AssetCol'});
+						for (var i=0; i<this.collection.length; i++) {
+							tr.append(TableHeaderCell, {text:this.collection.at(i).get('name')});
+						}
+						tr.append(TableHeaderCell, {className:'TotalCol'});
+					}
+				}
+			}),
+			
+			AccountAssetSection:View.extend({
+				tagName:'tbody',
+				
+				initialize:function() {
+				},
+				
+				refresh:function() {
+				}
+			}),
+			
+			IndividualAssetSection:View.extend({
+			}),
+			
+			Total:View.extend({
+			})
 		})
 	}),
 	
