@@ -1,64 +1,79 @@
 View = Backbone.View.extend({
-	append:function(View, options, id) {
+	_lastViewIdx:0,
+	
+	genViewName:function() {
+		return '_' + (++this._lastViewIdx);
+	},
+	
+	append:function(View, options, viewName) {
 		var view = new View(options);
 		if (!this.views) this.views = {};
-		if (typeof(id) != 'undefined') {
-			view.id = id;
-			this.views[id] = view;
-		}
+
+		if (typeof(viewName) == 'undefined')
+			viewName = this.genViewName();
+
+		view.viewName = viewName;
+		this.views[viewName] = view;
+		
 		this.$el.append(view.el);
 		view.parent = this; 
 		
 		return view;
 	},
 	
-	prepend:function(View, options, id) {
+	prepend:function(View, options, viewName) {
 		var view = new View(options);
 		if (!this.views) this.views = {};
-		if (typeof(id) != 'undefined') {
-			view.id = id;
-			this.views[id] = view;
-		}
+
+		if (typeof(viewName) == 'undefined')
+			viewName = this.genViewName();
+
+		view.viewName = viewName;
+		this.views[viewName] = view;
+
 		this.$el.prepend(view.el);
 		view.parent = this; 
 		
 		return view;
 	},
 		
-	insertAbove:function(View, options, id) {
+	insertAbove:function(View, options, viewName) {
 		var view = new View(options);
-		if (typeof(id) != 'undefined') {
-			view.id = id;
-			this.views[id] = view;
-		}
+
+		if (typeof(viewName) == 'undefined')
+			viewName = this.genViewName();
+
+		view.viewName = viewName;
+		this.views[viewName] = view;
+
 		this.$el.before(view.$el);
 		view.parent = this.parent;
 		
 		return view;
 	},
 	
-	findParent:function(id) {
-		if (this.parent.id == id)
+	findParent:function(className) {
+		if (this.parent && this.parent.$el.hasClass(className))
 			return this.parent;
 		else if (this.parent)
-			return this.parent.findParent(id);
+			return this.parent.findParent(className);
 		else
 			return null;
 	},
 	
-	getView:function(id) {
+	getView:function(viewName) {
 		if (this.views)
-			return this.views[id];
+			return this.views[viewName];
 		else
 			return null;
 	},
 	
-	findView:function(id) {
-		if (this.views[id])
-			return this.views[id];
+	findView:function(viewName) {
+		if (this.views[viewName])
+			return this.views[viewName];
 		
 		for (var a in this.views) {
-			var view = this.views[a].findView(id);
+			var view = this.views[a].findView(viewName);
 			if (view)
 				return view;
 		}
@@ -73,6 +88,13 @@ View = Backbone.View.extend({
 			return this.$el.html();
 	},
 	
+	text:function(text) {
+		if (typeof(text) != 'undefined')
+			return this.$el.text(text);
+		else
+			return this.$el.text();
+	},
+	
 	val:function(value) {
 		if (typeof(value) != 'undefined')
 			return this.$el.val(value);
@@ -82,6 +104,10 @@ View = Backbone.View.extend({
 	
 	addClass:function(className) {
 		this.$el.addClass(className);
+	},
+	
+	attr:function(attr, value) {
+		return this.$el.attr(attr, value);
 	}
 });
 
@@ -118,11 +144,15 @@ Amount = View.extend({
 			this.val(0);
 	},
 	
+	setPrefix:function(prefix) {
+		this.options.prefix = prefix;
+	},
+	
 	val:function(value) {
 		if (typeof(value) != 'undefined')
-			this.html(util.formatAmount(value, this.dp));
+			this.text((this.options.prefix?this.options.prefix:'')+util.formatAmount(value, this.dp));
 		else
-			return util.str2Amount(this.html());
+			return util.str2Amount(this.text());
 	}
 });
 
@@ -399,9 +429,9 @@ CollectionPicker = View.extend({
 		
 		for (var i=0; i<this.collection.length; i++) {
 			this.add(this.collection.at(i));
-			if (this.options.selectModel && this.collection.at(i).get('id') == this.options.selectModel.get('id'))
+			if (this.options.selectModel && this.collection.at(i).get('viewName') == this.options.selectModel.get('viewName'))
 				this.idx(i + this.options.withBlank?1:0);
-			else if (this.options.selectedId && this.collection.at(i).get('id') == this.options.selectedId)
+			else if (this.options.selectedId && this.collection.at(i).get('viewName') == this.options.selectedId)
 				this.idx(i + this.options.withBlank?1:0);
 		}
 		

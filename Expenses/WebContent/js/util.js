@@ -132,10 +132,10 @@ util = {
 		return true;
 	},
 	
-	get:function(obj, field) {
+	get:function(data, field) {
 		var fieldpath = field.split('.');
 		
-		var value = obj;
+		var value = data;
 		for (var i=0; i<fieldpath.length; i++) {
 			if (typeof(value[fieldpath[i]]) != 'undefined')
 				value = value[fieldpath[i]];
@@ -144,5 +144,13 @@ util = {
 		}
 		
 		return value;
+	},
+	
+	at:function(data, idx) {
+		if (typeof(data.at) == 'function')
+			return data.at(idx);
+		else if (data instanceof Array)
+			return data[idx];
+		return undefined;
 	}
 };

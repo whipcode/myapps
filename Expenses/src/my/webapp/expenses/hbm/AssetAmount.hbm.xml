@@ -11,10 +11,9 @@
 		<property name="deleted" column="deleted" />
 		<property name="lastUpdateUr" column="last_update_ur" />
 
-		<property name="date" column="DATE" />
 		<property name="assetOwner" column="ASSET_OWNER" />
-		<property name="amount" column="amount" />
+		<property name="units" column="UNITS" />
 		
-		<many-to-one name="asset" column="ASSET_ID" class="Asset" not-null="true" />		
+		<many-to-one name="rate" column="ASSETRATE_ID" class="AssetRate" not-null="true" />		
 	</class>
 </hibernate-mapping>

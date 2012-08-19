@@ -24,22 +24,19 @@ Main = View.extend({
 	},
 	
 	getViewModel:function(modelName) {
-		return this.viewModels[modelName];
+		return util.get(this.viewModels, modelName);
 	},
 	
 	setupAssetSummaryViewModel:function() {
 		this.setViewModel('assetSummary', Model, {
-			assetOwners:new Collection([{name:'Home'},{name:'Papa'},{name:'Mama'},{name:'Lok Lok'}]),
 			accountAssetTypes:new Collection(),
 			individualAssetTypes:new Collection(),
-			ownerTotals:new Model({Home:0.00, Papa:0.00, Mama:0.00, 'Lok Lok':0.00}),
-			total:new Model({amount:0.00})
+			ownerTotals:{'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00},
+			grandTotal:0.00
 		});
 		
 		datastore.bind('accounts', 'reset', this.resetAccountAssetTypes, this);
 		datastore.bind('accounts', 'change', this.resetAccountAssetTypes, this);
-		datastore.bind('transactions', 'reset', this.resetAccountAssetTypes, this);
-		datastore.bind('transactions', 'change', this.resetAccountAssetTypes, this);
 		datastore.bind('closings', 'reset', this.resetAccountAssetTypes, this);
 		datastore.bind('closings', 'change', this.resetAccountAssetTypes, this);
 		
@@ -60,29 +57,111 @@ Main = View.extend({
 		for (var i=0; i<accounts.length; i++) {
 			var account = accounts.at(i);
 			var assetType = account.get('assetType');
+			var accountName = account.get('name');
 			var accOwner = account.get('accOwner');
 
 			if (assetType && accOwner) {
-				var closing = datastore.getClosing(account, selectedYear, selectedMonth);
-				
 				if (!_accountAssetTypes[assetType]) 
 					_accountAssetTypes[assetType] = {
 						name:assetType, 
 						ownerTotals:{Home:null,Papa:null,Mama:null,'Lok Lok':null},
-						total:0.0,
-						assets:[]
+						total:0.00,
+						accounts:{}
 					};
 				
-				_accountAssetTypes[assetType].ownerTotals[accOwner] += closing.get('amount');
-				_accountAssetTypes[assetType].total += closing.get('amount');
-				_accountAssetTypes[assetType].assets.push({account:account, closing:closing, total:closing.get('amount')});
+				var accountAssetType = _accountAssetTypes[assetType];
+				var closing = datastore.getClosing(account, selectedYear, selectedMonth);
+				
+				accountAssetType.ownerTotals[accOwner] += closing.get('amount');
+				accountAssetType.total += closing.get('amount');
+				
+				if (!accountAssetType.accounts[accountName]) {
+					accountAssetType.accounts[accountName] = {
+						account:account,
+						closings:{},
+						total:0.00
+					};
+				}
+
+				accountAssetType.accounts[accountName].closings[accOwner] = closing;
+				accountAssetType.accounts[accountName].total += closing.get('amount');
 			}
 		}
 		
-		page.getViewModel('assetSummary').get('accountAssetTypes').reset(util.toArray(_accountAssetTypes));
+		this.resetAssetTotals();
+		
+		page.getViewModel('assetSummary.accountAssetTypes').reset(util.toArray(_accountAssetTypes));
 	},
 	
 	resetIndividualAssetTypes:function() {
+		var _individualAssetTypes = {};
+		var selectedYear = page.getSelectedYear();
+		var selectedMonth = page.getSelectedMonth();
+		
+		var assets = datastore.getAssets();
+		for (var i=0; i<assets.length; i++) {
+			var asset = assets.at(i);
+			var assetName = asset.get('name');
+			var assetType = asset.get('type');
+			
+			if (!_individualAssetTypes[assetType]) {
+				_individualAssetTypes[assetType] = {
+					name:assetType,
+					ownerTotals:{Home:null,Papa:null,Mama:null,'Lok Lok':null},
+					assets:{},
+					total:0.00
+				};
+			}
+			
+			if (!_individualAssetTypes[assetType].assets[assetName]) {
+				_individualAssetTypes[assetType].assets[assetName] = {
+					asset:asset,
+					assetRate:datastore.getAssetRate(asset, selectedYear, selectedMonth),
+					assetAmounts:{},
+					total:0.00
+				};
+			}
+			
+			for (var ownerName in _individualAssetTypes[assetType].ownerTotals) {
+				var assetAmount = datastore.getAssetAmount(_individualAssetTypes[assetType].assets[assetName].assetRate, ownerName);
+				_individualAssetTypes[assetType].assets[assetName].assetAmounts[ownerName] = assetAmount;
+				_individualAssetTypes[assetType].assets[assetName].total += assetAmount.get('amount');
+				_individualAssetTypes[assetType].total += assetAmount.get('amount');
+			}
+		}
+		
+		this.resetAssetTotals();
+		
+		page.getViewModel('assetSummary.individualAssetTypes').reset(util.toArray(_individualAssetTypes));
+	},
+	
+	resetAssetTotals:function() {
+		var assetSummary = page.getViewModel('assetSummary');
+
+		var _ownerTotals = {Home:0.00, Papa:0.00, Mama:0.00, 'Lok Lok':0.00};
+		var _grandTotal = 0.00;
+
+		var accountAssetTypes = assetSummary.get('accountAssetTypes');
+		for (var i=0; i<accountAssetTypes.length; i++) {
+			var accountAssetType = accountAssetTypes.at(i);
+			var ownerTotals = accountAssetType.get('ownerTotals');
+			
+			for (var ownerName in ownerTotals)
+				_ownerTotals[ownerName] += ownerTotals[ownerName];
+			_grandTotal += accountAssetType.get('total');
+		}
+
+		var individualAssetTypes = assetSummary.get('individualAssetTypes');
+		for (var i=0; i<individualAssetTypes.length; i++) {
+			var individualAssetType = individualAssetTypes.at(i);
+			var ownerTotals = individualAssetType.get('ownerTotals');
+			
+			for (var ownerName in ownerTotals)
+				_ownerTotals[ownerName] += ownerTotals[ownerName];
+			_grandTotal += individualAssetType.get('total');
+		}
+
+		assetSummary.set({ownerTotals:_ownerTotals, grandTotal:_grandTotal});
 	},
 	
 	render:function() {
@@ -102,14 +181,8 @@ Main = View.extend({
 	},
 	
 	run:function() {
-		datastore.loadAccounts(
+		datastore.load(page.getSelectedYear(),
 			function /*success*/() {
-				datastore.loadTransactions(page.getSelectedYear(),
-					function /*success*/() {
-					},
-					function /*failed*/() {
-					}
-				);
 			},
 			function /*failed*/() {
 			}
@@ -134,6 +207,10 @@ Main = View.extend({
 	
 	editTransaction:function(transaction) {
 		this.append(this.TransactionEditor, {model:transaction}, 'transactionEditor');
+	},
+	
+	editAsset:function(asset) {
+		this.append(this.AssetEditor, {model:asset}, 'assetEditor');
 	},
 	
 	events:{
@@ -210,7 +287,7 @@ Main = View.extend({
 				},
 				
 				cbChange:function() {
-					var transactionView = this.findParent('transactionView');
+					var transactionView = this.findParent('TransactionView');
 					if (transactionView)
 						transactionView.findView('transactionList').refresh();
 				}
@@ -320,13 +397,13 @@ Main = View.extend({
 			},
 			
 			cbLnkAccountSummaryClick:function() {
-				var summaryView = this.findParent('summaryView');
+				var summaryView = this.findParent('SummaryView');
 				if (summaryView)
 					summaryView.switchView('accountSummary');
 			},
 			
 			cbLnkAssetSummaryClick:function() {
-				var summaryView = this.findParent('summaryView');
+				var summaryView = this.findParent('SummaryView');
 				if (summaryView)
 					summaryView.switchView('assettSummary');
 			}
@@ -385,7 +462,7 @@ Main = View.extend({
 
 					var row = this.append(TableRow, {}, 'row');
 					if (row) {
-						row.append(TableHeaderCell, {className:'ColName',text:'Opening'});
+						row.append(TableCell, {className:'ColName',text:'Opening'});
 						
 						var opening = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear()-1, 11);
 						row.append(this.OpeningCell, {model:opening});
@@ -466,7 +543,7 @@ Main = View.extend({
 					/* render category summary row */
 					var row = this.append(TableRow);
 					if (row) {
-						row.append(TableHeaderCell, {className:'ColName',text:bu.getTranType(this.options.tranType)});
+						row.append(TableCell, {className:'ColName',text:bu.getTranType(this.options.tranType)});
 						
 						for (var i=0; i<12; i++) {
 							row.append(TableCell, {className:'ColMonth', text:util.formatAmount(this.subtotals[i],2)});
@@ -477,7 +554,7 @@ Main = View.extend({
 					for (var a in categories) {
 						var row = this.append(TableRow);
 						if (row) {
-							row.append(TableHeaderCell, {className:'ColName',text:a});
+							row.append(TableCell, {className:'ColName',text:a});
 							
 							for (var i=0; i<categories[a].length; i++) {
 								row.append(TableCell, {className:'ColMonth', text:util.formatAmount(categories[a][i],2)});
@@ -507,7 +584,7 @@ Main = View.extend({
 					/* Closing row */
 					var row = this.append(TableRow, {}, 'row');
 					if (row) {
-						row.append(TableHeaderCell, {className:'ColName',text:'Closing'});
+						row.append(TableCell, {className:'ColName',text:'Closing'});
 						
 						for (var i=0; i<12; i++) {
 							var closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
@@ -518,7 +595,7 @@ Main = View.extend({
 					/* Diff row */
 					row = this.append(TableRow, {}, 'row');
 					if (row) {
-						row.append(TableHeaderCell, {className:'ColName',text:'Differences'});
+						row.append(TableCell, {className:'ColName',text:'Differences'});
 						
 						for (var i=0; i<12; i++) {
 							var closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
@@ -595,23 +672,24 @@ Main = View.extend({
 				tagName:'thead',
 				
 				initialize:function() {
-					this.collection = page.getViewModel('assetSummary').get('assetOwners');
-					this.collection.bind('reset', this.refresh, this);
-					
-					this.refresh();
-				},
-				
-				refresh:function() {
-					this.html('');
+					var ownerTotals = page.getViewModel('assetSummary.ownerTotals');
 					
 					var tr = this.append(TableRow);
 					if (tr) {
-						tr.append(TableHeaderCell, {className:'AssetCol'});
-						for (var i=0; i<this.collection.length; i++) {
-							tr.append(TableHeaderCell, {text:this.collection.at(i).get('name')});
+						tr.append(TableCell, {className:'Name'}).append(Button, {className:'BtnNew', label:'New'});
+						for (var ownerName in ownerTotals) {
+							tr.append(TableCell, {text:ownerName});
 						}
-						tr.append(TableHeaderCell, {className:'TotalCol', text:'Total'});
+						tr.append(TableCell, {className:'Total', text:'Total'});
 					}
+				},
+				
+				events:{
+					'click .BtnNew':'cbClickBtnNew'
+				},
+				
+				cbClickBtnNew:function() {
+					page.editAsset(new Asset());
 				}
 			}),
 			
@@ -619,7 +697,7 @@ Main = View.extend({
 				tagName:'tbody',
 				
 				initialize:function() {
-					this.collection = page.getViewModel('assetSummary').get('accountAssetTypes');
+					this.collection = page.getViewModel('assetSummary.accountAssetTypes');
 					this.collection.bind('reset', this.refresh, this);
 					
 					this.refresh();
@@ -628,22 +706,22 @@ Main = View.extend({
 				refresh:function() {
 					this.html('');
 					
-					var assetOwners = page.getViewModel('assetSummary').get('assetOwners');
+					var assetOwners = page.getViewModel('assetSummary.ownerTotals');
 					
 					for (var i=0; i<this.collection.length; i++) {
 						var accountAssetType = this.collection.at(i);
 						var assetTypeName = accountAssetType.get('name');
 						var ownerTotals = accountAssetType.get('ownerTotals');
 						var total = accountAssetType.get('total');
-						var assets = accountAssetType.get('assets');
+						var accounts = accountAssetType.get('accounts');
 						
 						/* render assetType row */
 						var tr = this.append(TableRow, {className:'AssetType'});
 						if (tr) {
-							tr.append(TableHeaderCell, {className:'AssetCol', text:assetTypeName});
+							tr.append(TableCell, {className:'Name', text:assetTypeName});
 							
-							for (var o=0; o<assetOwners.length; o++) {
-								var ownerTotal = ownerTotals[assetOwners.at(o).get('name')];
+							for (var ownerName in assetOwners) {
+								var ownerTotal = ownerTotals[ownerName];
 								if (ownerTotal != null)
 									tr.append(TableCell).append(Amount, {value:ownerTotal});
 								else
@@ -651,30 +729,30 @@ Main = View.extend({
 							}
 
 							if (total != null)
-								tr.append(TableHeaderCell, {className:'TotalCol'}).append(Amount, {value:total});
+								tr.append(TableCell, {className:'Total'}).append(Amount, {value:total});
 							else
-								tr.append(TableHeaderCell, {className:'TotalCol'});
+								tr.append(TableCell, {className:'Total'});
 						}
 						
 						/* render account rows */
-						for (var j=0; j<assets.length; j++) {
-							var asset = assets[j];
-							var account = asset.account;
-							var closing = asset.closing;
-							var total = asset.total;
+						for (var accName in accounts) {
+							var account = accounts[accName].account;
+							var closings = accounts[accName].closings;
+							var total = accounts[accName].total;
 							
 							var tr = this.append(TableRow, {className:'Account'});
 							if (tr) {
-								tr.append(TableHeaderCell, {className:'AssetCol', text:account.get('name')});
+								tr.append(TableCell, {className:'Name', text:account.get('name')});
 								
-								for (var o=0; o<assetOwners.length; o++) {
-									if (account.get('accOwner') == assetOwners.at(o).get('name'))
+								for (var ownerName in assetOwners) {
+									var closing = closings[ownerName];
+									if (closing != null)
 										tr.append(TableCell).append(Amount, {value:closing.get('amount')});
 									else
 										tr.append(TableCell);
 								}
 
-								tr.append(TableHeaderCell, {className:'TotalCol'}).append(Amount, {value:total});
+								tr.append(TableCell, {className:'Total'}).append(Amount, {value:total});
 							}
 							
 						}
@@ -683,6 +761,168 @@ Main = View.extend({
 			}),
 			
 			IndividualAssetSection:View.extend({
+				tagName:'tbody',
+				
+				initialize:function() {
+					this.collection = page.getViewModel('assetSummary.individualAssetTypes');
+					this.collection.bind('reset', this.refresh, this);
+					
+					this.refresh();
+				},
+				
+				refresh:function() {
+					this.html('');
+					
+					for (var i=0; i<this.collection.length; i++) {
+						var individualAssetType = this.collection.at(i);
+						var assetTypeName = individualAssetType.get('name');
+						var ownerTotals = individualAssetType.get('ownerTotals');
+						var total = individualAssetType.get('total');
+						var assets = individualAssetType.get('assets');
+						
+						/* render assetType row */
+						var tr = this.append(TableRow, {className:'AssetType'});
+						if (tr) {
+							tr.append(TableCell, {className:'Name', text:assetTypeName});
+							
+							for (var ownerName in ownerTotals) {
+								var ownerTotal = ownerTotals[ownerName];
+								if (ownerTotal != null)
+									tr.append(TableCell).append(Amount, {value:ownerTotal});
+								else
+									tr.append(TableCell);
+							}
+
+							if (total != null)
+								tr.append(TableCell, {className:'Total'}).append(Amount, {value:total});
+							else
+								tr.append(TableCell, {className:'Total'});
+						}
+						
+						/* render asset rows */
+						for (var assetName in assets) {
+							var asset = assets[assetName].asset;
+							var assetRate = assets[assetName].assetRate;
+							var assetAmounts = assets[assetName].assetAmounts;
+							var total = assets[assetName].total;
+							
+							var tr = this.append(TableRow, {className:'Asset'});
+							if (tr) {
+								var td = tr.append(TableCell, {className:'Name'});
+								td.append(this.AssetView, {model:asset});
+								td.append(this.AssetRateView, {model:assetRate}, 'assetRateView');
+								
+								for (var ownerName in assetAmounts) {
+									var assetAmount = assetAmounts[ownerName];
+									var td = tr.append(TableCell);
+									if (assetAmount != null)
+										td.append(this.AssetAmountView, {model:assetAmount});
+								}
+
+								tr.append(TableCell, {className:'Total'}).append(Amount, {value:total});
+							}
+							
+						}
+					}
+				},
+				
+				AssetView:View.extend({
+					tagName:'span',
+					
+					initialize:function() {
+						this.model.bind('change', this.refresh, this);
+						
+						this.refresh();
+					},
+					
+					refresh:function() {
+						this.html('');
+						this.text(this.model.get('name'));
+					}
+				}),
+				
+				AssetRateView:Amount.extend({
+					initialize:function() {
+						this.setPrefix('@');
+						this.attr('contentEditable', 'true');
+						this.model.bind('change', this.refresh, this);
+						
+						this.refresh();
+					},
+					
+					refresh:function() {
+						this.val(this.model.get('rate'));
+					},
+					
+					events:{
+						'focus':'cbFocus',
+						'blur':'cbBlur'
+					},
+					
+					cbFocus:function() {
+						this.setPrefix('');
+						this.val(this.model.get('rate'));
+					},
+					
+					cbBlur:function() {
+						this.setPrefix('@');
+						var oldValue = this.model.get('rate');
+						var value = this.val();
+						this.model.set({rate:value});
+						if (oldValue != value)
+							datastore.saveAssetRate(this.model);
+						else
+							this.val(oldValue);
+					},
+					
+					save:function(cbSuccess, cbFailed) {
+						datastore.saveAssetRate(this.model, cbSuccess, cbFailed);
+					}
+				}),
+				
+				AssetAmountView:Amount.extend({
+					initialize:function() {
+						this.attr('contentEditable', 'true');
+						this.model.bind('change', this.refresh, this);
+						
+						this.refresh();
+					},
+					
+					refresh:function() {
+						this.val(this.model.get('amount'));
+					},
+					
+					events:{
+						'focus':'cbFocus',
+						'blur':'cbBlur'
+					},
+					
+					cbFocus:function() {
+						this.val(this.model.get('units'));
+					},
+					
+					cbBlur:function() {
+						var _this = this;
+						var oldValue = this.model.get('units');
+						var value = this.val();
+						this.model.set({units:value});
+						if (oldValue != value) {
+							if (!this.model.get('rate').id) {
+								var assetRateView = this.findParent('Asset').findView('assetRateView');
+								assetRateView.save(
+									function /*success*/(rate) {
+										_this.model.set({rate:rate.toJSON()}, {silent:true});
+										datastore.saveAssetAmount(_this.model);
+									}
+								);
+							}
+							else
+								datastore.saveAssetAmount(this.model);
+						}
+						else
+							this.val(this.model.get('amount'));
+					}
+				})
 			}),
 			
 			Total:View.extend({
@@ -849,6 +1089,63 @@ Main = View.extend({
 			});
 						
 			datastore.saveTransaction(this.model, cbSuccess, cbFailed);
+		}
+	}),
+	
+	AssetEditor:View.extend({
+		tagName:'div',
+		className:'AssetEditor DialogBackground',
+		
+		initialize:function() {
+			var _this = this;
+			
+			var editor = this.append(Editor, {}, 'editor');
+			if (editor) {
+				if (!this.model.get('id'))
+					editor.setTitle('New Asset');
+				else
+					editor.setTitle(this.model.get('name'));
+				
+				editor.add(TextField, {label:'Asset Type', text:this.model.get('type')}, 'fldAssetType');
+				editor.add(TextField, {label:'Asset Name', text:this.model.get('name')}, 'fldName');
+				editor.add(CheckboxField, {label:'Discontinue?', checked:this.model.get('discontinued')}, 'fldDiscontinued');
+				
+				editor.onSave(function() {
+					_this.validate(
+						function /*ok*/() {
+							_this.save(
+								function /*success*/() {
+									_this.remove();
+								},
+								function /*failed*/(msg) {
+								}
+							);
+						},
+						function /*failed*/() {}
+					);
+				});
+				
+				editor.onCancel(function() {
+					_this.remove();
+				});
+			}
+		},
+		
+		validate:function(cbOk, cbFailed) {
+			if (cbOk) cbOk();
+			else if (cbFailed) cbFailed();
+		},
+		
+		save:function(cbSuccess, cbFailed) {
+			var editor = this.findView('editor');
+			
+			this.model.set({
+				type:editor.get('fldAssetType').val(),
+				name:editor.get('fldName').val(),
+				discontinued:editor.get('fldDiscontinued').checked()
+			});
+						
+			datastore.saveAsset(this.model, cbSuccess, cbFailed);
 		}
 	})
 });

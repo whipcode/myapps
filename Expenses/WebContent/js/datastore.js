@@ -17,28 +17,35 @@ datastore = {
 	
 	set:function(items, values, refDateFields, collection) {
 		for (var i=0; i<items.length; i++) {
-			var item = data[i];
+			var item = items[i];
 			var value = values[i];
 			
-			if (util.isInYear(item, refDateFields, _this.selectedYear) && !item.get('deleted')) {
+			if (util.isInYear(item, refDateFields, this.selectedYear) && !item.get('deleted')) {
 				if (!item.get('id'))
-					_this.data[collection].add(item);
+					collection.add(item);
 				item.set(value, {silent:true});
 			}
 			else {
 				if (item.get('id'))
-					_this.data[collection].remove(item);
+					collection.remove(item);
 			}
 		}
 	},
 	
-	/* Accounts */
-	loadAccounts:function(cbSuccess, cbFailed) {
+	load:function(year, cbSuccess, cbFailed) {
 		var _this = this;
 		
-		ServerApi.loadAccounts({
-			callback:function(_data) {
-				_this.data.accounts.reset(_data);
+		this.selectedYear = year;
+		ServerApi.load(this.selectedYear, {
+			callback:function (_data) {
+				_this.data.accounts.reset(_data.accounts);
+				_this.data.closings.reset(_data.closings);
+				_this.data.transactions.reset(_data.transactions);
+				_this.data.assets.reset(_data.assets);
+				_this.data.assetRates.reset(_data.assetRates);
+				_this.data.assetAmounts.reset(_data.assetAmounts);
+
+				_this.calcClosings();
 				if (cbSuccess) cbSuccess();
 			},
 			errorHandler:function(msg) {
@@ -48,6 +55,7 @@ datastore = {
 		});
 	},
 	
+	/* Accounts */
 	getAccounts:function() {
 		return this.data.accounts;
 	},
@@ -83,7 +91,7 @@ datastore = {
 
 				if (!account.get('deleted'))
 					account.set(_data, {silent:true});
-				if (cbSuccess) cbSuccess();
+				if (cbSuccess) cbSuccess(account);
 			},
 			errorHandler:function(msg) {
 				util.showError(msg);
@@ -119,26 +127,7 @@ datastore = {
 					closing.set(_data, {silent:true});
 					_this.calcClosings();
 				}
-				if (cbSuccess) cbSuccess();
-			},
-			errorHandler:function(msg) {
-				util.showError(msg);
-				if (cbFailed) cbFailed(msg);
-			}
-		});
-	},
-	
-	/* Transactions */
-	loadTransactions:function(year, cbSuccess, cbFailed) {
-		var _this = this;
-		
-		this.selectedYear = year;
-		ServerApi.loadTransactions(this.selectedYear, {
-			callback:function (_data) {
-				_this.data.closings.reset(_data.closings);
-				_this.data.transactions.reset(_data.transactions);
-				_this.calcClosings();
-				if (cbSuccess) cbSuccess();
+				if (cbSuccess) cbSuccess(closing);
 			},
 			errorHandler:function(msg) {
 				util.showError(msg);
@@ -169,6 +158,7 @@ datastore = {
 		}
 	},
 	
+	/* Transactions */
 	getTransactions:function() {
 		return this.data.transactions;
 	},
@@ -193,7 +183,7 @@ datastore = {
 
 				_this.calcClosings();
 				
-				if (cbSuccess) cbSuccess();
+				if (cbSuccess) cbSuccess(transaction);
 			},
 			errorHandler:function(msg) {
 				util.showError(msg);
@@ -229,8 +219,36 @@ datastore = {
 		return this.data.assetRates;
 	},
 	
+	getAssetRate:function(asset, year, month) {
+		for (var i=0; i<this.data.assetRates.length; i++) {
+			var assetRate = this.data.assetRates.at(i);
+			if (assetRate.get('asset').id == asset.get('id') && assetRate.get('date').getFullYear() == year && assetRate.get('date').getMonth() == month)
+				return assetRate;
+		}
+		
+		var assetRate = new AssetRate();
+		assetRate.set({asset:asset.toJSON(), date:new Date(year, month, 1), rate:1.00});
+		this.data.assetRates.add(assetRate);
+		return assetRate;
+	},
+	
 	getAssetAmounts:function() {
 		return this.data.assetAmounts;
+	},
+	
+	getAssetAmount:function(assetRate, owner) {
+		for (var i=0; i<this.data.assetAmounts.length; i++) {
+			var assetAmount = this.data.assetAmounts.at(i);
+			if (assetAmount.get('rate').id == assetRate.get('id') && assetAmount.get('assetOwner') == owner) {
+				var amount = assetAmount.get('units') * assetRate.get('rate');
+				assetAmount.set({amount:amount}, {silent:true});
+				return assetAmount;
+			}
+		}
+		
+		var assetAmount = new AssetAmount({rate:assetRate.toJSON(), assetOwner:owner, units:0.00, amount:0.00});
+		this.data.assetAmounts.add(assetAmount);
+		return assetAmount;
 	},
 	
 	saveAsset:function(asset, cbSuccess, cbFailed) {
@@ -238,9 +256,41 @@ datastore = {
 		
 		ServerApi.saveAsset(asset.toJSON(), {
 			callback:function(_data) {
-				_this.set([asset], [_data], [], 'assets');
+				_this.set([asset], [_data], [], _this.data.assets);
 				
-				if (cbSuccess) cbSuccess();
+				if (cbSuccess) cbSuccess(asset);
+			},
+			errorHandler:function(msg) {
+				util.showError(msg);
+				if (cbFailed) cbFailed(msg);
+			}
+		});
+	},
+	
+	saveAssetRate:function(assetRate, cbSuccess, cbFailed) {
+		var _this = this;
+		
+		ServerApi.saveAssetRate(assetRate.toJSON(), {
+			callback:function(_data) {
+				_this.set([assetRate], [_data], ['date'], _this.data.assetRates);
+				
+				if (cbSuccess) cbSuccess(assetRate);
+			},
+			errorHandler:function(msg) {
+				util.showError(msg);
+				if (cbFailed) cbFailed(msg);
+			}
+		});
+	},
+	
+	saveAssetAmount:function(assetAmount, cbSuccess, cbFailed) {
+		var _this = this;
+		
+		ServerApi.saveAssetAmount(assetAmount.toJSON(), {
+			callback:function(_data) {
+				_this.set([assetAmount], [_data], [], _this.data.assetAmounts);
+				
+				if (cbSuccess) cbSuccess(assetAmount);
 			},
 			errorHandler:function(msg) {
 				util.showError(msg);
