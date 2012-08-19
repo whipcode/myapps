@@ -15,6 +15,23 @@ datastore = {
 		return this.data[model].bind(event, callback, caller);
 	},
 	
+	set:function(items, values, refDateFields, collection) {
+		for (var i=0; i<items.length; i++) {
+			var item = data[i];
+			var value = values[i];
+			
+			if (util.isInYear(item, refDateFields, _this.selectedYear) && !item.get('deleted')) {
+				if (!item.get('id'))
+					_this.data[collection].add(item);
+				item.set(value, {silent:true});
+			}
+			else {
+				if (item.get('id'))
+					_this.data[collection].remove(item);
+			}
+		}
+	},
+	
 	/* Accounts */
 	loadAccounts:function(cbSuccess, cbFailed) {
 		var _this = this;
@@ -203,29 +220,32 @@ datastore = {
 		return totalsByAccountByMonth;
 	},
 	
-	getAssetOwners:function() {
-		return ['Home','Papa','Mama','Lok Lok'];
+	/* Asset */
+	getAssets:function() {
+		return this.data.assets;
 	},
 	
-	getAssetValuesOfMonthByTypeByAssessByOwner:function(month) {
-		var assetValues = {};
+	getAssetRates:function() {
+		return this.data.assetRates;
+	},
+	
+	getAssetAmounts:function() {
+		return this.data.assetAmounts;
+	},
+	
+	saveAsset:function(asset, cbSuccess, cbFailed) {
+		var _this = this;
 		
-		/* Add Account Assets */
-		var closings = this.getClosingsOfMonth(month);
-		for (var i=0; i<closings.length; i++) {
-			var closing = closings.at(i);
-			var account = closing.get('account');
-			var assetType = account.assetType;
-			var accountName = account.name;
-			var accountOwner = account.owner;
-
-			if (assetType && accountOwner) {
-				if (!assetValues[assetType]) assetValues[assetType] = {};
-				if (!assetValues[assetType][accountName]) assetValues[assetType][accountName] = {asset:new Asset({name:accountName}), rate:new AssetRate({rate:1}), assetAmounts:{}};
-				assetValues[assetType][accountName].assetAmounts[accountOwner] = new AssetAmount({amount:closing.get('amount')});
+		ServerApi.saveAsset(asset.toJSON(), {
+			callback:function(_data) {
+				_this.set([asset], [_data], [], 'assets');
+				
+				if (cbSuccess) cbSuccess();
+			},
+			errorHandler:function(msg) {
+				util.showError(msg);
+				if (cbFailed) cbFailed(msg);
 			}
-		}
-		
-		return assetValues;
+		});
 	}
 };

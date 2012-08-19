@@ -122,5 +122,27 @@ util = {
 		}
 		
 		return array;
+	},
+	
+	isInYear:function(data, refDateFields, year) {
+		for (var i=0; i<refDateFields.length; i++)
+			if (util.get(data, refDateFields[i]).getFullYear() != year)
+				return false;
+		
+		return true;
+	},
+	
+	get:function(obj, field) {
+		var fieldpath = field.split('.');
+		
+		var value = obj;
+		for (var i=0; i<fieldpath.length; i++) {
+			if (typeof(value[fieldpath[i]]) != 'undefined')
+				value = value[fieldpath[i]];
+			else if (typeof(value.get) == 'function')
+				value = value.get(fieldpath[i]);
+		}
+		
+		return value;
 	}
 };
