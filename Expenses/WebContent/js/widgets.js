@@ -69,15 +69,17 @@ View = Backbone.View.extend({
 	},
 	
 	findView:function(viewName) {
-		if (this.views[viewName])
-			return this.views[viewName];
-		
-		for (var a in this.views) {
-			var view = this.views[a].findView(viewName);
-			if (view)
-				return view;
+		if (this.views) {
+			if (this.views[viewName])
+				return this.views[viewName];
+			
+			for (var a in this.views) {
+				var view = this.views[a].findView(viewName);
+				if (view)
+					return view;
+			}
 		}
-		
+			
 		return null;
 	},
 	
