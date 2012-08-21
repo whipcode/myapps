@@ -31,8 +31,7 @@ Main = View.extend({
 		this.setViewModel('assetSummary', Model, {
 			accountAssetTypes:new Collection(),
 			individualAssetTypes:new Collection(),
-			ownerTotals:{'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00},
-			grandTotal:0.00
+			ownerTotals:new Model({'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00, 'Total':0.00})
 		});
 		
 		datastore.bind('accounts', 'reset', this.resetAccountAssetTypes, this);
@@ -138,8 +137,7 @@ Main = View.extend({
 	resetAssetTotals:function() {
 		var assetSummary = page.getViewModel('assetSummary');
 
-		var _ownerTotals = {Home:0.00, Papa:0.00, Mama:0.00, 'Lok Lok':0.00};
-		var _grandTotal = 0.00;
+		var _ownerTotals = {Home:0.00, Papa:0.00, Mama:0.00, 'Lok Lok':0.00, 'Total':0.00};
 
 		var accountAssetTypes = assetSummary.get('accountAssetTypes');
 		for (var i=0; i<accountAssetTypes.length; i++) {
@@ -148,7 +146,7 @@ Main = View.extend({
 			
 			for (var ownerName in ownerTotals)
 				_ownerTotals[ownerName] += ownerTotals[ownerName];
-			_grandTotal += accountAssetType.get('total');
+			_ownerTotals['Total'] += accountAssetType.get('total');
 		}
 
 		var individualAssetTypes = assetSummary.get('individualAssetTypes');
@@ -158,10 +156,10 @@ Main = View.extend({
 			
 			for (var ownerName in ownerTotals)
 				_ownerTotals[ownerName] += ownerTotals[ownerName];
-			_grandTotal += individualAssetType.get('total');
+			_ownerTotals['Total'] += individualAssetType.get('total');
 		}
 
-		assetSummary.set({ownerTotals:_ownerTotals, grandTotal:_grandTotal});
+		assetSummary.get('ownerTotals').set(_ownerTotals);
 	},
 	
 	render:function() {
@@ -658,7 +656,7 @@ Main = View.extend({
 					table.append(this.Header);
 					table.append(this.AccountAssetSection);
 					table.append(this.IndividualAssetSection);
-					table.append(this.Total);
+					table.append(this.AssetTotal);
 				}
 			},
 			
@@ -677,7 +675,7 @@ Main = View.extend({
 					var tr = this.append(TableRow);
 					if (tr) {
 						tr.append(TableCell, {className:'Name'}).append(Button, {className:'BtnNew', label:'New'});
-						for (var ownerName in ownerTotals) {
+						for (var ownerName in ownerTotals.attributes) {
 							tr.append(TableCell, {text:ownerName});
 						}
 						tr.append(TableCell, {className:'Total', text:'Total'});
@@ -706,7 +704,7 @@ Main = View.extend({
 				refresh:function() {
 					this.html('');
 					
-					var assetOwners = page.getViewModel('assetSummary.ownerTotals');
+					var ownerTotals = page.getViewModel('assetSummary.ownerTotals');
 					
 					for (var i=0; i<this.collection.length; i++) {
 						var accountAssetType = this.collection.at(i);
@@ -720,7 +718,7 @@ Main = View.extend({
 						if (tr) {
 							tr.append(TableCell, {className:'Name', text:assetTypeName});
 							
-							for (var ownerName in assetOwners) {
+							for (var ownerName in ownerTotals.attributes) {
 								var ownerTotal = ownerTotals[ownerName];
 								if (ownerTotal != null)
 									tr.append(TableCell).append(Amount, {value:ownerTotal});
@@ -744,7 +742,7 @@ Main = View.extend({
 							if (tr) {
 								tr.append(TableCell, {className:'Name', text:account.get('name')});
 								
-								for (var ownerName in assetOwners) {
+								for (var ownerName in ownerTotals.attributes) {
 									var closing = closings[ownerName];
 									if (closing != null)
 										tr.append(TableCell).append(Amount, {value:closing.get('amount')});
@@ -925,7 +923,49 @@ Main = View.extend({
 				})
 			}),
 			
-			Total:View.extend({
+			AssetTotal:View.extend({
+				tagName:'tfoot',
+				className:'AssetTotal',
+				
+				initialize:function() {
+					this.model = page.getViewModel('assetSummary.ownerTotals');
+					
+					this.model.bind('change:Home', this.cbHomeChanged, this);
+					this.model.bind('change:Papa', this.cbPapaChanged, this);
+					this.model.bind('change:Mama', this.cbMamaChanged, this);
+					this.model.bind('change:"Lok Lok"', this.cbLokLokChanged, this);
+					this.model.bind('change:Total', this.cbTotalChanged, this);
+					
+					var tr = this.append(TableRow);
+					if (tr) {
+						tr.append(TableCell, {className:'Name', text:'Total'});
+						tr.append(TableCell).append(Amount, {value:this.model.get('Home')}, 'homeTotal');
+						tr.append(TableCell).append(Amount, {value:this.model.get('Papa')}, 'papaTotal');
+						tr.append(TableCell).append(Amount, {value:this.model.get('Mama')}, 'mamaTotal');
+						tr.append(TableCell).append(Amount, {value:this.model.get('Lok Lok')}, 'loklokTotal');
+						tr.append(TableCell).append(Amount, {value:this.model.get('Total')}, 'grandTotal');
+					}
+				},
+				
+				cbHomeChanged:function() {
+					this.findView('homeTotal').val(this.model.get('Home'));
+				},
+				
+				cbPapaChanged:function() {
+					this.findView('papaTotal').val(this.model.get('Papa'));
+				},
+				
+				cbMamaChanged:function() {
+					this.findView('mamaTotal').val(this.model.get('Mama'));
+				},
+				
+				cbLokLokChanged:function() {
+					this.findView('loklookTotal').val(this.model.get('Lok Lok'));
+				},
+				
+				cbTotalChanged:function() {
+					this.findView('grandTotal').val(this.model.get('Total'));
+				}
 			})
 		})
 	}),
