@@ -134,6 +134,10 @@ Wrapper = View.extend({
 	tagName:'div',
 });
 
+Line = View.extend({
+	tagName:'hr'
+}),
+
 Text = View.extend({
 	tagName:'span',
 	

@@ -175,8 +175,6 @@ datastore = {
 				}
 				else if (transaction.get('id') && transaction.get('deleted'))
 					_this.data.transactions.remove(transaction);
-				else if (transaction.get('id') && !transaction.get('deleted'))
-					_this.data.transactions.trigger('reset');
 				
 				if (!transaction.get('deleted'))
 					transaction.set(_data, {silent:true});

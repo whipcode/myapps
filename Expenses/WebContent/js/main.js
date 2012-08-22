@@ -87,9 +87,8 @@ Main = View.extend({
 			}
 		}
 		
-		this.resetAssetTotals();
-		
 		page.getViewModel('assetSummary.accountAssetTypes').reset(util.toArray(_accountAssetTypes));
+		this.resetAssetTotals();
 	},
 	
 	resetIndividualAssetTypes:function() {
@@ -129,9 +128,8 @@ Main = View.extend({
 			}
 		}
 		
-		this.resetAssetTotals();
-		
 		page.getViewModel('assetSummary.individualAssetTypes').reset(util.toArray(_individualAssetTypes));
+		this.resetAssetTotals();
 	},
 	
 	resetAssetTotals:function() {
@@ -452,7 +450,7 @@ Main = View.extend({
 					this.collection = datastore.getClosings();
 					
 					this.collection.bind('reset', this.refresh, this);
-					
+					this.collection.bind('change', this.refresh, this);
 				},
 				
 				refresh:function() {
@@ -509,6 +507,7 @@ Main = View.extend({
 					this.collection.bind('reset', this.refresh, this);
 					this.collection.bind('add', this.refresh, this);
 					this.collection.bind('remove', this.refresh, this);
+					this.collection.bind('change', this.refresh, this);
 					
 					this.subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
 				},
@@ -574,6 +573,7 @@ Main = View.extend({
 					this.collection = datastore.getClosings();
 					
 					this.collection.bind('reset', this.refresh, this);
+					this.collection.bind('change', this.refresh, this);
 				},
 				
 				refresh:function() {
@@ -764,6 +764,9 @@ Main = View.extend({
 				initialize:function() {
 					this.collection = page.getViewModel('assetSummary.individualAssetTypes');
 					this.collection.bind('reset', this.refresh, this);
+					this.collection.bind('add', this.refresh, this);
+					this.collection.bind('remove', this.refresh, this);
+					this.collection.bind('change', this.refresh, this);
 					
 					this.refresh();
 				},
@@ -984,11 +987,11 @@ Main = View.extend({
 				else
 					editor.setTitle(this.model.get('name'));
 				
-				editor.add(TextField, {label:'Account Name', text:this.model.get('name')}, 'fldName');
-				editor.add(TextField, {label:'Asset Type', text:this.model.get('assetType')}, 'fldAssetType');
-				editor.add(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
-				editor.add(TextField, {label:'Owner', text:this.model.get('accOwner')}, 'fldAccOwner');
-				editor.add(CollectionPickerField, 
+				editor.body.append(TextField, {label:'Account Name', text:this.model.get('name')}, 'fldName');
+				editor.body.append(TextField, {label:'Asset Type', text:this.model.get('assetType')}, 'fldAssetType');
+				editor.body.append(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
+				editor.body.append(TextField, {label:'Owner', text:this.model.get('accOwner')}, 'fldAccOwner');
+				editor.body.append(CollectionPickerField, 
 					{
 						label:'Default Payment Settle Account', 
 						collection:datastore.getAccounts(), 
@@ -997,45 +1000,47 @@ Main = View.extend({
 						selectModel:this.model.get('defSettleAcc')
 					}, 
 					'fldDefSettleAcc');
-				editor.add(CheckboxField, {label:'Delete?', checked:this.model.get('deleted')}, 'fldDelete');
-				
-				editor.onSave(function() {
-					_this.validate(
-						function /*ok*/() {
-							_this.save(
-								function /*success*/() {
-									_this.remove();
-								},
-								function /*failed*/(msg) {
-								}
-							);
-						},
-						function /*failed*/() {}
-					);
-				});
-				
-				editor.onCancel(function() {
-					_this.remove();
-				});
+				editor.body.append(CheckboxField, {label:'Delete?', checked:this.model.get('deleted')}, 'fldDelete');
 			}
 		},
 		
+		events:{
+			'click .BtnSave':'cbClickSave',
+			'click .BtnCancel':'cbClickCancel'
+		},
+		
+		cbClickSave:function() {
+			var _this = this;
+			
+			if (this.validate())
+				this.save(
+					function /*success*/() {
+						_this.remove();
+					},
+					function /*failed*/(msg) {
+					}
+				);
+		},
+		
+		cbClickCancel:function() {
+			this.remove();
+		},
+		
 		validate:function(cbOk, cbFailed) {
-			if (cbOk) cbOk();
-			else if (cbFailed) cbFailed();
+			return true;
 		},
 		
 		save:function(cbSuccess, cbFailed) {
 			var editor = this.findView('editor');
-			var defSettleAcc = editor.get('fldDefSettleAcc').getSelectedModel();
+			var defSettleAcc = editor.findView('fldDefSettleAcc').getSelectedModel();
 			
 			this.model.set({
-				name:editor.get('fldName').val(),
-				assetType:editor.get('fldAssetType').val(),
-				desc:editor.get('fldDesc').val(),
-				accOwner:editor.get('fldAccOwner').val(),
+				name:editor.findView('fldName').val(),
+				assetType:editor.findView('fldAssetType').val(),
+				desc:editor.findView('fldDesc').val(),
+				accOwner:editor.findView('fldAccOwner').val(),
 				defSettleAcc:(defSettleAcc?defSettleAcc.toJSON():null),
-				deleted:editor.get('fldDelete').checked()
+				deleted:editor.findView('fldDelete').checked()
 			});
 			
 			datastore.saveAccount(this.model, cbSuccess, cbFailed);
@@ -1047,6 +1052,7 @@ Main = View.extend({
 		className:'TransactionEditor DialogBackground',
 		
 		initialize:function() {
+			this.attr('tabindex','99');
 			var editor = this.append(Editor, {}, 'editor');
 			if (editor) {
 				if (!this.model.get('id'))
@@ -1088,20 +1094,36 @@ Main = View.extend({
 					}, 
 					'fldClaimAcc').append(Label, {text:'Date'}).append(DateInput, {}, 'fldClaimDate');
 				editor.body.append(CheckboxField, {label:'Delete?', checked:this.model.get('deleted')}, 'fldDelete');
+				
+				editor.body.append(Line);
+				
 				var repeatDiv = editor.body.append(Wrapper, {className:'RepeatFields'});
 				if (repeatDiv) {
-					repeatDiv.append(Text, {text:'Repeat:'});
-					repeatDiv.append(AmountInput, {className:'InputRepeatTimes'}, 'fldRepeatTimes');
-					repeatDiv.append(Text, {text:'Times, Every'});
-					repeatDiv.append(AmountInput, {className:'InputRepeatMonths'}, 'fldRepeatMonths');
-					repeatDiv.append(Text, {text:'Months'});
+					if (this.model.get('repeatKey')) 
+						repeatDiv.append(CheckboxField, {label:'Auto Repeat?', className:'AutoRepeat', checked:true}, 'fldAutoRepeat');
+
+					var repeatDtl = repeatDiv.append(Wrapper);
+					if (repeatDtl) {
+						repeatDtl.append(Label, {text:'Repeat:'});
+						repeatDtl.append(AmountInput, {className:'InputRepeatTimes'}, 'fldRepeatTimes');
+						repeatDtl.append(Label, {text:'Times, Every'});
+						repeatDtl.append(AmountInput, {className:'InputRepeatMonths'}, 'fldRepeatMonths');
+						repeatDtl.append(Label, {text:'Months'});
+					}
+
+					if (this.model.get('repeatKey')) {
+						repeatDtl.findView('fldRepeatTimes').attr('disabled','disabled');
+						repeatDtl.findView('fldRepeatMonths').attr('disabled','disabled');
+					}
 				}
 			}
 		},
 		
 		events:{
 			'click .BtnSave':'cbClickSave',
-			'click .BtnCancel':'cbClickCancel'
+			'click .BtnCancel':'cbClickCancel',
+			'click .AutoRepeat':'cbClickAutoRepeat',
+			'keyup':'cbKeypress'
 		},
 		
 		cbClickSave:function() {
@@ -1122,6 +1144,24 @@ Main = View.extend({
 			this.remove();
 		},
 		
+		cbClickAutoRepeat:function() {
+			var autoRepeat = this.findView('fldAutoRepeat').checked();
+			if (!autoRepeat) {
+				this.findView('fldRepeatTimes').$el.removeAttr('disabled');
+				this.findView('fldRepeatMonths').$el.removeAttr('disabled');
+			}
+			else {
+				this.findView('fldRepeatTimes').$el.attr('disabled','disabled');
+				this.findView('fldRepeatMonths').$el.attr('disabled','disabled');
+			}
+		},
+		
+		cbKeypress:function(evt) {
+			if (evt.keyCode == 27) {
+				this.remove();
+			}
+		},
+		
 		validate:function(cbOk, cbFailed) {
 			return true;
 		},
@@ -1133,6 +1173,7 @@ Main = View.extend({
 			var claimAcc = editor.body.findView('fldClaimAcc').getSelectedModel();
 			var repeatTimes = editor.body.findView('fldRepeatTimes').val();
 			var repeatMonths = editor.body.findView('fldRepeatMonths').val();
+			var autoRepeat = editor.body.findView('fldAutoRepeat')?editor.body.findView('fldAutoRepeat').checked():false;
 			
 			this.model.set({
 				tranDate:editor.body.findView('fldTranDate').val(),
@@ -1144,13 +1185,14 @@ Main = View.extend({
 
 				tranxAcc:(tranxAcc?tranxAcc.toJSON():null),
 				settleAcc:(settleAcc?settleAcc.toJSON():null),
-				claimAcc:(settleAcc?claimAcc.toJSON():null),
+				claimAcc:(claimAcc?claimAcc.toJSON():null),
 				deleted:editor.body.findView('fldDelete').checked()
 			});
 						
-			if (repeatTimes > 1 || this.model.get('repeatKey')) {
+			if (autoRepeat)
+				datastore.saveTransactionRepeat(this.model, {auto:true}, cbSuccess, cbFailed);
+			else if (repeatTimes > 1)
 				datastore.saveTransactionRepeat(this.model, {times:repeatTimes, months:repeatMonths, auto:false}, cbSuccess, cbFailed);
-			}
 			else
 				datastore.saveTransaction(this.model, cbSuccess, cbFailed);
 		}
@@ -1170,43 +1212,45 @@ Main = View.extend({
 				else
 					editor.setTitle(this.model.get('name'));
 				
-				editor.add(TextField, {label:'Asset Type', text:this.model.get('type')}, 'fldAssetType');
-				editor.add(TextField, {label:'Asset Name', text:this.model.get('name')}, 'fldName');
-				editor.add(CheckboxField, {label:'Discontinue?', checked:this.model.get('discontinued')}, 'fldDiscontinued');
-				
-				editor.onSave(function() {
-					_this.validate(
-						function /*ok*/() {
-							_this.save(
-								function /*success*/() {
-									_this.remove();
-								},
-								function /*failed*/(msg) {
-								}
-							);
-						},
-						function /*failed*/() {}
-					);
-				});
-				
-				editor.onCancel(function() {
-					_this.remove();
-				});
+				editor.body.append(TextField, {label:'Asset Type', text:this.model.get('type')}, 'fldAssetType');
+				editor.body.append(TextField, {label:'Asset Name', text:this.model.get('name')}, 'fldName');
+				editor.body.append(CheckboxField, {label:'Discontinue?', checked:this.model.get('discontinued')}, 'fldDiscontinued');
 			}
 		},
 		
+		events:{
+			'click .BtnSave':'cbClickSave',
+			'click .BtnCancel':'cbClickCancel'
+		},
+		
+		cbClickSave:function() {
+			var _this = this;
+			
+			if (this.validate())
+				this.save(
+					function /*success*/() {
+						_this.remove();
+					},
+					function /*failed*/(msg) {
+					}
+				);
+		},
+		
+		cbClickCancel:function() {
+			this.remove();
+		},
+		
 		validate:function(cbOk, cbFailed) {
-			if (cbOk) cbOk();
-			else if (cbFailed) cbFailed();
+			return true;
 		},
 		
 		save:function(cbSuccess, cbFailed) {
 			var editor = this.findView('editor');
 			
 			this.model.set({
-				type:editor.get('fldAssetType').val(),
-				name:editor.get('fldName').val(),
-				discontinued:editor.get('fldDiscontinued').checked()
+				type:editor.findView('fldAssetType').val(),
+				name:editor.findView('fldName').val(),
+				discontinued:editor.findView('fldDiscontinued').checked()
 			});
 						
 			datastore.saveAsset(this.model, cbSuccess, cbFailed);

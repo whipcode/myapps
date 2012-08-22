@@ -132,7 +132,8 @@ public class ServerApi {
 
 		try {
 			long repeatKey = transaction.getRepeatKey();
-			if (repeatKey == 0 || !repeatDtl.isAuto()) {
+			
+			if (repeatKey == 0) {
 				repeatKey = new Date().getTime();
 				
 				transaction.setRepeatKey(repeatKey);
@@ -140,7 +141,39 @@ public class ServerApi {
 				
 				for (int n=1; n<repeatDtl.getTimes(); n++) {
 					Transaction repeatedTranx = new Transaction();
-					repeatedTranx.set(transaction);
+					repeatedTranx.set(transaction, true);
+					repeatedTranx.setTranDate(DateUtil.addMonth(transaction.getTranDate(), repeatDtl.getMonths() * n));
+					repeatedTranx.setSettleDate(DateUtil.addMonth(transaction.getSettleDate(), repeatDtl.getMonths() * n));
+					repeatedTranx.setClaimDate(DateUtil.addMonth(transaction.getClaimDate(), repeatDtl.getMonths() * n));
+					
+					transactions.add(repeatedTranx);
+				}
+			}
+			else if (repeatDtl.isAuto()) {
+				transactions = session.createCriteria(Transaction.class)
+						.add(Restrictions.eq("tranxAcc", transaction.getTranxAcc()))
+						.add(Restrictions.ge("tranDate", transaction.getTranDate()))
+						.add(Restrictions.eq("repeatKey", transaction.getRepeatKey()))
+						.list();
+			
+				for (Iterator<Transaction> itTransactions=transactions.iterator(); itTransactions.hasNext();) {
+					Transaction repeatedTranx = itTransactions.next();
+					repeatedTranx.set(transaction, false);
+				}
+			}
+			else {
+				transactions.add(transaction);
+
+				for (int n=1; n<repeatDtl.getTimes(); n++) {
+					Date targetTranDate = DateUtil.addMonth(transaction.getTranDate(), repeatDtl.getMonths() * n);
+					
+					Transaction repeatedTranx = (Transaction)session.createCriteria(Transaction.class)
+							.add(Restrictions.eq("tranxAcc", transaction.getTranxAcc()))
+							.add(Restrictions.sqlRestriction("YEAR(TRAN_DATE) = ?", new Integer(targetTranDate.getYear()+1900), Hibernate.INTEGER))
+							.add(Restrictions.sqlRestriction("MONTH(TRAN_DATE) = ?", new Integer(targetTranDate.getMonth()+1), Hibernate.INTEGER))
+							.add(Restrictions.eq("repeatKey", transaction.getRepeatKey()))
+							.uniqueResult();
+					repeatedTranx.set(transaction, true);
 					repeatedTranx.setTranDate(DateUtil.addMonth(transaction.getTranDate(), repeatDtl.getMonths() * n));
 					repeatedTranx.setSettleDate(DateUtil.addMonth(transaction.getSettleDate(), repeatDtl.getMonths() * n));
 					repeatedTranx.setClaimDate(DateUtil.addMonth(transaction.getClaimDate(), repeatDtl.getMonths() * n));

@@ -130,8 +130,7 @@ public class Transaction extends Base {
 		this.claimDate = claimDate;
 	}
 	
-	public void set(Transaction src) {
-		this.tranDate = src.tranDate;
+	public void set(Transaction src, boolean withDates) {
 		this.tranType = src.tranType;
 		this.amount = src.amount;
 		this.desc = src.desc;
@@ -142,7 +141,11 @@ public class Transaction extends Base {
 		this.settleAcc = src.settleAcc;
 		this.claimAcc = src.claimAcc;
 		this.transferAcc = src.transferAcc;
-		this.settleDate = src.settleDate;
-		this.claimDate = src.claimDate;
+		
+		if (withDates) {
+			this.tranDate = src.tranDate;
+			this.settleDate = src.settleDate;
+			this.claimDate = src.claimDate;
+		}
 	}
 }
