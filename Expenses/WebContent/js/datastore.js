@@ -192,6 +192,34 @@ datastore = {
 		});
 	},
 	
+	saveTransactionRepeat:function(transaction, repeatDtl, cbSuccess, cbFailed) {
+		var _this = this;
+		
+		ServerApi.saveTransactionRepeat(transaction.toJSON(), repeatDtl, {
+			callback:function(_data) {
+				for (var i=0; i<_data.length; i++) {
+					var _transaction = _data[i];
+					
+					var foundTran = _this.data.transactions.get(_transaction.id);
+					if (foundTran) {
+						foundTran.set(_transaction);
+					}
+					else {
+						if (util.isInYear(_transaction, ['tranDate','settleDate','claimDate'], _this.selectedYear) && !_transaction.deleted) {
+							_this.data.transactions.add(_transaction);
+						}
+					}
+				}
+				
+				if (cbSuccess) cbSuccess(transaction);
+			},
+			errorHandler:function(msg) {
+				util.showError(msg);
+				if (cbFailed) cbFailed(msg);
+			}
+		});
+	},
+	
 	getTotalsByAccountByMonth:function() {
 		var totalsByAccountByMonth = {};
 		var transactions = this.getTransactions();

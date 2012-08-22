@@ -39,6 +39,7 @@ View = Backbone.View.extend({
 		
 	insertAbove:function(View, options, viewName) {
 		var view = new View(options);
+		if (!this.views) this.views = {};
 
 		if (typeof(viewName) == 'undefined')
 			viewName = this.genViewName();
@@ -46,7 +47,23 @@ View = Backbone.View.extend({
 		view.viewName = viewName;
 		this.views[viewName] = view;
 
-		this.$el.before(view.$el);
+		this.$el.before(view.el);
+		view.parent = this.parent;
+		
+		return view;
+	},
+		
+	insertBelow:function(View, options, viewName) {
+		var view = new View(options);
+		if (!this.views) this.views = {};
+
+		if (typeof(viewName) == 'undefined')
+			viewName = this.genViewName();
+
+		view.viewName = viewName;
+		this.views[viewName] = view;
+
+		this.$el.after(view.el);
 		view.parent = this.parent;
 		
 		return view;
@@ -117,12 +134,21 @@ Wrapper = View.extend({
 	tagName:'div',
 });
 
+Text = View.extend({
+	tagName:'span',
+	
+	initialize:function() {
+		if (typeof(this.options.text) != 'undefined')
+			this.text(this.options.text);
+	}
+});
+
 Label = View.extend({
 	tagName:'label',
 	
 	initialize:function() {
 		if (typeof(this.options.text) != 'undefined')
-			this.html(this.options.text);
+			this.text(this.options.text);
 	}
 });
 
@@ -272,8 +298,6 @@ DateInput = View.extend({
 		this.$el.attr('type','text');
 		if (typeof(this.options.date) != 'undefined')
 			this.val(this.options.date);
-		else
-			this.val(util.getToday());
 	},
 	
 	val:function(date) {
@@ -686,8 +710,8 @@ Editor = View.extend({
 	tagName:'div',
 	lblSave:'Save',
 	lblCancel:'Cancel',
-	cbSave:null,
-	cbCancel:null,
+	menu:null,
+	body:null,
 	
 	initialize:function() {
 		this.addClass('Editor');
@@ -697,51 +721,17 @@ Editor = View.extend({
 			if (this.options.label.cancel) this.lblSave = this.options.label.cancel;
 		}
 		
-		var menu = this.append(Wrapper, {className:'Menu'}, 'menu');
-		if (menu) {
-			menu.append(Paragraph, {tagName:'h2',className:'Title'}, 'title');
-			menu.append(Button, {className:'BtnSave', label:this.lblSave});
-			menu.append(Button, {className:'BtnCancel', label:this.lblCancel});
+		this.menu = this.append(Wrapper, {className:'Menu'}, 'menu');
+		if (this.menu) {
+			this.menu.append(Button, {className:'BtnCancel', label:this.lblCancel}, 'btnCancel');
+			this.menu.append(Button, {className:'BtnSave', label:this.lblSave}, 'btnSave');
+			this.menu.append(Paragraph, {tagName:'h2',className:'Title'}, 'title');
 		}
-		this.append(Wrapper, {className:'EditArea'}, 'editArea');
-	},
-	
-	events:{
-		'click .BtnSave':'cbSaveClick',
-		'click .BtnCancel':'cbCancelClick'
-	},
-	
-	cbSaveClick:function() {
-		if (this.cbSave) this.cbSave();
-	},
-	
-	cbCancelClick:function() {
-		if (this.cbCancel) this.cbCancel();
-	},
-	
-	close:function() {
-		this.$el.remove();
+		
+		this.body = this.append(Wrapper, {className:'EditArea'}, 'editArea');
 	},
 	
 	setTitle:function(text) {
-		this.getView('menu').getView('title').html(text);
-	},
-	
-	onSave:function(cbSave) {
-		this.cbSave = cbSave;
-	},
-	
-	onCancel:function(cbCancel) {
-		this.cbCancel = cbCancel;
-	},
-
-	add:function(View, options, viewId) {
-		var editArea = this.getView('editArea');
-		
-		editArea.append(View, options,viewId);
-	},
-	
-	get:function(viewId) {
-		return this.getView('editArea').getView(viewId);
+		this.menu.getView('title').text(text);
 	}
 });

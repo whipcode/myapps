@@ -129,4 +129,20 @@ public class Transaction extends Base {
 	public void setClaimDate(Date claimDate) {
 		this.claimDate = claimDate;
 	}
+	
+	public void set(Transaction src) {
+		this.tranDate = src.tranDate;
+		this.tranType = src.tranType;
+		this.amount = src.amount;
+		this.desc = src.desc;
+		this.tranxCatg = src.tranxCatg;
+		this.remarks = src.remarks;
+		this.repeatKey = src.repeatKey;
+		this.tranxAcc = src.tranxAcc;
+		this.settleAcc = src.settleAcc;
+		this.claimAcc = src.claimAcc;
+		this.transferAcc = src.transferAcc;
+		this.settleDate = src.settleDate;
+		this.claimDate = src.claimDate;
+	}
 }

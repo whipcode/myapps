@@ -359,7 +359,7 @@ Main = View.extend({
 			},
 			
 			cbBtnAddTranxClick:function() {
-				page.editTransaction(new Transaction({tranxAcc:page.getSelectedAccount().toJSON()}));
+				page.editTransaction(new Transaction({tranxAcc:page.getSelectedAccount().toJSON(), tranDate:util.getToday()}));
 			}
 		})
 	}),
@@ -1047,8 +1047,6 @@ Main = View.extend({
 		className:'TransactionEditor DialogBackground',
 		
 		initialize:function() {
-			var _this = this;
-			
 			var editor = this.append(Editor, {}, 'editor');
 			if (editor) {
 				if (!this.model.get('id'))
@@ -1056,8 +1054,7 @@ Main = View.extend({
 				else
 					editor.setTitle(this.model.get('desc'));
 				
-				editor.add(Paragraph, {tagName:'h2', text:this.model.get('tranxAcc').name});
-				editor.add(CollectionPickerField, 
+				editor.body.append(CollectionPickerField, 
 					{
 						label:'Account', 
 						collection:datastore.getAccounts(), 
@@ -1066,13 +1063,13 @@ Main = View.extend({
 						selectedId:this.model.get('tranxAcc')?this.model.get('tranxAcc').id:0
 					}, 
 					'fldTranxAcc');
-				editor.add(DateField, {label:'Transaction Date', date:this.model.get('tranDate')}, 'fldTranDate');
-				editor.add(PickerField, {label:'Transaction Type', options:bu.getTranTypes(), value:this.model.get('tranType')}, 'fldTranType');
-				editor.add(TextField, {label:'Category', text:this.model.get('tranxCatg')}, 'fldTranxCatg');
-				editor.add(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
-				editor.add(AmountField, {label:'Amount', amount:this.model.get('amount')}, 'fldAmount');
-				editor.add(TextField, {label:'Remarks', text:this.model.get('remarks')}, 'fldRemarks');
-				editor.add(CollectionPickerField, 
+				editor.body.append(DateField, {label:'Transaction Date', date:this.model.get('tranDate')}, 'fldTranDate');
+				editor.body.append(PickerField, {label:'Transaction Type', options:bu.getTranTypes(), value:this.model.get('tranType')}, 'fldTranType');
+				editor.body.append(TextField, {label:'Category', text:this.model.get('tranxCatg')}, 'fldTranxCatg');
+				editor.body.append(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
+				editor.body.append(AmountField, {label:'Amount', amount:this.model.get('amount')}, 'fldAmount');
+				editor.body.append(TextField, {label:'Remarks', text:this.model.get('remarks')}, 'fldRemarks');
+				editor.body.append(CollectionPickerField, 
 					{
 						label:'Settle Account', 
 						collection:datastore.getAccounts(), 
@@ -1080,55 +1077,82 @@ Main = View.extend({
 						withBlank:true, 
 						selectedId:this.model.get('settleAcc')?this.model.get('settleAcc').id:0
 					}, 
-					'fldSettleAcc');
-				editor.add(CheckboxField, {label:'Delete?', checked:this.model.get('deleted')}, 'fldDelete');
-				
-				editor.onSave(function() {
-					_this.validate(
-						function /*ok*/() {
-							_this.save(
-								function /*success*/() {
-									_this.remove();
-								},
-								function /*failed*/(msg) {
-								}
-							);
-						},
-						function /*failed*/() {}
-					);
-				});
-				
-				editor.onCancel(function() {
-					_this.remove();
-				});
+					'fldSettleAcc').append(Label, {text:'Date'}).append(DateInput, {}, 'fldSettleDate');
+				editor.body.append(CollectionPickerField, 
+					{
+						label:'Claim Account', 
+						collection:datastore.getAccounts(), 
+						displayField:'name', 
+						withBlank:true, 
+						selectedId:this.model.get('claimAcc')?this.model.get('claimAcc').id:0
+					}, 
+					'fldClaimAcc').append(Label, {text:'Date'}).append(DateInput, {}, 'fldClaimDate');
+				editor.body.append(CheckboxField, {label:'Delete?', checked:this.model.get('deleted')}, 'fldDelete');
+				var repeatDiv = editor.body.append(Wrapper, {className:'RepeatFields'});
+				if (repeatDiv) {
+					repeatDiv.append(Text, {text:'Repeat:'});
+					repeatDiv.append(AmountInput, {className:'InputRepeatTimes'}, 'fldRepeatTimes');
+					repeatDiv.append(Text, {text:'Times, Every'});
+					repeatDiv.append(AmountInput, {className:'InputRepeatMonths'}, 'fldRepeatMonths');
+					repeatDiv.append(Text, {text:'Months'});
+				}
 			}
 		},
 		
+		events:{
+			'click .BtnSave':'cbClickSave',
+			'click .BtnCancel':'cbClickCancel'
+		},
+		
+		cbClickSave:function() {
+			var _this = this;
+			
+			if (this.validate()) {
+				this.save(
+					function /*success*/() {
+						_this.remove();
+					},
+					function /*failed*/(msg) {
+					}
+				);
+			}
+		},
+		
+		cbClickCancel:function() {
+			this.remove();
+		},
+		
 		validate:function(cbOk, cbFailed) {
-			if (cbOk) cbOk();
-			else if (cbFailed) cbFailed();
+			return true;
 		},
 		
 		save:function(cbSuccess, cbFailed) {
 			var editor = this.findView('editor');
-			var tranxAcc = editor.get('fldTranxAcc').getSelectedModel();
-			var settleAcc = editor.get('fldSettleAcc').getSelectedModel();
+			var tranxAcc = editor.body.findView('fldTranxAcc').getSelectedModel();
+			var settleAcc = editor.body.findView('fldSettleAcc').getSelectedModel();
+			var claimAcc = editor.body.findView('fldClaimAcc').getSelectedModel();
+			var repeatTimes = editor.body.findView('fldRepeatTimes').val();
+			var repeatMonths = editor.body.findView('fldRepeatMonths').val();
 			
 			this.model.set({
-				tranDate:editor.get('fldTranDate').val(),
-				bankDate:editor.get('fldTranDate').val(),
-				tranType:editor.get('fldTranType').getSelectedIdx(),
-				amount:editor.get('fldAmount').val(),
-				desc:editor.get('fldDesc').val(),
-				tranxCatg:editor.get('fldTranxCatg').val(),
-				remarks:editor.get('fldRemarks').val(),
+				tranDate:editor.body.findView('fldTranDate').val(),
+				tranType:editor.body.findView('fldTranType').getSelectedIdx(),
+				amount:editor.body.findView('fldAmount').val(),
+				desc:editor.body.findView('fldDesc').val(),
+				tranxCatg:editor.body.findView('fldTranxCatg').val(),
+				remarks:editor.body.findView('fldRemarks').val(),
 
 				tranxAcc:(tranxAcc?tranxAcc.toJSON():null),
 				settleAcc:(settleAcc?settleAcc.toJSON():null),
-				deleted:editor.get('fldDelete').checked()
+				claimAcc:(settleAcc?claimAcc.toJSON():null),
+				deleted:editor.body.findView('fldDelete').checked()
 			});
 						
-			datastore.saveTransaction(this.model, cbSuccess, cbFailed);
+			if (repeatTimes > 1 || this.model.get('repeatKey')) {
+				datastore.saveTransactionRepeat(this.model, {times:repeatTimes, months:repeatMonths, auto:false}, cbSuccess, cbFailed);
+			}
+			else
+				datastore.saveTransaction(this.model, cbSuccess, cbFailed);
 		}
 	}),
 	

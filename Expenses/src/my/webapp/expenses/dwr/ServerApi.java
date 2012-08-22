@@ -1,7 +1,9 @@
 package my.webapp.expenses.dwr;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +12,9 @@ import my.webapp.expenses.entity.Asset;
 import my.webapp.expenses.entity.AssetAmount;
 import my.webapp.expenses.entity.AssetRate;
 import my.webapp.expenses.entity.Closing;
+import my.webapp.expenses.entity.RepeatDtl;
 import my.webapp.expenses.entity.Transaction;
+import my.webapp.expenses.util.DateUtil;
 import my.webapp.expenses.util.DbUtil;
 import my.webapp.expenses.util.LogUtil;
 
@@ -120,6 +124,43 @@ public class ServerApi {
 		}
 		
 		return transaction;
+	}
+	
+	public List<Transaction> saveTransactionRepeat(Transaction transaction, RepeatDtl repeatDtl) {
+		Session session = DbUtil.beginTranx();
+		List<Transaction> transactions = new ArrayList<Transaction>();
+
+		try {
+			long repeatKey = transaction.getRepeatKey();
+			if (repeatKey == 0 || !repeatDtl.isAuto()) {
+				repeatKey = new Date().getTime();
+				
+				transaction.setRepeatKey(repeatKey);
+				transactions.add(transaction);
+				
+				for (int n=1; n<repeatDtl.getTimes(); n++) {
+					Transaction repeatedTranx = new Transaction();
+					repeatedTranx.set(transaction);
+					repeatedTranx.setTranDate(DateUtil.addMonth(transaction.getTranDate(), repeatDtl.getMonths() * n));
+					repeatedTranx.setSettleDate(DateUtil.addMonth(transaction.getSettleDate(), repeatDtl.getMonths() * n));
+					repeatedTranx.setClaimDate(DateUtil.addMonth(transaction.getClaimDate(), repeatDtl.getMonths() * n));
+					
+					transactions.add(repeatedTranx);
+				}
+			}
+			
+			for (Iterator<Transaction> itTransactions=transactions.iterator(); itTransactions.hasNext();) {
+				Transaction temp = itTransactions.next();
+				session.saveOrUpdate(temp);
+			}
+			
+			DbUtil.commit(session);
+		}
+		catch (Exception e) {
+			DbUtil.rollback(session);
+		}
+		
+		return transactions;
 	}
 	
 	public Asset saveAsset(Asset asset) {

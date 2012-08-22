@@ -7,5 +7,5 @@ ul, ol {list-style:none}
 .Editor > .Menu {position:absolute;left:0;right:0;top:0;height:2.5em;background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(245,246,246,1)), color-stop(25%,rgba(219,220,226,1)), color-stop(75%,rgba(221,223,227,1)), color-stop(100%,rgba(240,240,240,1)));border-top-left-radius:0.5em;border-top-right-radius:0.5em;box-shadow:1px 1px 5px rgba(0,0,0,0.3);text-align:right;overflow:hidden}
 .Editor > .EditArea {position:absolute;left:0;right:0;top:2.5em;bottom:0;padding:0.5em;overflow:auto}
 
-.Editor > .Menu > button {margin-top:0.7em;height:2em;z-index:1}
-.Editor > .Menu > h2 {position:absolute;left:0;right:10em;top:0;bottom:0;line-height:1.8em;padding-left:1em;text-align:left;overflow:hidden}
+.Editor > .Menu > button {float:right}
+.Editor > .Menu > h2 {line-height:1.8em;padding-left:1em;text-align:left}

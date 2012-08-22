@@ -126,7 +126,7 @@ util = {
 	
 	isInYear:function(data, refDateFields, year) {
 		for (var i=0; i<refDateFields.length; i++)
-			if (util.get(data, refDateFields[i]).getFullYear() != year)
+			if (util.get(data, refDateFields[i]) && util.get(data, refDateFields[i]).getFullYear() != year)
 				return false;
 		
 		return true;

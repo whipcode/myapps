@@ -48,3 +48,4 @@ input {font-size:0.8em}
 
 .AccountSummary > div > div {display:inline-block}
 
+.TransactionEditor .Editor {height:26em;margin-top:-13em}
