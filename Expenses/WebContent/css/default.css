@@ -1,5 +1,9 @@
-body, p, h1, h2, h3 {margin:0;padding:0}
+body, p, h1, h2, h3, ul {margin:0;padding:0}
 ul, ol {list-style:none}
+td {border:none}
+table {border-collapse:collapse;border:none}
+
+li:hover, tbody tr:hover {background:-webkit-linear-gradient(top, rgba(228,245,252,0.3) 0%,rgba(191,232,249,0.3) 50%,rgba(159,216,239,0.3) 51%,rgba(42,176,237,0.3) 100%);}
 
 .DialogBackground {position:fixed;left:0;right:0;top:0;bottom:0;background-color:rgba(0,0,0,.7);z-index:99}
 

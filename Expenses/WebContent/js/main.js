@@ -328,9 +328,9 @@ Main = View.extend({
 				refresh:function() {
 					this.html('');
 					
-					this.append(Paragraph, {text:util.formatDate(this.model.get('tranDate'), "$(Mmm) $(dd)")}, 'tranDate');
-					this.append(Paragraph, {text:this.model.get('desc')}, 'desc');
-					this.append(Paragraph, {text:util.formatAmount(this.model.get('amount'))}, 'amount');
+					this.append(Paragraph, {className:'Date', text:util.formatDate(this.model.get('tranDate'), "$(dd) $(Mmm)")}, 'tranDate');
+					this.append(Paragraph, {className:'Desc', text:this.model.get('desc')}, 'desc');
+					this.append(Paragraph, {className:'Amount', text:util.formatAmount(this.model.get('amount'))}, 'amount');
 				},
 				
 				events:{
