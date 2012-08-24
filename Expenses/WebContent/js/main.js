@@ -270,7 +270,6 @@ Main = View.extend({
 				className:'MonthPicker',
 				
 				initialize:function() {
-					this.append(Label, {text:'Month'});
 					this.append(Picker, {options:util.getMonthNames(), idx:new Date().getMonth()}, 'picker');
 				},
 				
@@ -328,7 +327,8 @@ Main = View.extend({
 				refresh:function() {
 					this.html('');
 					
-					this.append(Paragraph, {className:'Date', text:util.formatDate(this.model.get('tranDate'), "$(dd) $(Mmm)")}, 'tranDate');
+					var displayDate = bu.getTranDateOfSelectedAcc(this.model, page.getSelectedAccount());
+					this.append(Paragraph, {className:'Date', text:util.formatDate(displayDate, "$(dd) $(Mmm)")}, 'tranDate');
 					this.append(Paragraph, {className:'Desc', text:this.model.get('desc')}, 'desc');
 					this.append(Paragraph, {className:'Amount', text:util.formatAmount(this.model.get('amount'))}, 'amount');
 				},
@@ -349,7 +349,6 @@ Main = View.extend({
 			
 			initialize:function() {
 				this.append(Button, {label:'Add', className:'BtnAddTranx'}, 'btnAddTranx');
-				this.append(Button, {label:'Find', className:'BtnFindTranx'}, 'btnFindTranx');
 			},
 			
 			events:{
@@ -435,10 +434,10 @@ Main = View.extend({
 				initialize:function() {
 					var row = this.append(TableRow);
 					
-					row.append(TableCell, {className:'ColName'});
+					row.append(TableCell, {className:'Name'});
 					
 					for (var i=0; i<12; i++)
-						row.append(TableCell, {className:'ColMonth'}).html(util.getMonthName(i));
+						row.append(TableCell, {className:'Month'}).html(util.getMonthName(i));
 				}
 			}),
 			
@@ -458,7 +457,7 @@ Main = View.extend({
 
 					var row = this.append(TableRow, {}, 'row');
 					if (row) {
-						row.append(TableCell, {className:'ColName',text:'Opening'});
+						row.append(TableCell, {className:'Name',text:'Opening'});
 						
 						var opening = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear()-1, 11);
 						row.append(this.OpeningCell, {model:opening});
@@ -472,7 +471,7 @@ Main = View.extend({
 				
 				OpeningCell:View.extend({
 					tagName:'td',
-					className:'ColMonth',
+					className:'Month',
 					
 					initialize:function() {
 						this.model.bind('change', this.refresh, this);
@@ -540,10 +539,10 @@ Main = View.extend({
 					/* render category summary row */
 					var row = this.append(TableRow);
 					if (row) {
-						row.append(TableCell, {className:'ColName',text:bu.getTranType(this.options.tranType)});
+						row.append(TableCell, {className:'Name',text:bu.getTranType(this.options.tranType)});
 						
 						for (var i=0; i<12; i++) {
-							row.append(TableCell, {className:'ColMonth', text:util.formatAmount(this.subtotals[i],2)});
+							row.append(TableCell, {className:'Month', text:util.formatAmount(this.subtotals[i],2)});
 						}
 					}
 					
@@ -551,10 +550,10 @@ Main = View.extend({
 					for (var a in categories) {
 						var row = this.append(TableRow);
 						if (row) {
-							row.append(TableCell, {className:'ColName',text:a});
+							row.append(TableCell, {className:'Name',text:a});
 							
 							for (var i=0; i<categories[a].length; i++) {
-								row.append(TableCell, {className:'ColMonth', text:util.formatAmount(categories[a][i],2)});
+								row.append(TableCell, {className:'Month', text:util.formatAmount(categories[a][i],2)});
 							}
 						}
 					}
@@ -582,7 +581,7 @@ Main = View.extend({
 					/* Closing row */
 					var row = this.append(TableRow, {}, 'row');
 					if (row) {
-						row.append(TableCell, {className:'ColName',text:'Closing'});
+						row.append(TableCell, {className:'Name',text:'Closing'});
 						
 						for (var i=0; i<12; i++) {
 							var closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
@@ -593,7 +592,7 @@ Main = View.extend({
 					/* Diff row */
 					row = this.append(TableRow, {}, 'row');
 					if (row) {
-						row.append(TableCell, {className:'ColName',text:'Differences'});
+						row.append(TableCell, {className:'Name',text:'Differences'});
 						
 						for (var i=0; i<12; i++) {
 							var closing = datastore.getClosing(page.getSelectedAccount(), page.getSelectedYear(), i);
@@ -604,7 +603,7 @@ Main = View.extend({
 				
 				ClosingCell:View.extend({
 					tagName:'td',
-					className:'ColMonth',
+					className:'Month',
 					
 					initialize:function() {
 						this.model.bind('change', this.refresh, this);
@@ -630,7 +629,7 @@ Main = View.extend({
 				
 				DiffCell:View.extend({
 					tagName:'td',
-					className:'ColMonth',
+					className:'Month',
 					
 					initialize:function() {
 						this.model.bind('change', this.refresh, this);
@@ -678,7 +677,6 @@ Main = View.extend({
 						for (var ownerName in ownerTotals.attributes) {
 							tr.append(TableCell, {text:ownerName});
 						}
-						tr.append(TableCell, {className:'Total', text:'Total'});
 					}
 				},
 				

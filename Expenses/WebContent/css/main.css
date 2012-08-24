@@ -10,8 +10,8 @@ input {font-size:0.8em}
 .PageMenu .BtnNewAcc {position:absolute;right:8em;top:50%;padding:0 1em;line-height:1.5em;margin:-0.9em 0}
 .PageMenu .BtnEditAcc {position:absolute;right:2em;top:50%;padding:0 1em;line-height:1.5em;margin:-0.9em 0}
 
-.TaskViews > .TransactionView {position:absolute;left:0;top:0;bottom:0;width:25%;background-color:#fff;border-bottom-right-radius:1em;box-shadow:1px 0 5px rgb(128,128,128);z-index:1}
-.TaskViews > .SummaryView {position:absolute;left:25%;right:0;top:0;bottom:0;overflow:hidden}
+.TaskViews > .TransactionView {position:absolute;left:0;top:0;bottom:0;width:18em;background-color:#fff;border-bottom-right-radius:1em;box-shadow:1px 0 5px rgb(128,128,128);z-index:1}
+.TaskViews > .SummaryView {position:absolute;left:18em;right:0;top:0;bottom:0;overflow:hidden}
 
 .TransactionView > .Menu {position:absolute;left:0;right:0;top:0;height:2em;background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(76,76,76,1)), color-stop(12%,rgba(89,89,89,1)), color-stop(25%,rgba(102,102,102,1)), color-stop(39%,rgba(71,71,71,1)), color-stop(50%,rgba(44,44,44,1)), color-stop(51%,rgba(0,0,0,1)), color-stop(60%,rgba(17,17,17,1)), color-stop(76%,rgba(43,43,43,1)), color-stop(91%,rgba(28,28,28,1)), color-stop(100%,rgba(19,19,19,1)));box-shadow:0 1px 5px rgb(64,64,64);z-index:1}
 .TransactionView > .TransactionList {position:absolute;left:0;right:0;top:2em;bottom:2em;padding:0;overflow:auto}
@@ -21,7 +21,7 @@ input {font-size:0.8em}
 .TransactionView > .Menu > .PickMonth {position:absolute;left:0.5em;width:50%}
 .TransactionView > .Menu > .PickFilter {position:absolute;right:0.5em;width:50%}
 
-.TransactionView > .TransactionList .Transaction {padding:0.5em 0}
+.TransactionView > .TransactionList .Transaction {position:relative;padding:0.5em 0;min-height:1.5em;border-bottom:1px dotted rgba(192,192,192,0.5)}
 .TransactionView > .TransactionList p.Date {position:absolute;left:0.2em;top:0.5em}
 .TransactionView > .TransactionList p.Desc {padding-left:4em;padding-right:5em}
 .TransactionView > .TransactionList p.Amount {position:absolute;right:0.2em;top:0.5em}
@@ -31,7 +31,7 @@ input {font-size:0.8em}
 .SummaryView > .Navigator {position:absolute;left:0;right:0;top:0;height:3em;background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.2)), color-stop(100%,rgba(0,0,0,0)));}
 .SummaryView > .Summaries {position:absolute;left:0.5em;right:0.5em;top:3.3em;bottom:0.5em;background-color:rgba(255,255,255,.7);border-top:3px double rgb(128,128,128);border-bottom:3px double rgb(128,128,128)}
 
-.SummaryView > .Navigator > a {display:inline-block;height:1.8em;line-height:1.8em;margin:0.8em 0 0 1em;padding:0 0.5em;border:1px solid #eee;border-right-color:#aaa;border-bottom-color:#aaa;border-radius:0.2em;background:rgb(245,245,245);box-shadow:1px 1px 1px #bbb}
+.SummaryView > .Navigator > a {display:inline-block;height:1.8em;line-height:1.8em;margin:0.8em 0 0 1em;padding:0 0.5em;border:1px solid #eee;border-right-color:#aaa;border-bottom-color:#aaa;border-radius:0.2em;background:rgb(245,245,245);box-shadow:1px 1px 1px #bbb;cursor:default}
 
 .SummaryView > .Summaries > div {display:none;position:absolute;left:0;right:0;top:0;bottom:0;overflow:hidden}
 .SummaryView > .Summaries[activeView=accountSummary] > div.AccountSummary {display:block}
@@ -39,16 +39,28 @@ input {font-size:0.8em}
 .SummaryView > .Summaries[activeView=reminders] > div.Reminders {display:block}
 
 .AccountSummary > table {width:100%}
-.AccountSummary > table .ColName {width:15em;text-align:left}
-.AccountSummary > table .ColMonth {width:5em;text-align:right}
+.AccountSummary > table td.Name {width:12em;text-align:left;font-weight:bold}
+.AccountSummary > table td.Month {width:5em;text-align:right}
+.AccountSummary > table td.Month input {width:95%}
 
-.AccountSummary > table .ColMonth input {width:95%}
+.AccountSummary .Header {}
+.AccountSummary .Opening {}
+.AccountSummary .Section {}
+.AccountSummary .Closing {}
 
-.AccountSummary > .Header {}
-.AccountSummary > .Opening {}
-.AccountSummary > .Items {}
-.AccountSummary > .Closing {}
+.AccountSummary .Section > tr {border-bottom:1px solid rgba(240,240,240,0.5)}
+.AccountSummary .Section > tr td.Name {padding-left:1em}
+.AccountSummary .Section > tr:first-child {border-bottom:none;background:-webkit-linear-gradient(top, rgba(197,222,234,0.5) 0%,rgba(138,187,215,0.5) 31%,rgba(6,109,171,0.5) 90%,rgba(138,187,215,0.5) 100%)}
+.AccountSummary .Section > tr:first-child td.Name {padding-left:0}
+.AccountSummary .Section > tr:first-child td.Month {font-style:italic;color:rgba(150,150,150,1)}
+.AccountSummary .Section > tr:last-child {border-bottom:none}
 
-.AccountSummary > div > div {display:inline-block}
+.AssetSummary > table {width:100%}
+.AssetSummary td.Name {font-weight:bold}
+
+.AssetSummary .AssetType {border-bottom:none;font-style:italic;color:rgba(150,150,150,1);background:-webkit-linear-gradient(top, rgba(197,222,234,0.5) 0%,rgba(138,187,215,0.5) 31%,rgba(6,109,171,0.5) 90%,rgba(138,187,215,0.5) 100%)}
+.AssetSummary .AssetType td + td {font-style:italic;color:rgba(150,150,150,1)}
+.AssetSummary .Account td.Name {padding-left:1em}
+.AssetSummary .Asset td.Name {padding-left:1em}
 
 .TransactionEditor .Editor {height:28em;margin-top:-14em}

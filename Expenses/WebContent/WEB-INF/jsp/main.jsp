@@ -20,6 +20,7 @@
 <script type="text/javascript" src="js/widgets.js"></script>
 <script type="text/javascript" src="js/models.js"></script>
 <script type="text/javascript" src="js/datastore.js"></script>
+<script type="text/javascript" src="js/viewmodels.js"></script>
 <script type="text/javascript" src="js/bu.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
 </head>

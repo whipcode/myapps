@@ -156,5 +156,21 @@ bu = {
 		else if (claimAccId == selectedAccId) return transaction.get('claimDate');
 		else if (transferAccId == selectedAccId) return transaction.get('transferDate');
 		else if (investmentAccId == selectedAccId) return transaction.get('investmentDate');
+	},
+	
+	getTranDateOfSelectedAcc:function(transaction, selectedAcc) {
+		var selectedAccountId = util.get(selectedAcc, 'id');
+		var tranxAcc = util.get(transaction, 'tranxAcc');
+		var settleAcc = util.get(transaction, 'settleAcc');
+		var claimAcc = util.get(transaction, 'claimAcc');
+		
+		if (util.get(tranxAcc, 'id') == selectedAccountId)
+			return util.get(transaction, 'tranDate');
+		else if (util.get(settleAcc, 'id') == selectedAccountId)
+			return util.get(transaction, 'settleDate');
+		else if (util.get(claimAcc, 'id') == selectedAccountId)
+			return util.get(transaction, 'claimDate');
+		
+		return null;
 	}
 };
