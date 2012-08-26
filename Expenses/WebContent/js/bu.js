@@ -172,5 +172,9 @@ bu = {
 			return util.get(transaction, 'claimDate');
 		
 		return null;
+	},
+	
+	getOwnerBlanks:function() {
+		return {'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00};
 	}
 };

@@ -1,4 +1,5 @@
 Main = View.extend({
+	pageState:new Model(),
 	viewModels:{},
 	working:{
 	},
@@ -8,6 +9,7 @@ Main = View.extend({
 		bu.init(
 			function /*success*/() {
 				datastore.init();
+				viewmodels.init();
 				_this.initViewModels();
 				_this.render();
 				_this.run();
