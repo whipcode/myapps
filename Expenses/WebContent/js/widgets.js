@@ -1,4 +1,4 @@
-View = Backbone.View.extend({
+ View = Backbone.View.extend({
 	_lastViewIdx:0,
 	
 	genViewName:function() {
@@ -140,10 +140,27 @@ Line = View.extend({
 
 Text = View.extend({
 	tagName:'span',
-	
+
 	initialize:function() {
-		if (typeof(this.options.text) != 'undefined')
+		if (this.model) {
+			if (this.options.displayFn) {
+				this.model.bind('change', this.update, this);
+				this.text(this.options.displayFn(this.model));
+			}
+			else if (this.options.modelField) {
+				this.model.bind('change:'+this.options.modelField, this.update, this);
+				this.text(this.model.get(this.options.modelField));
+			}
+		}
+		else if (typeof(this.options.text) != 'undefined')
 			this.text(this.options.text);
+	},
+	
+	update:function() {
+		if (this.options.displayFn)
+			this.text(this.options.displayFn(this.model));
+		else
+			this.text(this.model.get(this.options.modelField));
 	}
 });
 
@@ -151,29 +168,70 @@ Label = View.extend({
 	tagName:'label',
 	
 	initialize:function() {
-		if (typeof(this.options.text) != 'undefined')
+		if (this.model) {
+			if (this.options.displayFn) {
+				this.model.bind('change', this.update, this);
+				this.text(this.options.displayFn(this.model));
+			}
+			else if (this.options.modelField) {
+				this.model.bind('change:'+this.options.modelField, this.update, this);
+				this.text(this.model.get(this.options.modelField));
+			}
+		}
+		else if (typeof(this.options.text) != 'undefined')
 			this.text(this.options.text);
+	},
+	
+	update:function() {
+		if (this.options.displayFn)
+			this.text(this.options.displayFn(this.model));
+		else
+			this.text(this.model.get(this.options.modelField));
 	}
 });
 
 Paragraph = View.extend({
 	tagName:'p',
-	
+
 	initialize:function() {
-		if (typeof(this.options.text) != 'undefined')
+		if (this.model) {
+			if (this.options.displayFn) {
+				this.model.bind('change', this.update, this);
+				this.html(this.options.displayFn(this.model));
+			}
+			else if (this.options.modelField) {
+				this.model.bind('change:'+this.options.modelField, this.update, this);
+				this.html(this.model.get(this.options.modelField));
+			}
+		}
+		else if (typeof(this.options.text) != 'undefined')
 			this.html(this.options.text);
+	},
+	
+	update:function() {
+		if (this.options.displayFn)
+			this.html(this.options.displayFn(this.model));
+		else
+			this.html(this.model.get(this.options.modelField));
 	}
 });
 
 Amount = View.extend({
 	tagName:'span',
-	dp:2,
 	
 	initialize:function() {
+		if (!this.options.dp) this.options.dp = 2;
+		
+		if (this.model && this.options.modelField) {
+			this.model.bind('change:'+this.options.modelField, this.update, this);
+			this.val(this.model.get(this.options.modelField));
+		}
 		if (typeof(this.options.value) != 'undefined')
 			this.val(this.options.value);
-		else
-			this.val(0);
+	},
+	
+	update:function() {
+		this.val(this.model.get(this.options.modelField));
 	},
 	
 	setPrefix:function(prefix) {
@@ -181,8 +239,11 @@ Amount = View.extend({
 	},
 	
 	val:function(value) {
-		if (typeof(value) != 'undefined')
-			this.text((this.options.prefix?this.options.prefix:'')+util.formatAmount(value, this.dp));
+		if (typeof(value) != 'undefined') {
+			if (this.model && this.options.modelField)
+				this.model.set(this.options.modelField, value);
+			this.text((this.options.prefix?this.options.prefix:'')+util.formatAmount(value, this.options.dp));
+		}
 		else
 			return util.str2Amount(this.text());
 	}
@@ -441,11 +502,24 @@ CollectionPicker = View.extend({
 	callback:{},
 	
 	initialize:function() {
+		if (!this.model && this.options.field) this.model = new Model();
+
+		this.model.bind('change', this.modelChanged, this);
 		this.collection.bind('add', this.add, this);
 		this.collection.bind('reset', this.refresh, this);
 		this.collection.bind('remove', this.refresh, this);
 		
+		if (this.options.onChange) this.onChange(this.options.onChange);
+		
 		this.refresh();
+	},
+	
+	modelChanged:function() {
+		for (var i=0; i<this.collection.length; i++) {
+			var optionId = this.options.collection.at(i).get('id');
+			if (this.model.get(this.options.modelField) == optionId)
+				this.idx(i + (this.options.withBlank?1:0));
+		}
 	},
 	
 	refresh:function() {
@@ -453,28 +527,28 @@ CollectionPicker = View.extend({
 		
 		if (this.options.withBlank)
 			this.add(null);
-		
+
 		if (this.options.selectModel && !this.options.selectModel.get)
 			this.options.selectModel = new Model(this.options.selectModel);
-		
+
 		for (var i=0; i<this.collection.length; i++) {
 			this.add(this.collection.at(i));
-			if (this.options.selectModel && this.collection.at(i).get('viewName') == this.options.selectModel.get('viewName'))
-				this.idx(i + this.options.withBlank?1:0);
-			else if (this.options.selectedId && this.collection.at(i).get('viewName') == this.options.selectedId)
-				this.idx(i + this.options.withBlank?1:0);
+			
+			var optionId = this.options.collection.at(i).get('id');
+			if ((this.options.selectModel && this.options.selectModel.get('id') == optionId) ||
+				(this.options.selectedId == optionId) ||
+				(this.model && this.model.get(this.options.modelField) == optionId) ||
+				this.options.idx == i)
+				this.idx(i + (this.options.withBlank?1:0));
 		}
-		
-		if (this.options.idx)
-			this.idx(this.options.idx);
 	},
 	
 	add:function(model) {
 		this.append(ModelOption, {model:model, displayField:this.options.displayField, displayFn:this.options.displayFn});
 	},
 	
-	onPickerChange:function(cb) {
-		this.callback.cbPickerChange = cb;
+	onChange:function(cb) {
+		this.callback.cbChange = cb;
 	},
 	
 	val:function(value) {
@@ -505,8 +579,9 @@ CollectionPicker = View.extend({
 	},
 	
 	cbPickerChange:function(evt) {
-		if (this.callback.cbPickerChange)
-			this.callback.cbPickerChange(evt);
+		if (this.model && this.options.modelField) this.model.set(this.options.modelField, this.getSelectedModel().get('id'));
+		if (this.callback.cbChange)
+			this.callback.cbChange(this.getSelectedModel());
 	}
 });
 
@@ -652,8 +727,8 @@ CollectionPickerField = View.extend({
 		this.append(CollectionPicker, this.options, 'picker');
 	},
 	
-	onPickerChange:function(cb) {
-		this.getView('picker').onPickerChange(cb);
+	onChange:function(cb) {
+		this.getView('picker').onChange(cb);
 	},
 	
 	val:function(value) {

@@ -1,5 +1,5 @@
 Main = View.extend({
-	pageState:new Model(),
+	pagestate:new Model(),
 	viewModels:{},
 	working:{
 	},
@@ -15,6 +15,16 @@ Main = View.extend({
 				_this.run();
 			}
 		);
+	},
+	
+	getPageState:function(attr) {
+		if (typeof(attr) != 'undefined')
+			return this.pagestate.get(attr);
+		return this.pagestate;
+	},
+	
+	setPageState:function(attr, value, options) {
+		this.pagestate.set(attr, value, options);
 	},
 	
 	initViewModels:function() {
@@ -223,9 +233,11 @@ Main = View.extend({
 			this.append(CollectionPickerField, 
 				{
 					label:'Account', 
-					className:'AccountPicker', 
-					collection:datastore.getAccounts(), 
-					displayField:'name'
+					className:'AccountPicker',
+					model:page.getPageState(),
+					modelField:'selectedAcc',
+					collection:datastore.getAccounts(),
+					displayFn:function(option) {return util.get(option, 'name') + ' (' + util.get(option, 'accOwner') + ')';}
 				}, 
 				'accountPicker');
 			this.append(Button, {label:'New',className:'BtnNewAcc'}, 'btnNewAcc');
@@ -235,6 +247,10 @@ Main = View.extend({
 		events:{
 			'click .BtnNewAcc':'cbBtnNewAccClick',
 			'click .BtnEditAcc':'cbBtnEditAccClick'
+		},
+		
+		cbChangeAccountPicker:function(option) {
+			console.log(option);
 		},
 		
 		cbBtnNewAccClick:function() {
