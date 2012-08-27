@@ -240,8 +240,8 @@ Main = View.extend({
 					displayFn:function(option) {return util.get(option, 'name') + ' (' + util.get(option, 'accOwner') + ')';}
 				}, 
 				'accountPicker');
-			this.append(Button, {label:'New',className:'BtnNewAcc'}, 'btnNewAcc');
-			this.append(Button, {label:'Edit',className:'BtnEditAcc'}, 'btnEditAcc');
+			this.append(Button, {text:'New',className:'BtnNewAcc'}, 'btnNewAcc');
+			this.append(Button, {text:'Edit',className:'BtnEditAcc'}, 'btnEditAcc');
 		},
 		
 		events:{
@@ -366,7 +366,7 @@ Main = View.extend({
 			className:'FootMenu',
 			
 			initialize:function() {
-				this.append(Button, {label:'Add', className:'BtnAddTranx'}, 'btnAddTranx');
+				this.append(Button, {text:'Add', className:'BtnAddTranx'}, 'btnAddTranx');
 			},
 			
 			events:{
@@ -691,7 +691,7 @@ Main = View.extend({
 					
 					var tr = this.append(TableRow);
 					if (tr) {
-						tr.append(TableCell, {className:'Name'}).append(Button, {className:'BtnNew', label:'New'});
+						tr.append(TableCell, {className:'Name'}).append(Button, {className:'BtnNew', text:'New'});
 						for (var ownerName in ownerTotals.attributes) {
 							tr.append(TableCell, {text:ownerName});
 						}

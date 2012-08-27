@@ -1,5 +1,33 @@
  View = Backbone.View.extend({
 	_lastViewIdx:0,
+
+	initialize:function() {
+		if (this.options.modelField)
+			this.options.modelField.bind('change', this.render, this);
+		else if (this.model)
+			this.model.bind('change', this.render, this);
+		
+		this.render();
+	},
+	
+	render:function() {
+		if (this.options.htmlFn)
+			this.html(this.options.htmlFn(this.model));
+		else if (typeof(this.options.html) != 'undefined')
+			this.html(this.options.html);
+		else if (this.options.textFn)
+			this.text(this.options.textFn(this.model));
+		else if (typeof(this.options.text) != 'undefined')
+			this.text(this.options.text);
+		else if (this.options.modelField) {
+			if (this.format)
+				this.text(this.format(this.options.modelField.get()));
+			else
+				this.text(this.options.modelField.get());
+		}
+		
+		return this;
+	},
 	
 	genViewName:function() {
 		return '_' + (++this._lastViewIdx);
@@ -108,17 +136,33 @@
 	},
 	
 	text:function(text) {
-		if (typeof(text) != 'undefined')
-			return this.$el.text(text);
-		else
-			return this.$el.text();
+		if (typeof(text) != 'undefined') {
+			if (this.options.modelField)
+				this.options.modelField.set(text);
+			else
+				this.$el.text(text);
+		}
+		else {
+			if (this.options.modelField)
+				return this.options.modelField.get();
+			else
+				return this.$el.text();
+		}
 	},
 	
 	val:function(value) {
-		if (typeof(value) != 'undefined')
-			return this.$el.val(value);
-		else
-			return this.$el.val();
+		if (typeof(text) != 'undefined') {
+			if (this.options.modelField)
+				this.options.modelField.set(text);
+			else
+				this.$el.val(text);
+		}
+		else {
+			if (this.options.modelField)
+				return this.options.modelField.get();
+			else
+				return this.$el.val();
+		}
 	},
 	
 	addClass:function(className) {
@@ -131,7 +175,11 @@
 });
 
 Wrapper = View.extend({
-	tagName:'div',
+	tagName:'div'
+});
+
+Span = View.extend({
+	tagName:'span'
 });
 
 Line = View.extend({
@@ -139,100 +187,19 @@ Line = View.extend({
 }),
 
 Text = View.extend({
-	tagName:'span',
-
-	initialize:function() {
-		if (this.model) {
-			if (this.options.displayFn) {
-				this.model.bind('change', this.update, this);
-				this.text(this.options.displayFn(this.model));
-			}
-			else if (this.options.modelField) {
-				this.model.bind('change:'+this.options.modelField, this.update, this);
-				this.text(this.model.get(this.options.modelField));
-			}
-		}
-		else if (typeof(this.options.text) != 'undefined')
-			this.text(this.options.text);
-	},
-	
-	update:function() {
-		if (this.options.displayFn)
-			this.text(this.options.displayFn(this.model));
-		else
-			this.text(this.model.get(this.options.modelField));
-	}
+	tagName:'span'
 });
 
 Label = View.extend({
-	tagName:'label',
-	
-	initialize:function() {
-		if (this.model) {
-			if (this.options.displayFn) {
-				this.model.bind('change', this.update, this);
-				this.text(this.options.displayFn(this.model));
-			}
-			else if (this.options.modelField) {
-				this.model.bind('change:'+this.options.modelField, this.update, this);
-				this.text(this.model.get(this.options.modelField));
-			}
-		}
-		else if (typeof(this.options.text) != 'undefined')
-			this.text(this.options.text);
-	},
-	
-	update:function() {
-		if (this.options.displayFn)
-			this.text(this.options.displayFn(this.model));
-		else
-			this.text(this.model.get(this.options.modelField));
-	}
+	tagName:'label'
 });
 
 Paragraph = View.extend({
-	tagName:'p',
-
-	initialize:function() {
-		if (this.model) {
-			if (this.options.displayFn) {
-				this.model.bind('change', this.update, this);
-				this.html(this.options.displayFn(this.model));
-			}
-			else if (this.options.modelField) {
-				this.model.bind('change:'+this.options.modelField, this.update, this);
-				this.html(this.model.get(this.options.modelField));
-			}
-		}
-		else if (typeof(this.options.text) != 'undefined')
-			this.html(this.options.text);
-	},
-	
-	update:function() {
-		if (this.options.displayFn)
-			this.html(this.options.displayFn(this.model));
-		else
-			this.html(this.model.get(this.options.modelField));
-	}
+	tagName:'p'
 });
 
 Amount = View.extend({
 	tagName:'span',
-	
-	initialize:function() {
-		if (!this.options.dp) this.options.dp = 2;
-		
-		if (this.model && this.options.modelField) {
-			this.model.bind('change:'+this.options.modelField, this.update, this);
-			this.val(this.model.get(this.options.modelField));
-		}
-		if (typeof(this.options.value) != 'undefined')
-			this.val(this.options.value);
-	},
-	
-	update:function() {
-		this.val(this.model.get(this.options.modelField));
-	},
 	
 	setPrefix:function(prefix) {
 		this.options.prefix = prefix;
@@ -240,21 +207,28 @@ Amount = View.extend({
 	
 	val:function(value) {
 		if (typeof(value) != 'undefined') {
-			if (this.model && this.options.modelField)
-				this.model.set(this.options.modelField, value);
-			this.text((this.options.prefix?this.options.prefix:'')+util.formatAmount(value, this.options.dp));
+			if (this.options.modelField)
+				this.options.modelField.set(value);
+			else
+				this.text(this.format(value));
 		}
-		else
-			return util.str2Amount(this.text());
-	}
-});
-
-Span = View.extend({
-	tagName:'span',
+		else {
+			if (this.options.modelField)
+				return this.options.modelField.get();
+			else
+				return this.parse(this.text());
+		}
+	},
 	
-	initialize:function() {
-		if (typeof(this.options.text) != 'undefined')
-			this.html(this.options.text);
+	format:function(value) {
+		if (this.options.prefix)
+			return this.options.prefix + util.formatAmount(value, this.options.dp);
+		else
+			return util.formatAmount(value, this.options.dp);
+	},
+	
+	parse:function(text) {
+		return util.str2Amount(text);
 	}
 });
 
@@ -263,7 +237,7 @@ Link = View.extend({
 	
 	initialize:function() {
 		if (typeof(this.options.label) != 'undefined')
-			this.html(this.options.label);
+			this.text(this.options.label);
 		
 		if (typeof(this.options.href) != 'undefined')
 			this.$el.attr('href', this.options.href);
@@ -338,20 +312,27 @@ TableCell = View.extend({
 
 });
 
+Button = View.extend({
+	tagName:'button'
+});
+
 TextInput = View.extend({
 	tagName:'input',
 	
 	initialize:function() {
 		this.$el.attr('type','text');
+		
+		if (this.options.modelField)
+			this.options.modelField.bind('change', this.update, this);
+		
 		if (typeof(this.options.text) != 'undefined')
-			this.$el.val(this.options.text);
+			this.val(this.options.text);
+		else if (this.options.modelField)
+			this.val(this.options.modelField.get());
 	},
 	
-	val:function(text) {
-		if (typeof(text) != 'undefined')
-			this.$el.val(text);
-		else
-			return this.$el.val();
+	update:function() {
+		this.$el.val(this.options.modelField.get());
 	}
 });
 
@@ -393,15 +374,6 @@ AmountInput = View.extend({
 			this.$el.val(util.formatAmount(amount, this.dp));
 		else
 			return util.str2Amount(this.$el.val());
-	}
-});
-
-Button = View.extend({
-	tagName:'button',
-	
-	initialize:function() {
-		if (typeof(this.options.label) != 'undefined')
-			this.html(this.options.label);
 	}
 });
 
