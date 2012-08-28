@@ -171,6 +171,15 @@
 	
 	attr:function(attr, value) {
 		return this.$el.attr(attr, value);
+	},
+	
+	removeChild:function(viewName) {
+		if (typeof(viewName) != 'undefined')
+			this.findView(viewName).remove();
+		else {
+			for (var a in this.views)
+				this.views[a].remove();
+		}
 	}
 });
 
@@ -419,29 +428,58 @@ Picker = View.extend({
 	callback:{},
 	
 	initialize:function() {
-		if (typeof(this.options.options) != 'undefined') {
+		if (typeof(this.collection) != 'undefined') {
+			this.collection.bind('reset', this.resetOptions, this);
+			this.collection.bind('add', this.addOption, this);
+			this.collection.bind('remove', this.removeOption, this);
+			
+			this.resetOptions();
+		}
+		else if (typeof(this.options.options) != 'undefined') {
 			for (var i=0; i<this.options.options.length; i++) {
 				this.append(Option, {text:this.options.options[i]});
 			}
 		}
 		
-		if (this.options.modelField) {
+		if (this.options.modelField)
 			this.options.modelField.bind('change', this.update, this);
-			this.idx(this.options.modelField.get());
-		}
-		
-		if (typeof(this.options.idx) != 'undefined')
+		else if (typeof(this.options.idx) != 'undefined')
 			this.idx(this.options.idx);
 		else if (typeof(this.options.value) != 'undefined')
 			this.val(this.options.value);
 	},
 	
+	resetOptions:function() {
+		this.removeChild();
+		
+		for (var i=0; i<this.collection.length; i++) {
+			this.addOption(this.collection.at(i));
+			
+			if (this.options.modelField && this.options.modelField.get() == this.collection.at(i).get('id'))
+				this.idx(i);
+		}
+	},
+	
+	addOption:function(option) {
+		if (option.get)
+			this.append(Option, {model:option});
+		else
+			this.append(Option, {text:option});
+	},
+	
+	removeOption:function(option) {
+		
+	},
+	
+	removeIdx:function(idx) {
+	},
+	
 	update:function() {
-		this.idx(this.options.modelField.get());
+		this.pick(this.options.modelField.get());
 	},
 	
 	val:function(value) {
-		if (typeof(value) != 'undefine') {
+		if (typeof(value) != 'undefined') {
 			this.$el.val(value);
 			if (this.options.modelField) this.options.modelField.set(this.el.selectedIndex);
 		}
@@ -460,6 +498,11 @@ Picker = View.extend({
 	
 	getSelectedIdx:function() {
 		return this.el.selectedIndex;
+	},
+	
+	getSelectedModel:function() {
+		if (this.collection)
+			return this.collection.at(this.el.selectedIndex);
 	},
 	
 	onPickerChange:function(cb) {
