@@ -229,13 +229,12 @@ Main = View.extend({
 		className:'PageMenu',
 		
 		initialize:function() {
-			this.append(TextField, {label:'Year', className:'PickYear', text:new Date().getFullYear()}, 'year');
+			this.append(TextField, {label:'Year', className:'PickYear', text:new Date().getFullYear(), modelField:page.getPageState().getFieldObj('selectedYear')}, 'year');
 			this.append(CollectionPickerField, 
 				{
 					label:'Account', 
 					className:'AccountPicker',
-					model:page.getPageState(),
-					modelField:'selectedAcc',
+					modelField:page.getPageState().getFieldObj('selectedAcc'),
 					collection:datastore.getAccounts(),
 					displayFn:function(option) {return util.get(option, 'name') + ' (' + util.get(option, 'accOwner') + ')';}
 				}, 
@@ -288,7 +287,7 @@ Main = View.extend({
 				className:'MonthPicker',
 				
 				initialize:function() {
-					this.append(Picker, {options:util.getMonthNames(), idx:new Date().getMonth()}, 'picker');
+					this.append(Picker, {options:util.getMonthNames(), modelField:page.getPageState().getFieldObj('selectedMonth'), idx:new Date().getMonth()}, 'picker');
 				},
 				
 				getSelectedMonth:function() {

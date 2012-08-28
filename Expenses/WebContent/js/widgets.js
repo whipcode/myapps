@@ -151,11 +151,11 @@
 	},
 	
 	val:function(value) {
-		if (typeof(text) != 'undefined') {
+		if (typeof(value) != 'undefined') {
 			if (this.options.modelField)
-				this.options.modelField.set(text);
+				this.options.modelField.set(value);
 			else
-				this.$el.val(text);
+				this.$el.val(value);
 		}
 		else {
 			if (this.options.modelField)
@@ -318,6 +318,7 @@ Button = View.extend({
 
 TextInput = View.extend({
 	tagName:'input',
+	callback:{},
 	
 	initialize:function() {
 		this.$el.attr('type','text');
@@ -325,14 +326,24 @@ TextInput = View.extend({
 		if (this.options.modelField)
 			this.options.modelField.bind('change', this.update, this);
 		
-		if (typeof(this.options.text) != 'undefined')
+		if (typeof(this.options.text) != 'undefined') 
 			this.val(this.options.text);
-		else if (this.options.modelField)
-			this.val(this.options.modelField.get());
 	},
 	
 	update:function() {
 		this.$el.val(this.options.modelField.get());
+	},
+	
+	events:{
+		'change':'cbChange'
+	},
+	
+	cbChange:function() {
+		if (this.options.modelField)
+			this.options.modelField.set(this.$el.val());
+
+		if (this.callback.cbPickerChange)
+			this.callback.cbPickerChange(evt);
 	}
 });
 
@@ -414,22 +425,35 @@ Picker = View.extend({
 			}
 		}
 		
+		if (this.options.modelField) {
+			this.options.modelField.bind('change', this.update, this);
+			this.idx(this.options.modelField.get());
+		}
+		
 		if (typeof(this.options.idx) != 'undefined')
 			this.idx(this.options.idx);
 		else if (typeof(this.options.value) != 'undefined')
 			this.val(this.options.value);
 	},
 	
+	update:function() {
+		this.idx(this.options.modelField.get());
+	},
+	
 	val:function(value) {
-		if (typeof(value) != 'undefine')
+		if (typeof(value) != 'undefine') {
 			this.$el.val(value);
+			if (this.options.modelField) this.options.modelField.set(this.el.selectedIndex);
+		}
 		else
 			return this.$el.val();
 	},
 	
 	idx:function(idx) {
-		if (typeof(idx) != 'undefined')
+		if (typeof(idx) != 'undefined') {
 			this.el.selectedIndex = idx;
+			if (this.options.modelField) this.options.modelField.set(idx);
+		}
 		else
 			return this.el.selectedIndex;
 	},
@@ -447,6 +471,8 @@ Picker = View.extend({
 	},
 	
 	cbPickerChange:function(evt) {
+		if (this.options.modelField) this.options.modelField.set(this.el.selectedIndex);
+
 		if (this.callback.cbPickerChange)
 			this.callback.cbPickerChange(evt);
 	}
@@ -474,9 +500,9 @@ CollectionPicker = View.extend({
 	callback:{},
 	
 	initialize:function() {
-		if (!this.model && this.options.field) this.model = new Model();
+		if (this.options.modelField) 
+			this.options.modelField.bind('change', this.modelChanged, this);
 
-		this.model.bind('change', this.modelChanged, this);
 		this.collection.bind('add', this.add, this);
 		this.collection.bind('reset', this.refresh, this);
 		this.collection.bind('remove', this.refresh, this);
@@ -489,7 +515,7 @@ CollectionPicker = View.extend({
 	modelChanged:function() {
 		for (var i=0; i<this.collection.length; i++) {
 			var optionId = this.options.collection.at(i).get('id');
-			if (this.model.get(this.options.modelField) == optionId)
+			if (this.options.modelField.get() == optionId)
 				this.idx(i + (this.options.withBlank?1:0));
 		}
 	},
@@ -509,7 +535,7 @@ CollectionPicker = View.extend({
 			var optionId = this.options.collection.at(i).get('id');
 			if ((this.options.selectModel && this.options.selectModel.get('id') == optionId) ||
 				(this.options.selectedId == optionId) ||
-				(this.model && this.model.get(this.options.modelField) == optionId) ||
+				(this.options.modelField && this.options.modelField.get() == optionId) ||
 				this.options.idx == i)
 				this.idx(i + (this.options.withBlank?1:0));
 		}
@@ -551,7 +577,7 @@ CollectionPicker = View.extend({
 	},
 	
 	cbPickerChange:function(evt) {
-		if (this.model && this.options.modelField) this.model.set(this.options.modelField, this.getSelectedModel().get('id'));
+		if (this.options.modelField) this.options.modelField.set(this.getSelectedModel().get('id'));
 		if (this.callback.cbChange)
 			this.callback.cbChange(this.getSelectedModel());
 	}
