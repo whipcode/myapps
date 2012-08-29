@@ -60,8 +60,8 @@ datastore = {
 		return this.data.accounts;
 	},
 	
-	getAccount:function(i) {
-		return this.data.accounts.at(i);
+	getAccount:function(id) {
+		return this.data.accounts.where({id:id});
 	},
 	
 	locateAccount:function(account) {

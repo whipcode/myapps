@@ -28,12 +28,18 @@ View = Backbone.View.extend({
 	
 	initContent:function() {
 		/* Override me when needed */
-		if (typeof(this.options.text) != 'undefined')
+		if (typeof(this.options.text) != 'undefined') {
 			this.viewModel.set('content', this.options.text);
-		else if (typeof(this.options.html) != 'undefined')
+			this.contentType = 0;
+		}
+		else if (typeof(this.options.html) != 'undefined') {
 			this.viewModel.set('content', this.options.html);
-		else if (typeof(this.options.value) != 'undefined')
+			this.contentType = 1;
+		}
+		else if (typeof(this.options.value) != 'undefined') {
 			this.viewModel.set('content', this.options.value);
+			this.contentType = 2;
+		}
 		else if (this.model)
 			this.digestModel();
 	},
@@ -103,15 +109,16 @@ View = Backbone.View.extend({
 		return '_' + (++this._lastViewIdx);
 	},
 	
-	append:function(View, options, viewName) {
+	append:function(View, options) {
 		var view = new View(options);
 		if (!this.views) this.views = {};
 
-		if (typeof(viewName) == 'undefined')
-			viewName = this.genViewName();
+		if (!options) options = {};
+		if (!options.viewName)
+			options.viewName = this.genViewName();
 
-		view.viewName = viewName;
-		this.views[viewName] = view;
+		view.viewName = options.viewName;
+		this.views[options.viewName] = view;
 		
 		this.$el.append(view.el);
 		view.parent = this; 
@@ -119,15 +126,16 @@ View = Backbone.View.extend({
 		return view;
 	},
 	
-	prepend:function(View, options, viewName) {
+	prepend:function(View, options) {
 		var view = new View(options);
 		if (!this.views) this.views = {};
 
-		if (typeof(viewName) == 'undefined')
-			viewName = this.genViewName();
+		if (!options) options = {};
+		if (!options.viewName)
+			options.viewName = this.genViewName();
 
-		view.viewName = viewName;
-		this.views[viewName] = view;
+		view.viewName = options.viewName;
+		this.views[options.viewName] = view;
 
 		this.$el.prepend(view.el);
 		view.parent = this; 
@@ -135,15 +143,16 @@ View = Backbone.View.extend({
 		return view;
 	},
 		
-	insertAbove:function(View, options, viewName) {
+	insertAbove:function(View, options) {
 		var view = new View(options);
 		if (!this.views) this.views = {};
 
-		if (typeof(viewName) == 'undefined')
-			viewName = this.genViewName();
+		if (!options) options = {};
+		if (!options.viewName)
+			options.viewName = this.genViewName();
 
-		view.viewName = viewName;
-		this.views[viewName] = view;
+		view.viewName = options.viewName;
+		this.views[options.viewName] = view;
 
 		this.$el.before(view.el);
 		view.parent = this.parent;
@@ -151,15 +160,16 @@ View = Backbone.View.extend({
 		return view;
 	},
 		
-	insertBelow:function(View, options, viewName) {
+	insertBelow:function(View, options) {
 		var view = new View(options);
 		if (!this.views) this.views = {};
 
-		if (typeof(viewName) == 'undefined')
-			viewName = this.genViewName();
+		if (!options) options = {};
+		if (!options.viewName)
+			options.viewName = this.genViewName();
 
-		view.viewName = viewName;
-		this.views[viewName] = view;
+		view.viewName = options.viewName;
+		this.views[options.viewName] = view;
 
 		this.$el.after(view.el);
 		view.parent = this.parent;
@@ -185,13 +195,6 @@ View = Backbone.View.extend({
 			return null;
 	},
 	
-	getView:function(viewName) {
-		if (this.views)
-			return this.views[viewName];
-		else
-			return null;
-	},
-	
 	findView:function(viewName) {
 		if (this.views) {
 			if (this.views[viewName])
@@ -211,15 +214,17 @@ View = Backbone.View.extend({
 		'change':'cbChange'
 	},
 	
-	cbChange:function() {
-		this.changeNonce++;
-		
-		if (this.options.contentType == 0)
-			this.viewModel.set('content', this.parse(this.$el.text()));
-		else if (this.options.contentType == 1)
-			this.viewModel.set('content', this.parse(this.$el.html()));
-		else if (this.options.contentType == 2)
-			this.viewModel.set('content', this.parse(this.$el.val()));
+	cbChange:function(evt) {
+		if (evt.srcElement == this.el) {
+			this.changeNonce++;
+			
+			if (this.contentType == 0)
+				this.viewModel.set('content', this.parse(this.$el.text()));
+			else if (this.contentType == 1)
+				this.viewModel.set('content', this.parse(this.$el.html()));
+			else if (this.contentType == 2)
+				this.viewModel.set('content', this.parse(this.$el.val()));
+		}
 	},
 	
 	format:function(content) {
@@ -257,18 +262,52 @@ Paragraph = View.extend({
 	tagName:'p'
 });
 
-Amount = View.extend({
+TextView = View.extend({
+	tagName:'span'
+});
+
+AmountView = View.extend({
 	tagName:'span',
-	contentType:0,
 	dp:0,
 	
 	initContent:function() {
 		if (this.options.dp) this.dp = this.options.dp;
-
-		if (typeof(this.options.value) != 'undefined')
-			this.viewModel.set('content', util.formatAmount(this.options.value, this.dp));
+		
+		if (typeof(this.options.amount) != 'undefined')
+			this.viewModel.set('content', this.options.amount);
 		else if (this.model)
 			this.digestModel();
+	},
+	
+	format:function(date) {
+		return util.formatAmount(date, this.dp);
+	},
+	
+	parse:function(text) {
+		return util.str2Amount(text);
+	}
+});
+
+DateView = View.extend({
+	tagName:'span',
+	dateFormat:'$(dd) $(Mmm) $(yyyy)',
+	
+	initContent:function() {
+		if (this.options.dateFormat)
+			this.dateFormat = this.options.dateFormat;
+		
+		if (typeof(this.options.date) != 'undefined')
+			this.viewModel.set('content', this.options.date);
+		else if (this.model)
+			this.digestModel();
+	},
+	
+	format:function(date) {
+		return util.formatDate(date, this.dateFormat);
+	},
+	
+	parse:function(text) {
+		return util.str2Date(text);
 	}
 });
 
@@ -279,6 +318,18 @@ Link = View.extend({
 		if (this.options.href)
 			this.$el.attr('href', this.options.href);
 	}
+});
+
+List = View.extend({
+	tagName:'ul'
+});
+
+NumberedList = View.extend({
+	tagName:'ol'
+});
+
+ListItem = View.extend({
+	tagName:'li'
 });
 
 Table = View.extend({
@@ -354,6 +405,7 @@ AmountInput = View.extend({
 	tagName:'input',
 	contentType:2,
 	dp:0,
+	withSep:false,
 	
 	initAttr:function() {
 		this.$el.attr('type', 'text');
@@ -361,6 +413,7 @@ AmountInput = View.extend({
 	
 	initContent:function() {
 		if (this.options.dp) this.dp = this.options.dp;
+		if (this.options.withSep) this.withSep = this.options.withSep;
 		
 		if (typeof(this.options.amount) != 'undefined')
 			this.viewModel.set('content', this.options.amount);
@@ -369,7 +422,7 @@ AmountInput = View.extend({
 	},
 	
 	format:function(date) {
-		return util.formatAmount(date, this.dp);
+		return util.formatAmount(date, this.dp, this.withSep);
 	},
 	
 	parse:function(text) {
@@ -400,15 +453,15 @@ Picker = View.extend({
 	changeNonce:0,
 	
 	initialize:function() {
-		this.viewModel = new ViewModel({selectedIdx:-1, numOptions:0, validate:function(attr) {if (attr.selectedIdx>=attr.numOptions) attr.selectedIdx=attr.numOptions-1;}});
+		this.viewModel = new PickerViewModel();
 		if (!this.collection) this.collection = new Collection();
 
 		this.collection.bind('reset', this.refresh, this);
-		this.viewModel.bind('change:selectedIdx', this.pick, this);
+		this.viewModel.bind('change', this.pick, this);
 		
 		if (this.model) {
 			this.model.bind('change', this.digestModel, this);
-			this.viewModel.bind('change:selectedIdx', this.updateModel, this);
+			this.viewModel.bind('change', this.updateModel, this);
 		}
 		
 		if (this.options.options)
@@ -419,7 +472,7 @@ Picker = View.extend({
 		if (this.options.selectedIdx)
 			this.viewModel.set('selectedIdx', this.options.selectedIdx);
 		else if (this.model)
-			this.lookup();
+			this.digestModel();
 		else
 			this.viewModel.set('selectedIdx', 0);
 	},
@@ -439,6 +492,8 @@ Picker = View.extend({
 			this.append(Option, options);
 		}
 		
+		this.viewModel.set('numOptions', this.collection.length);
+		
 		this.pick();
 	},
 	
@@ -457,13 +512,12 @@ Picker = View.extend({
 		
 		this.options.fieldName = 'text';
 		this.options.formatFn = null;
-		this.viewModel.set('numOptions', options.length);
 		this.collection.reset(_options);
 	},
 	
 	digestModel:function() {
 		for (var i=0; i<this.collection.length; i++) {
-			var check = this.options.parseFn(this.collection.at(i));
+			var check = this.options.parseFn(this.collection.at(i), i);
 			var found = true;
 			for (var a in check)
 				if (this.model.get(a) != check[a]) {
@@ -479,7 +533,7 @@ Picker = View.extend({
 	},
 	
 	updateModel:function() {
-		this.model.set(this.options.parseFn(this.collection.at(this.viewModel.get('selectedIdx'))));
+		this.model.set(this.options.parseFn(this.collection.at(this.viewModel.get('selectedIdx')), this.viewModel.get('selectedIdx')));
 	},
 	
 	events:{
@@ -511,20 +565,22 @@ TextField = View.extend({
 	initialize:function() {
 		this.addClass('Field');
 		
+		this.options.viewName = null;
+		
 		if (typeof(this.options.label) != 'undefined') {
 			this.append(Label, {text:this.options.label});
 			this.options.label = undefined;
 		}
 		
-		this.append(TextInput, this.options, 'text');
+		this.textInput = this.append(TextInput, this.options);
 	},
 	
 	get:function() {
-		return this.findView('text').get();
+		return this.textInput.get();
 	},
 	
 	set:function(content) {
-		this.findView('text').set(content);
+		this.textInput.set(content);
 	}
 });
 
@@ -534,20 +590,22 @@ DateField = View.extend({
 	initialize:function() {
 		this.addClass('Field');
 		
+		this.options.viewName = null;
+		
 		if (typeof(this.options.label) != 'undefined') {
 			this.append(Label, {text:this.options.label});
 			this.options.label = undefined;
 		}
 		
-		this.append(DateInput, this.options, 'date');
+		this.dateInput = this.append(DateInput, this.options);
 	},
 	
 	get:function() {
-		return this.findView('date').get();
+		return this.dateInput.get();
 	},
 	
 	set:function(date) {
-		this.findView('date').set(date);
+		this.dateInput.set(date);
 	}
 });
 
@@ -557,20 +615,22 @@ AmountField = View.extend({
 	initialize:function() {
 		this.addClass('Field');
 		
+		this.options.viewName = null;
+		
 		if (typeof(this.options.label) != 'undefined') {
 			this.append(Label, {text:this.options.label});
 			this.options.label = undefined;
 		}
 		
-		this.append(AmountInput, this.options, 'amount');
+		this.amountInput = this.append(AmountInput, this.options);
 	},
 	
 	get:function() {
-		return this.findView('amount').get();
+		return this.amountInput.get();
 	},
 	
 	set:function(amount) {
-		this.findView('amount').set(amount);
+		this.amountInput.set(amount);
 	}
 });
 
@@ -580,20 +640,22 @@ CheckboxField = View.extend({
 	initialize:function() {
 		this.addClass('Field');
 		
+		this.options.viewName = null;
+		
 		if (typeof(this.options.label) != 'undefined') {
 			this.append(Label, {text:this.options.label});
 			this.options.label = undefined;
 		}
 		
-		this.append(Checkbox, this.options, 'checkbox');
+		this.checkbox = this.append(Checkbox, this.options);
 	},
 	
 	get:function() {
-		return this.findView('checkbox').get();
+		return this.checkbox.get();
 	},
 	
 	set:function(checked) {
-		this.findView('checkbox').set(checked);
+		this.checkbox.set(checked);
 	}
 });
 
@@ -603,20 +665,22 @@ PickerField = View.extend({
 	initialize:function() {
 		this.addClass('Field');
 		
+		this.options.viewName = null;
+		
 		if (typeof(this.options.label) != 'undefined') {
 			this.append(Label, {text:this.options.label});
 			this.options.label = undefined;
 		}
 		
-		this.append(Picker, this.options, 'picker');
+		this.picker = this.append(Picker, this.options);
 	},
 	
 	get:function() {
-		return this.findView('picker').get();
+		return this.picker.get();
 	},
 	
 	set:function(selectedIdx) {
-		this.findView('picker').set(selectedIdx);
+		this.picker.set(selectedIdx);
 	}
 });
 

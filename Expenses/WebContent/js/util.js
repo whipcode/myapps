@@ -79,32 +79,37 @@ util = {
 		}
 	},
 	
-	formatAmount:function(amount, dp) {
+	formatAmount:function(amount, dp, withSep) {
 		var rtn;
 		
-		if (amount == 0)
-			rtn = '0.00';
-		else if (Math.abs(amount) < 1) {
-			if (amount < 0) {
-				rtn = Math.round((amount-1)*100)+'';
-				var regexp = /(\d+)(\d{2})/;
-				rtn = rtn.replace(regexp,'0.$2');
-			}
-			else {
-				rtn = Math.round((amount+1)*100)+'';
-				var regexp = /(\d+)(\d{2})/;
-				rtn = rtn.replace(regexp,'0.$2');
+		if (dp == 0) {
+			rtn = '' + Math.round(amount);
+
+			if (withSep) {
+				var regexp = /(\d+)(\d{3})/;
+				while (regexp.test(rtn))
+					rtn = rtn.replace(regexp,'$1,$2');
 			}
 		}
-		else
-		{
-			rtn = Math.round(amount*100)+'';
-			var regexp = /(\d+)(\d{2})/;
-			rtn = rtn.replace(regexp,'$1.$2');
+		else if (Math.abs(amount) >= 1) {
+			rtn = '' + Math.round(amount*Math.pow(10,dp));
+			rtn = rtn.substr(0, rtn.length-dp) + '.' + rtn.substr(rtn.length-dp);
 
-			var regexp = /(\d+)(\d{3})/;
-			while (regexp.test(rtn))
-				rtn = rtn.replace(regexp,'$1,$2');
+			if (withSep) {
+				var regexp = /(\d+)(\d{3})/;
+				while (regexp.test(rtn))
+					rtn = rtn.replace(regexp,'$1,$2');
+			}
+		}
+		else {
+			if (amount < 0) {
+				rtn = '' + Math.round((amount-1)*Math.pow(10,dp));
+				rtn = '-0.' + rtn.substr(rtn.length-dp);
+			}
+			else {
+				rtn = '' + Math.round((amount+1)*Math.pow(10,dp));
+				rtn = '0.' + rtn.substr(rtn.length-dp);
+			}
 		}
 		
 		return rtn;

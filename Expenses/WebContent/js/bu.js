@@ -70,9 +70,7 @@ bu = {
 		);
 	},
 	
-	isSelectedMonthAccount:function(transaction, selectedAccount, selectedMonth) {
-		var selectedAccId = selectedAccount.get('id');
-		
+	isSelectedMonthAccount:function(transaction, selectedAccId, selectedMonth) {
 		var tranxAccId = transaction.get('tranxAcc')?transaction.get('tranxAcc').id:0;
 		var tranDateMonth = transaction.get('tranDate')?transaction.get('tranDate').getMonth():-1;
 		var settleAccId = transaction.get('settleAcc')?transaction.get('settleAcc').id:0;
@@ -158,17 +156,16 @@ bu = {
 		else if (investmentAccId == selectedAccId) return transaction.get('investmentDate');
 	},
 	
-	getTranDateOfSelectedAcc:function(transaction, selectedAcc) {
-		var selectedAccountId = util.get(selectedAcc, 'id');
+	getTranDateOfSelectedAcc:function(transaction, selectedAccId) {
 		var tranxAcc = util.get(transaction, 'tranxAcc');
 		var settleAcc = util.get(transaction, 'settleAcc');
 		var claimAcc = util.get(transaction, 'claimAcc');
 		
-		if (util.get(tranxAcc, 'id') == selectedAccountId)
+		if (util.get(tranxAcc, 'id') == selectedAccId)
 			return util.get(transaction, 'tranDate');
-		else if (util.get(settleAcc, 'id') == selectedAccountId)
+		else if (util.get(settleAcc, 'id') == selectedAccId)
 			return util.get(transaction, 'settleDate');
-		else if (util.get(claimAcc, 'id') == selectedAccountId)
+		else if (util.get(claimAcc, 'id') == selectedAccId)
 			return util.get(transaction, 'claimDate');
 		
 		return null;
