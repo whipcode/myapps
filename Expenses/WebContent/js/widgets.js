@@ -1,34 +1,143 @@
- View = Backbone.View.extend({
+ViewModel = Backbone.Model.extend({
+	digestNonce:0,
+	updateNonce:0,
+	
+	defaults:{
+		content:'',
+		type:0	/* 0:Text View Model, 1:Html View Model, 2:Value View Model, 3:Other View Model */
+	},
+	
+	initialize:function() {
+		if (this.has('model')) {
+			this.get('model').bind('change', this.digestModel, this);
+			this.bind('change', this.updateModel, this);
+		
+			this.digestModel();
+		}
+	},
+	
+	digestModel:function() {
+		if (this.digestNonce == this.updateNonce) {
+			this.digestNonce++;
+			
+			if (this.has('formatFn'))
+				this.set('content', this.get('formatFn').call(this.get('model')));
+			else if (this.has('fieldName'))
+				this.set('content', this.get('model').get(fieldName));
+		}
+		else
+			this.digestNonce = this.updateNonce;
+	},
+	
+	updateModel:function() {
+		if (this.updateNonce == this.digestNonce) {
+			this.updateNonce++;
+			
+			if (this.has('parseFn'))
+				this.get('parseFn').call(this.get('model'), this.get('content'));
+			else if (this.has('fieldName'))
+				this.get('model').set(this.get('fieldName'), this.get('content'));
+		}
+		else
+			this.updateNonce = this.digestNonce;
+	}
+});
+
+PickerViewModel = Backbone.Model.extend({
+	defaults:{
+		options:new Collection(),
+		selectedIdx:-1
+	},
+	
+	initialize:function() {
+		if (this.has('collection'))
+			this.set('options', this.get('collection'));
+		else if (this.has('options'))
+			this.set('options', new Collection(this.get('options')));
+	},
+	
+	getSelectedIdx:function() {
+		return this.get('selectedIdx');
+	}
+});
+
+View = Backbone.View.extend({
 	_lastViewIdx:0,
+	renderNonce:0,
+	changeNonce:0,
 
 	initialize:function() {
-		if (this.options.modelField)
-			this.options.modelField.bind('change', this.render, this);
-		else if (this.model)
-			this.model.bind('change', this.render, this);
+		if (!this.model) this.model = new ViewModel();
 		
-		this.render();
+		this.model.bind('change:content', this.render, this);
+		
+		if (typeof(this.options.text) != 'undefined')
+			this.model.set({content:this.options.text, type:0});
+		else if (typeof(this.options.html) != 'undefined')
+			this.model.set({content:this.options.html, type:1});
+		else if (typeof(this.options.value) != 'undefined')
+			this.model.set({content:this.options.value, type:2});
+		else
+			this.render();
 	},
 	
 	render:function() {
-		if (this.options.htmlFn)
-			this.html(this.options.htmlFn(this.model));
-		else if (typeof(this.options.html) != 'undefined')
-			this.html(this.options.html);
-		else if (this.options.textFn)
-			this.text(this.options.textFn(this.model));
-		else if (typeof(this.options.text) != 'undefined')
-			this.text(this.options.text);
-		else if (this.options.modelField) {
-			if (this.format)
-				this.text(this.format(this.options.modelField.get()));
-			else
-				this.text(this.options.modelField.get());
+		if (this.renderNonce == this.changeNonce) {
+			var type = this.model.get('type');
+			
+			if (type == 0)	/* Text View Model */
+				this.html(this.model.get('content'));
+			else if (type == 1)	/* Html View Model */
+				this.text(this.model.get('content'));
+			else if (type == 2)	/* Value View Model */
+				this.value(this.model.get('content'));
 		}
-		
-		return this;
+		else
+			this.renderNonce = this.changeNonce;
 	},
 	
+	set:function() {
+		this.model.set.apply(this.model, arguments);
+	},
+	
+	get:function(attr) {
+		return this.model.get(attr);
+	},
+	
+	bind:function(event, callback, caller) {
+		this.model.bind(event, callback, caller);
+	},
+	
+	html:function(innerHTML) {
+		if (typeof(innerHTML) != 'undefined')
+			return this.$el.html(innerHTML);
+		else
+			return this.$el.html();
+	},
+	
+	text:function(text) {
+		if (typeof(text) != 'undefined')
+			this.$el.text(text);
+		else
+			return this.$el.text();
+	},
+	
+	val:function(value) {
+		if (typeof(value) != 'undefined')
+			this.$el.val(value);
+		else
+			return this.$el.val();
+	},
+	
+	addClass:function(className) {
+		this.$el.addClass(className);
+	},
+	
+	attr:function(attr, value) {
+		return this.$el.attr(attr, value);
+	},
+	
+	/* child api */
 	genViewName:function() {
 		return '_' + (++this._lastViewIdx);
 	},
@@ -97,6 +206,15 @@
 		return view;
 	},
 	
+	removeChild:function(viewName) {
+		if (typeof(viewName) != 'undefined')
+			this.findView(viewName).remove();
+		else {
+			for (var a in this.views)
+				this.views[a].remove();
+		}
+	},
+	
 	findParent:function(className) {
 		if (this.parent && this.parent.$el.hasClass(className))
 			return this.parent;
@@ -128,58 +246,19 @@
 		return null;
 	},
 	
-	html:function(innerHTML) {
-		if (typeof(innerHTML) != 'undefined')
-			return this.$el.html(innerHTML);
-		else
-			return this.$el.html();
+	events:{
+		'change':'cbChange'
 	},
 	
-	text:function(text) {
-		if (typeof(text) != 'undefined') {
-			if (this.options.modelField)
-				this.options.modelField.set(text);
-			else
-				this.$el.text(text);
-		}
-		else {
-			if (this.options.modelField)
-				return this.options.modelField.get();
-			else
-				return this.$el.text();
-		}
-	},
-	
-	val:function(value) {
-		if (typeof(value) != 'undefined') {
-			if (this.options.modelField)
-				this.options.modelField.set(value);
-			else
-				this.$el.val(value);
-		}
-		else {
-			if (this.options.modelField)
-				return this.options.modelField.get();
-			else
-				return this.$el.val();
-		}
-	},
-	
-	addClass:function(className) {
-		this.$el.addClass(className);
-	},
-	
-	attr:function(attr, value) {
-		return this.$el.attr(attr, value);
-	},
-	
-	removeChild:function(viewName) {
-		if (typeof(viewName) != 'undefined')
-			this.findView(viewName).remove();
-		else {
-			for (var a in this.views)
-				this.views[a].remove();
-		}
+	cbChange:function() {
+		this.changeNonce++;
+		
+		if (this.model.has('html'))
+			this.model.set(html, this.html());
+		else if (this.model.has('text'))
+			this.model.set(text, this.text());
+		else if (this.model.has('value'))
+			this.model.set(value, this.value());
 	}
 });
 
@@ -428,96 +507,38 @@ Picker = View.extend({
 	callback:{},
 	
 	initialize:function() {
-		if (typeof(this.collection) != 'undefined') {
-			this.collection.bind('reset', this.resetOptions, this);
-			this.collection.bind('add', this.addOption, this);
-			this.collection.bind('remove', this.removeOption, this);
-			
-			this.resetOptions();
-		}
-		else if (typeof(this.options.options) != 'undefined') {
-			for (var i=0; i<this.options.options.length; i++) {
-				this.append(Option, {text:this.options.options[i]});
-			}
-		}
+		if (!this.model) this.model = new PickerViewModel();
 		
-		if (this.options.modelField)
-			this.options.modelField.bind('change', this.update, this);
-		else if (typeof(this.options.idx) != 'undefined')
-			this.idx(this.options.idx);
-		else if (typeof(this.options.value) != 'undefined')
-			this.val(this.options.value);
+		this.model.get('options').bind('reset', this.refresh, this);
+		this.model.get('options').bind('add', this.addOption, this);
+		this.model.bind('change:selectedIdx', this.pick, this);
+		
 	},
 	
-	resetOptions:function() {
+	refresh:function() {
 		this.removeChild();
-		
-		for (var i=0; i<this.collection.length; i++) {
-			this.addOption(this.collection.at(i));
-			
-			if (this.options.modelField && this.options.modelField.get() == this.collection.at(i).get('id'))
-				this.idx(i);
-		}
 	},
 	
 	addOption:function(option) {
-		if (option.get)
-			this.append(Option, {model:option});
-		else
-			this.append(Option, {text:option});
 	},
 	
-	removeOption:function(option) {
-		
-	},
-	
-	removeIdx:function(idx) {
-	},
-	
-	update:function() {
-		this.pick(this.options.modelField.get());
-	},
-	
-	val:function(value) {
-		if (typeof(value) != 'undefined') {
-			this.$el.val(value);
-			if (this.options.modelField) this.options.modelField.set(this.el.selectedIndex);
-		}
-		else
-			return this.$el.val();
+	pick:function() {
+		this.idx(this.model.get('selectedIdx'));
 	},
 	
 	idx:function(idx) {
-		if (typeof(idx) != 'undefined') {
+		if (typeof(idx) != 'undefined')
 			this.el.selectedIndex = idx;
-			if (this.options.modelField) this.options.modelField.set(idx);
-		}
 		else
 			return this.el.selectedIndex;
 	},
 	
-	getSelectedIdx:function() {
-		return this.el.selectedIndex;
-	},
-	
-	getSelectedModel:function() {
-		if (this.collection)
-			return this.collection.at(this.el.selectedIndex);
-	},
-	
-	onPickerChange:function(cb) {
-		this.callback.cbPickerChange = cb;
-	},
-	
 	events:{
-		'change':'cbPickerChange'
+		'change':'cbChange'
 	},
 	
-	cbPickerChange:function(evt) {
-		if (this.options.modelField) this.options.modelField.set(this.el.selectedIndex);
-
-		if (this.callback.cbPickerChange)
-			this.callback.cbPickerChange(evt);
+	cbChange:function(evt) {
+		this.model.set(selectedIdx, this.el.selectedIndex);
 	}
 });
 
@@ -525,15 +546,11 @@ Option = View.extend({
 	tagName:'option',
 	
 	initialize:function() {
-		this.render();
-	},
-	
-	render:function(options) {
-		if (options && typeof(options.text) != 'undefined') {
-			this.html(options.text);
+		if (typeof(this.options.htmlFn) != 'undefined') {
+			this.html(this.options.htmlFn(this.model));
 		}
-		else if (this.options && typeof(this.options.text) != 'undefined') {
-			this.html(this.options.text);
+		else if (typeof(this.options.text) != 'undefined') {
+			this.text(this.options.text);
 		}
 	}
 });
@@ -741,12 +758,16 @@ PickerField = View.extend({
 		this.append(Picker, this.options, 'picker');
 	},
 	
-	onPickerChange:function(cb) {
-		this.getView('picker').onPickerChange(cb);
+	onChange:function(cb) {
+		this.getView('picker').onChange(cb);
 	},
 	
-	val:function() {
-		return this.getView('picker').val();
+	val:function(value) {
+		return this.getView('picker').val(value);
+	},
+	
+	idx:function(idx) {
+		return this.getView('picker').idx(idx);
 	},
 	
 	getSelectedIdx:function() {

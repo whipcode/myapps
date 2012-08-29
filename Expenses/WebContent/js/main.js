@@ -230,7 +230,7 @@ Main = View.extend({
 		
 		initialize:function() {
 			this.append(TextField, {label:'Year', className:'PickYear', text:new Date().getFullYear(), modelField:page.getPageState().getFieldObj('selectedYear')}, 'year');
-			this.append(CollectionPickerField, 
+			this.append(PickerField, 
 				{
 					label:'Account', 
 					className:'AccountPicker',
@@ -1006,7 +1006,7 @@ Main = View.extend({
 				editor.body.append(TextField, {label:'Asset Type', text:this.model.get('assetType')}, 'fldAssetType');
 				editor.body.append(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
 				editor.body.append(TextField, {label:'Owner', text:this.model.get('accOwner')}, 'fldAccOwner');
-				editor.body.append(CollectionPickerField, 
+				editor.body.append(PickerField, 
 					{
 						label:'Default Payment Settle Account', 
 						collection:datastore.getAccounts(), 
@@ -1075,7 +1075,7 @@ Main = View.extend({
 				else
 					editor.setTitle(this.model.get('desc'));
 				
-				editor.body.append(CollectionPickerField, 
+				editor.body.append(PickerField, 
 					{
 						label:'Account', 
 						collection:datastore.getAccounts(), 
@@ -1090,7 +1090,7 @@ Main = View.extend({
 				editor.body.append(TextField, {label:'Description', text:this.model.get('desc')}, 'fldDesc');
 				editor.body.append(AmountField, {label:'Amount', amount:this.model.get('amount')}, 'fldAmount');
 				editor.body.append(TextField, {label:'Remarks', text:this.model.get('remarks')}, 'fldRemarks');
-				editor.body.append(CollectionPickerField, 
+				editor.body.append(PickerField, 
 					{
 						label:'Settle Account', 
 						collection:datastore.getAccounts(), 
@@ -1099,7 +1099,7 @@ Main = View.extend({
 						selectedId:this.model.get('settleAcc')?this.model.get('settleAcc').id:0
 					}, 
 					'fldSettleAcc').append(Label, {text:'Date'}).append(DateInput, {}, 'fldSettleDate');
-				editor.body.append(CollectionPickerField, 
+				editor.body.append(PickerField, 
 					{
 						label:'Claim Account', 
 						collection:datastore.getAccounts(), 
