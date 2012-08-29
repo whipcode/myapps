@@ -45,19 +45,49 @@ ViewModel = Backbone.Model.extend({
 
 PickerViewModel = Backbone.Model.extend({
 	defaults:{
-		options:new Collection(),
+		optionViewModels:new Collection(),	/* collection of viewModels */
+		type:0,	/* default Text Option View Model */
 		selectedIdx:-1
 	},
 	
 	initialize:function() {
-		if (this.has('collection'))
-			this.set('options', this.get('collection'));
-		else if (this.has('options'))
-			this.set('options', new Collection(this.get('options')));
+		this.set('optionViewModels', new Collection());
+		
+		if (this.has('options'))
+			this.resetOptions(this.get('options'));
+		else if (this.has('collection'))
+			this.resetCollection(this.get('collection'));
 	},
 	
-	getSelectedIdx:function() {
-		return this.get('selectedIdx');
+	resetOptions:function(options) {
+		var _options = [];
+		
+		for (var i=0; i<options.length; i++) {
+			var optionViewModel = new ViewModel({content:options[i], type:0});
+			_options.push(optionViewModel);
+		}
+		
+		this.get('optionViewModels').reset(_options);
+	},
+	
+	resetCollection:function(collection) {
+		var _options = [];
+		
+		for (var i=0; i<collection.length; i++) {
+			var optionViewModel = new ViewModel({model:collection.at(i), type:this.get('type')});
+			if (this.has('formatFn'))
+				optionViewModel.set('formatFn', this.get('formatFn'));
+			else if (this.has('fieldName'))
+				optionViewModel.set('fieldName', this.get('fieldName'));
+			_options.push(optionViewModel);
+		}
+		
+		this.get('optionViewModels').reset(_options);
+	},
+	
+	validate:function(attributes) {
+		if (attributes.selectedIdx >= this.get('optionViewModels').length)
+			attributes.selectedIdx = this.get('optionViewModels').length - 1;
 	}
 });
 
@@ -86,9 +116,9 @@ View = Backbone.View.extend({
 			var type = this.model.get('type');
 			
 			if (type == 0)	/* Text View Model */
-				this.html(this.model.get('content'));
-			else if (type == 1)	/* Html View Model */
 				this.text(this.model.get('content'));
+			else if (type == 1)	/* Html View Model */
+				this.html(this.model.get('content'));
 			else if (type == 2)	/* Value View Model */
 				this.value(this.model.get('content'));
 		}
@@ -289,34 +319,37 @@ Paragraph = View.extend({
 Amount = View.extend({
 	tagName:'span',
 	
+	initialize:function() {
+		var _this = this;
+		
+		if (!this.options.dp) this.options.dp = 2;
+		
+		if (!this.model) {
+			this.model = new ViewModel({model:new Model({value:this.options.value}), type:0});
+			this.model.set('formatFn', function() {
+				if (_this.options.prefix)
+					return _this.options.prefix + util.formatAmount(value, _this.options.dp);
+				else
+					return util.formatAmount(value, _this.options.dp);
+			});
+			this.model.set('parseFn', function(content) {
+				if (_this.options.prefix)
+					return util.str2Amount(content.substring(_this.options.prefix.length));
+				else
+					return util.str2Amount(content);
+			});
+		}
+		
+		this.model.bind('change:content', this.render, this);
+		
+		if (typeof(this.options.value) != 'undefined')
+			this.model.get('model').set('value', this.options.value);
+		else
+			this.render();
+	},
+
 	setPrefix:function(prefix) {
 		this.options.prefix = prefix;
-	},
-	
-	val:function(value) {
-		if (typeof(value) != 'undefined') {
-			if (this.options.modelField)
-				this.options.modelField.set(value);
-			else
-				this.text(this.format(value));
-		}
-		else {
-			if (this.options.modelField)
-				return this.options.modelField.get();
-			else
-				return this.parse(this.text());
-		}
-	},
-	
-	format:function(value) {
-		if (this.options.prefix)
-			return this.options.prefix + util.formatAmount(value, this.options.dp);
-		else
-			return util.formatAmount(value, this.options.dp);
-	},
-	
-	parse:function(text) {
-		return util.str2Amount(text);
 	}
 });
 
@@ -504,33 +537,43 @@ Checkbox = View.extend({
 
 Picker = View.extend({
 	tagName:'select',
+	pickNonce:0,
+	changeNonce:0,
 	callback:{},
 	
 	initialize:function() {
 		if (!this.model) this.model = new PickerViewModel();
 		
-		this.model.get('options').bind('reset', this.refresh, this);
-		this.model.get('options').bind('add', this.addOption, this);
+		this.model.get('optionViewModels').bind('reset', this.refresh, this);
 		this.model.bind('change:selectedIdx', this.pick, this);
 		
+		if (this.options.options)
+			this.model.resetOptions(this.options.options);
+		else
+			this.refresh();
+		
+		if (this.options.selectedIdx)
+			this.model.set('selectedIdx', this.options.selectedIdx);
+		else
+			this.model.set('selectedIdx', 0);
 	},
 	
 	refresh:function() {
 		this.removeChild();
-	},
-	
-	addOption:function(option) {
+		
+		var optionViewModels = this.model.get('optionViewModels');
+		for (var i=0; i<optionViewModels.length; i++) {
+			this.append(Option, {model:optionViewModels.at(i)});
+		}
+		
+		this.pick();
 	},
 	
 	pick:function() {
-		this.idx(this.model.get('selectedIdx'));
-	},
-	
-	idx:function(idx) {
-		if (typeof(idx) != 'undefined')
-			this.el.selectedIndex = idx;
+		if (this.pickNonce == this.changeNonce)
+			this.el.selectedIndex = this.model.get('selectedIdx');
 		else
-			return this.el.selectedIndex;
+			this.pickNonce = this.changeNonce;
 	},
 	
 	events:{
@@ -538,21 +581,14 @@ Picker = View.extend({
 	},
 	
 	cbChange:function(evt) {
-		this.model.set(selectedIdx, this.el.selectedIndex);
+		this.changeNonce++;
+		
+		this.model.set('selectedIdx', this.el.selectedIndex);
 	}
 });
 
 Option = View.extend({
-	tagName:'option',
-	
-	initialize:function() {
-		if (typeof(this.options.htmlFn) != 'undefined') {
-			this.html(this.options.htmlFn(this.model));
-		}
-		else if (typeof(this.options.text) != 'undefined') {
-			this.text(this.options.text);
-		}
-	}
+	tagName:'option'
 });
 
 CollectionPicker = View.extend({
