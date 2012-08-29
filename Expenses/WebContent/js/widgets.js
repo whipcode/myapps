@@ -1,29 +1,64 @@
-ViewModel = Backbone.Model.extend({
+View = Backbone.View.extend({
+	viewModel:null,
+	contentType:0,	/* 0:Text Content, 1:Html Content, 2:Value Content; 3:Checkbox Content */
 	digestNonce:0,
 	updateNonce:0,
-	
-	defaults:{
-		content:'',
-		type:0	/* 0:Text View Model, 1:Html View Model, 2:Value View Model, 3:Other View Model */
-	},
-	
+	renderNonce:0,
+	changeNonce:0,
+	_lastViewIdx:0,
+
 	initialize:function() {
-		if (this.has('model')) {
-			this.get('model').bind('change', this.digestModel, this);
-			this.bind('change', this.updateModel, this);
+		/* When you override this function, you are going to manage your viewModel and model relationship individually */
+		this.viewModel = new ViewModel({content:null});
+		if (this.options.contentType) this.contentType = this.options.contentType;
+		this.viewModel.bind('change:content', this.render, this);
 		
-			this.digestModel();
+		if (this.model) {
+			this.model.bind('change', this.digestModel, this);
+			this.viewModel.bind('change', this.updateModel, this);
 		}
+		
+		this.initAttr();
+		this.initContent();
 	},
 	
+	initAttr:function() {
+		/* Override me when needed */
+	},
+	
+	initContent:function() {
+		/* Override me when needed */
+		if (typeof(this.options.text) != 'undefined')
+			this.viewModel.set('content', this.options.text);
+		else if (typeof(this.options.html) != 'undefined')
+			this.viewModel.set('content', this.options.html);
+		else if (typeof(this.options.value) != 'undefined')
+			this.viewModel.set('content', this.options.value);
+		else if (this.model)
+			this.digestModel();
+	},
+	
+	render:function() {
+		if (this.renderNonce == this.changeNonce) {
+			if (this.contentType == 0)	/* Text View Model */
+				this.$el.text(this.format(this.viewModel.get('content')));
+			else if (this.contentType == 1)	/* Html View Model */
+				this.$el.html(this.format(this.viewModel.get('content')));
+			else if (this.contentType == 2)	/* Value View Model */
+				this.$el.val(this.format(this.viewModel.get('content')));
+		}
+		else
+			this.renderNonce = this.changeNonce;
+	},
+
 	digestModel:function() {
 		if (this.digestNonce == this.updateNonce) {
 			this.digestNonce++;
 			
-			if (this.has('formatFn'))
-				this.set('content', this.get('formatFn').call(this.get('model')));
-			else if (this.has('fieldName'))
-				this.set('content', this.get('model').get(fieldName));
+			if (this.options.formatFn)
+				this.viewModel.set('content', this.options.formatFn(this.model));
+			else if (this.options.fieldName)
+				this.viewModel.set('content', this.model.get(this.options.fieldName));
 		}
 		else
 			this.digestNonce = this.updateNonce;
@@ -33,134 +68,30 @@ ViewModel = Backbone.Model.extend({
 		if (this.updateNonce == this.digestNonce) {
 			this.updateNonce++;
 			
-			if (this.has('parseFn'))
-				this.get('parseFn').call(this.get('model'), this.get('content'));
-			else if (this.has('fieldName'))
-				this.get('model').set(this.get('fieldName'), this.get('content'));
+			if (this.options.parseFn)
+				this.model.set(this.options.parseFn(this.viewModel.get('content')));
+			else if (this.options.fieldName)
+				this.model.set(this.options.fieldName, this.viewModel.get('content'));
 		}
 		else
 			this.updateNonce = this.digestNonce;
-	}
-});
+	},
+	
+	get:function() {
+		return this.viewModel.get('content');
+	},
+	
+	set:function(content) {
+		this.viewModel.set('content', content);
+	},
 
-PickerViewModel = Backbone.Model.extend({
-	defaults:{
-		optionViewModels:new Collection(),	/* collection of viewModels */
-		type:0,	/* default Text Option View Model */
-		selectedIdx:-1
-	},
-	
-	initialize:function() {
-		this.set('optionViewModels', new Collection());
-		
-		if (this.has('options'))
-			this.resetOptions(this.get('options'));
-		else if (this.has('collection'))
-			this.resetCollection(this.get('collection'));
-	},
-	
-	resetOptions:function(options) {
-		var _options = [];
-		
-		for (var i=0; i<options.length; i++) {
-			var optionViewModel = new ViewModel({content:options[i], type:0});
-			_options.push(optionViewModel);
-		}
-		
-		this.get('optionViewModels').reset(_options);
-	},
-	
-	resetCollection:function(collection) {
-		var _options = [];
-		
-		for (var i=0; i<collection.length; i++) {
-			var optionViewModel = new ViewModel({model:collection.at(i), type:this.get('type')});
-			if (this.has('formatFn'))
-				optionViewModel.set('formatFn', this.get('formatFn'));
-			else if (this.has('fieldName'))
-				optionViewModel.set('fieldName', this.get('fieldName'));
-			_options.push(optionViewModel);
-		}
-		
-		this.get('optionViewModels').reset(_options);
-	},
-	
-	validate:function(attributes) {
-		if (attributes.selectedIdx >= this.get('optionViewModels').length)
-			attributes.selectedIdx = this.get('optionViewModels').length - 1;
-	}
-});
-
-View = Backbone.View.extend({
-	_lastViewIdx:0,
-	renderNonce:0,
-	changeNonce:0,
-
-	initialize:function() {
-		if (!this.model) this.model = new ViewModel();
-		
-		this.model.bind('change:content', this.render, this);
-		
-		if (typeof(this.options.text) != 'undefined')
-			this.model.set({content:this.options.text, type:0});
-		else if (typeof(this.options.html) != 'undefined')
-			this.model.set({content:this.options.html, type:1});
-		else if (typeof(this.options.value) != 'undefined')
-			this.model.set({content:this.options.value, type:2});
-		else
-			this.render();
-	},
-	
-	render:function() {
-		if (this.renderNonce == this.changeNonce) {
-			var type = this.model.get('type');
-			
-			if (type == 0)	/* Text View Model */
-				this.text(this.model.get('content'));
-			else if (type == 1)	/* Html View Model */
-				this.html(this.model.get('content'));
-			else if (type == 2)	/* Value View Model */
-				this.value(this.model.get('content'));
-		}
-		else
-			this.renderNonce = this.changeNonce;
-	},
-	
-	set:function() {
-		this.model.set.apply(this.model, arguments);
-	},
-	
-	get:function(attr) {
-		return this.model.get(attr);
-	},
-	
-	bind:function(event, callback, caller) {
-		this.model.bind(event, callback, caller);
-	},
-	
-	html:function(innerHTML) {
-		if (typeof(innerHTML) != 'undefined')
-			return this.$el.html(innerHTML);
-		else
-			return this.$el.html();
-	},
-	
-	text:function(text) {
-		if (typeof(text) != 'undefined')
-			this.$el.text(text);
-		else
-			return this.$el.text();
-	},
-	
-	val:function(value) {
-		if (typeof(value) != 'undefined')
-			this.$el.val(value);
-		else
-			return this.$el.val();
-	},
-	
+	/* freq manipulations */
 	addClass:function(className) {
-		this.$el.addClass(className);
+		return this.$el.addClass(className);
+	},
+	
+	removeClass:function(className) {
+		return this.$el.removeClass(className);
 	},
 	
 	attr:function(attr, value) {
@@ -283,12 +214,22 @@ View = Backbone.View.extend({
 	cbChange:function() {
 		this.changeNonce++;
 		
-		if (this.model.has('html'))
-			this.model.set(html, this.html());
-		else if (this.model.has('text'))
-			this.model.set(text, this.text());
-		else if (this.model.has('value'))
-			this.model.set(value, this.value());
+		if (this.options.contentType == 0)
+			this.viewModel.set('content', this.parse(this.$el.text()));
+		else if (this.options.contentType == 1)
+			this.viewModel.set('content', this.parse(this.$el.html()));
+		else if (this.options.contentType == 2)
+			this.viewModel.set('content', this.parse(this.$el.val()));
+	},
+	
+	format:function(content) {
+		/* Override me when needed */
+		return content;
+	},
+	
+	parse:function(text) {
+		/* Override me when needed */
+		return text;
 	}
 });
 
@@ -318,88 +259,34 @@ Paragraph = View.extend({
 
 Amount = View.extend({
 	tagName:'span',
+	contentType:0,
+	dp:0,
 	
-	initialize:function() {
-		var _this = this;
-		
-		if (!this.options.dp) this.options.dp = 2;
-		
-		if (!this.model) {
-			this.model = new ViewModel({model:new Model({value:this.options.value}), type:0});
-			this.model.set('formatFn', function() {
-				if (_this.options.prefix)
-					return _this.options.prefix + util.formatAmount(value, _this.options.dp);
-				else
-					return util.formatAmount(value, _this.options.dp);
-			});
-			this.model.set('parseFn', function(content) {
-				if (_this.options.prefix)
-					return util.str2Amount(content.substring(_this.options.prefix.length));
-				else
-					return util.str2Amount(content);
-			});
-		}
-		
-		this.model.bind('change:content', this.render, this);
-		
-		if (typeof(this.options.value) != 'undefined')
-			this.model.get('model').set('value', this.options.value);
-		else
-			this.render();
-	},
+	initContent:function() {
+		if (this.options.dp) this.dp = this.options.dp;
 
-	setPrefix:function(prefix) {
-		this.options.prefix = prefix;
+		if (typeof(this.options.value) != 'undefined')
+			this.viewModel.set('content', util.formatAmount(this.options.value, this.dp));
+		else if (this.model)
+			this.digestModel();
 	}
 });
 
 Link = View.extend({
 	tagName:'a',
 	
-	initialize:function() {
-		if (typeof(this.options.label) != 'undefined')
-			this.text(this.options.label);
-		
-		if (typeof(this.options.href) != 'undefined')
+	initAttr:function() {
+		if (this.options.href)
 			this.$el.attr('href', this.options.href);
 	}
 });
 
 Table = View.extend({
-	tagName:'table',
-	
-	addHeader:function(options) {
-		return this.append(Table.Header, options, 'header');
-	},
-	
-	addBody:function(options) {
-		return this.append(Table.Body, options, 'body');
-	},
-	
-	addFooter:function(options) {
-		return this.append(Table.Footer, options, 'footer');
-	},
-	
-	addRow:function(options) {
-		if (this.views.footer)
-			return this.views.footer.addRow(options);
-		else if (this.views.body)
-			return this.views.body.addRow(options);
-		else if (this.views.header)
-			return this.views.header.addRow(options);
-		else {
-			return this.addBody().addRow(options);
-		}
-	}
+	tagName:'table'
 });
 
-
 TableHeader = View.extend({
-	tagName:'thead',
-	
-	addRow:function(options) {
-		return this.append(Table.Row, options);
-	}
+	tagName:'thead'
 });
 
 TableBody = View.extend({
@@ -415,22 +302,11 @@ TableRow = View.extend({
 });
 
 TableHeaderCell = View.extend({
-	tagName:'th',
-	
-	initialize:function() {
-		if (this.options.text)
-			this.html(this.options.text);
-	}
+	tagName:'th'
 });
 
 TableCell = View.extend({
-	tagName:'td',
-	
-	initialize:function() {
-		if (this.options.text)
-			this.html(this.options.text);
-	}
-
+	tagName:'td'
 });
 
 Button = View.extend({
@@ -439,131 +315,128 @@ Button = View.extend({
 
 TextInput = View.extend({
 	tagName:'input',
-	callback:{},
+	contentType:2,
 	
-	initialize:function() {
-		this.$el.attr('type','text');
-		
-		if (this.options.modelField)
-			this.options.modelField.bind('change', this.update, this);
-		
-		if (typeof(this.options.text) != 'undefined') 
-			this.val(this.options.text);
-	},
-	
-	update:function() {
-		this.$el.val(this.options.modelField.get());
-	},
-	
-	events:{
-		'change':'cbChange'
-	},
-	
-	cbChange:function() {
-		if (this.options.modelField)
-			this.options.modelField.set(this.$el.val());
-
-		if (this.callback.cbPickerChange)
-			this.callback.cbPickerChange(evt);
+	initAttr:function() {
+		this.$el.attr('type', 'text');
 	}
 });
 
 DateInput = View.extend({
 	tagName:'input',
+	contentType:2,
 	dateFormat:'$(dd) $(Mmm) $(yyyy)',
 	
-	initialize:function() {
-		this.$el.attr('type','text');
-		if (typeof(this.options.date) != 'undefined')
-			this.val(this.options.date);
+	initAttr:function() {
+		this.$el.attr('type', 'text');
 	},
 	
-	val:function(date) {
-		if (typeof(date) != 'undefined')
-			this.$el.val(util.formatDate(date, this.dateFormat));
-		else {
-			var date = new Date();
-			util.str2Date(this.$el.val(), date);
-			return date;
-		}
+	initContent:function() {
+		if (this.options.dateFormat)
+			this.dateFormat = this.options.dateFormat;
+		
+		if (typeof(this.options.date) != 'undefined')
+			this.viewModel.set('content', this.options.date);
+		else if (this.model)
+			this.digestModel();
+	},
+	
+	format:function(date) {
+		return util.formatDate(date, this.dateFormat);
+	},
+	
+	parse:function(text) {
+		return util.str2Date(text);
 	}
 });
 
 AmountInput = View.extend({
 	tagName:'input',
-	dp:2,
+	contentType:2,
+	dp:0,
 	
-	initialize:function() {
-		this.$el.attr('type','text');
-		if (typeof(this.options.amount) != 'undefined')
-			this.val(this.options.amount);
-		else
-			this.val(0);
+	initAttr:function() {
+		this.$el.attr('type', 'text');
 	},
 	
-	val:function(amount) {
-		if (typeof(amount) != 'undefined')
-			this.$el.val(util.formatAmount(amount, this.dp));
-		else
-			return util.str2Amount(this.$el.val());
+	initContent:function() {
+		if (this.options.dp) this.dp = this.options.dp;
+		
+		if (typeof(this.options.amount) != 'undefined')
+			this.viewModel.set('content', this.options.amount);
+		else if (this.model)
+			this.digestModel();
+	},
+	
+	format:function(date) {
+		return util.formatAmount(date, this.dp);
+	},
+	
+	parse:function(text) {
+		return util.str2Amount(text);
 	}
 });
 
 Checkbox = View.extend({
 	tagName:'input',
+	contentType:3,
 	
-	initialize:function() {
-		this.el.type = 'checkbox';
-		if (typeof(this.options.value) != 'undefined')
-			this.val(this.options.value);
-		else if (typeof(this.options.checked) != 'undefined')
-			this.checked(this.options.checked);
+	initAttr:function() {
+		this.$el.attr('type', 'checkbox');
 	},
 	
-	val:function(value) {
-		if (typeof(value) != 'undefined')
-			this.$el.val(value);
+	initContent:function() {
+		if (typeof(this.options.checked) != 'undefined')
+			this.viewModel.set('content', this.options.checked);
 		else
-			return this.$el.val();
-	},
-	
-	checked:function(checked) {
-		if (typeof(checked) != 'undefined')
-			this.el.checked = checked;
-		else
-			return this.el.checked;
+			this.digestModel();
 	}
 });
 
 Picker = View.extend({
 	tagName:'select',
+	viewModel:null,
 	pickNonce:0,
 	changeNonce:0,
-	callback:{},
 	
 	initialize:function() {
-		if (!this.model) this.model = new PickerViewModel();
+		this.viewModel = new ViewModel({selectedIdx:-1, numOptions:0, validate:function(attr) {if (attr.selectedIdx>=attr.numOptions) attr.selectedIdx=attr.numOptions-1;}});
+		if (!this.collection) this.collection = new Collection();
+
+		this.collection.bind('reset', this.refresh, this);
+		this.viewModel.bind('change:selectedIdx', this.pick, this);
 		
-		this.model.get('optionViewModels').bind('reset', this.refresh, this);
-		this.model.bind('change:selectedIdx', this.pick, this);
+		if (this.model) {
+			this.model.bind('change', this.digestModel, this);
+			this.viewModel.bind('change:selectedIdx', this.updateModel, this);
+		}
 		
 		if (this.options.options)
-			this.model.resetOptions(this.options.options);
+			this.resetOptions(this.options.options);
 		else
 			this.refresh();
 		
 		if (this.options.selectedIdx)
-			this.model.set('selectedIdx', this.options.selectedIdx);
+			this.viewModel.set('selectedIdx', this.options.selectedIdx);
+		else if (this.model)
+			this.lookup();
 		else
-			this.model.set('selectedIdx', 0);
+			this.viewModel.set('selectedIdx', 0);
 	},
 	
 	refresh:function() {
 		this.removeChild();
 		
-		var optionViewModels = this.model.get('optionViewModels');
-		for (var i=0; i<optionViewModels.length; i++) {
-			this.append(Option, {model:optionViewModels.at(i)});
+		for (var i=0; i<this.collection.length; i++) {
+			var options = {
+				model:this.collection.at(i),
+				contentType:this.options.contentType||0
+			};
+			if (this.options.formatFn)
+				options.formatFn = this.options.formatFn;
+			else if (this.options.fieldName)
+				options.fieldName = this.options.fieldName;
+			this.append(Option, options);
 		}
 		
 		this.pick();
@@ -571,9 +444,42 @@ Picker = View.extend({
 	
 	pick:function() {
 		if (this.pickNonce == this.changeNonce)
-			this.el.selectedIndex = this.model.get('selectedIdx');
+			this.el.selectedIndex = this.viewModel.get('selectedIdx');
 		else
 			this.pickNonce = this.changeNonce;
+	},
+	
+	resetOptions:function(options) {
+		_options = [];
+		
+		for (var i=0; i<options.length; i++)
+			_options.push({text:options[i]});
+		
+		this.options.fieldName = 'text';
+		this.options.formatFn = null;
+		this.viewModel.set('numOptions', options.length);
+		this.collection.reset(_options);
+	},
+	
+	digestModel:function() {
+		for (var i=0; i<this.collection.length; i++) {
+			var check = this.options.parseFn(this.collection.at(i));
+			var found = true;
+			for (var a in check)
+				if (this.model.get(a) != check[a]) {
+					found = false;
+					break;
+				}
+			
+			if (found) {
+				this.viewModel.set('selectedIdx', i);
+				break;
+			}
+		}
+	},
+	
+	updateModel:function() {
+		this.model.set(this.options.parseFn(this.collection.at(this.viewModel.get('selectedIdx'))));
 	},
 	
 	events:{
@@ -583,120 +489,20 @@ Picker = View.extend({
 	cbChange:function(evt) {
 		this.changeNonce++;
 		
-		this.model.set('selectedIdx', this.el.selectedIndex);
+		this.viewModel.set('selectedIdx', this.el.selectedIndex);
+	},
+	
+	get:function() {
+		return this.viewModel.get('selectedIdx');
+	},
+	
+	set:function(selectedIdx) {
+		this.viewModel.set('selectedIdx', selectedIdx);
 	}
 });
 
 Option = View.extend({
 	tagName:'option'
-});
-
-CollectionPicker = View.extend({
-	tagName:'select',
-	callback:{},
-	
-	initialize:function() {
-		if (this.options.modelField) 
-			this.options.modelField.bind('change', this.modelChanged, this);
-
-		this.collection.bind('add', this.add, this);
-		this.collection.bind('reset', this.refresh, this);
-		this.collection.bind('remove', this.refresh, this);
-		
-		if (this.options.onChange) this.onChange(this.options.onChange);
-		
-		this.refresh();
-	},
-	
-	modelChanged:function() {
-		for (var i=0; i<this.collection.length; i++) {
-			var optionId = this.options.collection.at(i).get('id');
-			if (this.options.modelField.get() == optionId)
-				this.idx(i + (this.options.withBlank?1:0));
-		}
-	},
-	
-	refresh:function() {
-		this.html('');
-		
-		if (this.options.withBlank)
-			this.add(null);
-
-		if (this.options.selectModel && !this.options.selectModel.get)
-			this.options.selectModel = new Model(this.options.selectModel);
-
-		for (var i=0; i<this.collection.length; i++) {
-			this.add(this.collection.at(i));
-			
-			var optionId = this.options.collection.at(i).get('id');
-			if ((this.options.selectModel && this.options.selectModel.get('id') == optionId) ||
-				(this.options.selectedId == optionId) ||
-				(this.options.modelField && this.options.modelField.get() == optionId) ||
-				this.options.idx == i)
-				this.idx(i + (this.options.withBlank?1:0));
-		}
-	},
-	
-	add:function(model) {
-		this.append(ModelOption, {model:model, displayField:this.options.displayField, displayFn:this.options.displayFn});
-	},
-	
-	onChange:function(cb) {
-		this.callback.cbChange = cb;
-	},
-	
-	val:function(value) {
-		if (typeof(value) != 'undefined')
-			this.$el.val(value);
-		else
-			return this.$el.val();
-	},
-	
-	idx:function(idx) {
-		if (typeof(idx) != 'undefined')
-			this.el.selectedIndex = idx;
-		else
-			return this.el.selectedIndex;
-	},
-	
-	getSelectedIdx:function() {
-		return this.el.selectedIndex;
-	},
-	
-	getSelectedModel:function() {
-		var idx = this.el.selectedIndex;
-		return this.collection.at(idx - (this.options.withBlank?1:0));
-	},
-	
-	events:{
-		'change':'cbPickerChange'
-	},
-	
-	cbPickerChange:function(evt) {
-		if (this.options.modelField) this.options.modelField.set(this.getSelectedModel().get('id'));
-		if (this.callback.cbChange)
-			this.callback.cbChange(this.getSelectedModel());
-	}
-});
-
-ModelOption = View.extend({
-	tagName:'option',
-	
-	initialize:function() {
-		if (this.model)
-			this.model.bind('change', this.refresh, this);
-		this.refresh();
-	},
-	
-	refresh:function() {
-		this.html('');
-		if (!this.model)
-			this.html('');
-		else if (typeof(this.options.displayField) != 'undefined')
-			this.html(this.model.get(this.options.displayField));
-		else if (typeof(this.options.displayFn) == 'function')
-			this.html(this.options.displayFn(this.model));
-	}
 });
 
 TextField = View.extend({
@@ -713,8 +519,12 @@ TextField = View.extend({
 		this.append(TextInput, this.options, 'text');
 	},
 	
-	val:function(text) {
-		return this.getView('text').val(text);
+	get:function() {
+		return this.findView('text').get();
+	},
+	
+	set:function(content) {
+		this.findView('text').set(content);
 	}
 });
 
@@ -732,8 +542,12 @@ DateField = View.extend({
 		this.append(DateInput, this.options, 'date');
 	},
 	
-	val:function(date) {
-		return this.getView('date').val(date);
+	get:function() {
+		return this.findView('date').get();
+	},
+	
+	set:function(date) {
+		this.findView('date').set(date);
 	}
 });
 
@@ -751,8 +565,12 @@ AmountField = View.extend({
 		this.append(AmountInput, this.options, 'amount');
 	},
 	
-	val:function(amount) {
-		return this.getView('amount').val(amount);
+	get:function() {
+		return this.findView('amount').get();
+	},
+	
+	set:function(amount) {
+		this.findView('amount').set(amount);
 	}
 });
 
@@ -770,18 +588,17 @@ CheckboxField = View.extend({
 		this.append(Checkbox, this.options, 'checkbox');
 	},
 	
-	val:function(value) {
-		return this.getView('checkbox').val(value);
+	get:function() {
+		return this.findView('checkbox').get();
 	},
 	
-	checked:function(checked) {
-		return this.getView('checkbox').checked(checked);
+	set:function(checked) {
+		this.findView('checkbox').set(checked);
 	}
 });
 
 PickerField = View.extend({
 	tagName:'div',
-	callback:{},
 	
 	initialize:function() {
 		this.addClass('Field');
@@ -794,55 +611,12 @@ PickerField = View.extend({
 		this.append(Picker, this.options, 'picker');
 	},
 	
-	onChange:function(cb) {
-		this.getView('picker').onChange(cb);
+	get:function() {
+		return this.findView('picker').get();
 	},
 	
-	val:function(value) {
-		return this.getView('picker').val(value);
-	},
-	
-	idx:function(idx) {
-		return this.getView('picker').idx(idx);
-	},
-	
-	getSelectedIdx:function() {
-		return this.getView('picker').getSelectedIdx();
-	}
-});
-
-CollectionPickerField = View.extend({
-	tagName:'div',
-	
-	initialize:function() {
-		this.addClass('Field');
-		
-		if (typeof(this.options.label) != 'undefined') {
-			this.append(Label, {text:this.options.label});
-			this.options.label = undefined;
-		}
-		
-		this.append(CollectionPicker, this.options, 'picker');
-	},
-	
-	onChange:function(cb) {
-		this.getView('picker').onChange(cb);
-	},
-	
-	val:function(value) {
-		return this.getView('picker').val(value);
-	},
-	
-	idx:function(idx) {
-		return this.getView('picker').idx(idx);
-	},
-	
-	getSelectedIdx:function() {
-		return this.getView('picker').getSelectedIdx();
-	},
-	
-	getSelectedModel:function() {
-		return this.getView('picker').getSelectedModel();
+	set:function(selectedIdx) {
+		this.findView('picker').set(selectedIdx);
 	}
 });
 
@@ -900,8 +674,8 @@ Editor = View.extend({
 		
 		this.menu = this.append(Wrapper, {className:'Menu'}, 'menu');
 		if (this.menu) {
-			this.menu.append(Button, {className:'BtnCancel', label:this.lblCancel}, 'btnCancel');
-			this.menu.append(Button, {className:'BtnSave', label:this.lblSave}, 'btnSave');
+			this.menu.append(Button, {className:'BtnCancel', text:this.lblCancel}, 'btnCancel');
+			this.menu.append(Button, {className:'BtnSave', text:this.lblSave}, 'btnSave');
 			this.menu.append(Paragraph, {tagName:'h2',className:'Title'}, 'title');
 		}
 		
@@ -909,6 +683,6 @@ Editor = View.extend({
 	},
 	
 	setTitle:function(text) {
-		this.menu.getView('title').text(text);
+		this.findView('title').set(text);
 	}
 });

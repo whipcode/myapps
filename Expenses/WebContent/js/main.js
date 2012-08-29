@@ -234,14 +234,11 @@ Main = View.extend({
 				{
 					label:'Account', 
 					className:'AccountPicker',
-					model:new PickerViewModel({
-						collection:datastore.getAccounts(), 
-						selectedIdx:0,
-						type:0, 
-						formatFn:function() {
-							return this.get('name')+' ('+this.get('accOwner')+')';
-						}
-					})
+					collection:datastore.getAccounts(), 
+					formatFn:function(model) {
+						return model.get('name')+' ('+model.get('accOwner')+')';
+					}, 
+					selectedIdx:0
 				}, 
 				'accountPicker');
 			this.append(Button, {text:'New',className:'BtnNewAcc'}, 'btnNewAcc');
@@ -292,7 +289,7 @@ Main = View.extend({
 				className:'MonthPicker',
 				
 				initialize:function() {
-					this.append(Picker, {options:util.getMonthNames(), modelField:page.getPageState().getFieldObj('selectedMonth'), selectedIdx:new Date().getMonth()}, 'picker');
+					this.append(Picker, {options:util.getMonthNames(), selectedIdx:new Date().getMonth()}, 'picker');
 				},
 				
 				getSelectedMonth:function() {

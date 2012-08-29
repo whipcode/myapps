@@ -1,3 +1,6 @@
+ViewModel = Backbone.Model.extend({
+});
+
 viewmodels = {
 	models:{},
 	
