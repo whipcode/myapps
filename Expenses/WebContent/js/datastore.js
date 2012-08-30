@@ -45,7 +45,7 @@ datastore = {
 				_this.data.assetRates.reset(_data.assetRates);
 				_this.data.assetAmounts.reset(_data.assetAmounts);
 
-				_this.calcClosings();
+				_this.calcAccounts();
 				if (cbSuccess) cbSuccess();
 			},
 			errorHandler:function(msg) {
@@ -53,6 +53,11 @@ datastore = {
 				if (cbFailed) cbFailed(msg);
 			}
 		});
+	},
+	
+	calcAccounts:function() {
+		var transactionsByAccountByMonth = this.getTransactionsOfYearByAccountByMonth(this.selectedYear);
+		var closingsByAccountByMonth = this.getClosingsOfYearByAccountByMonth(this.selectedYear);
 	},
 	
 	/* Accounts */
@@ -105,7 +110,42 @@ datastore = {
 		return this.data.closings;
 	},
 	
-	getClosing:function(account, year, month) {
+	getClosingsOfYearByAccountByMonth:function(year) {
+		var closingsByAccountByMonth = {};
+		
+		/* prep transaction accounts */
+		var accounts = this.getAccounts();
+		for (var i=0; i<account.length; i++) {
+			var account = accounts.at(i);
+			closingsByAccountByMonth[account.get('id')] = [null,null,null,null,null,null,null,null,null,null,null,null,null];
+		}
+		
+		/* prep closings */
+		var closings = this.getClosings();
+		for (var i=0; i<closings.length; i++) {
+			var closing = closings.at(i);
+			var closingYear = closing.get('date').getFullYear();
+			var closingMonth = closing.get('date').getMonth();
+			
+			if (closingYear == year || (closingYear == year-1 && closingMonth == 11))
+				closingsByAccountByMonth[closing.get('account').id][(closingYear-year)*12 + closingMonth + 1] = closing;
+		}
+		
+		/* fill missing closings */
+		for (var i=0; i<accounts.length; i++) {
+			account = accounts.at(i);
+			
+			for (var j=0; j<13; i++)
+				if (!closingsByAccountByMonth[accounts.at(i).get('id')][j])
+					closingsByAccountByMonth[accounts.at(i).get('id')][j] = new Closing({
+						account:account
+					});
+		}
+		
+		return closingsByAccountByMonth;
+	},
+	
+	getClosingOfAccountOfYearOfMonth:function(account, year, month) {
 		for (var i=0; i<this.data.closings.length; i++) {
 			var closing = this.data.closings.at(i);
 			if (closing.get('account').id == account.get('id') && closing.get('date').getFullYear() == year && closing.get('date').getMonth() == month)
@@ -165,6 +205,31 @@ datastore = {
 	/* Transactions */
 	getTransactions:function() {
 		return this.data.transactions;
+	},
+	
+	getTransactionsOfYearByAccountByMonth:function(year) {
+		var transactionsByAccountByMonth = {};
+		
+		/* prep transaction accounts */
+		var accounts = this.getAccounts();
+		for (var i=0; i<account.length; i++)
+			transactionsByAccountByMonth[accounts.at(i).get('id')] = [[],[],[],[],[],[],[],[],[],[],[],[]];
+		
+		var transactions = this.getTransactions();
+		for (var i=0; i<transactions.length; i++) {
+			var transaction = transactions.at(i);
+			
+			if (transaction.get('tranDate').getFullYear() == year)
+				transactionsByAccountByMonth[transaction.get('tranxAcc').id][transaction.get('tranDate').getMonth()].push(transaction);
+			
+			if (transaction.get('settleAcc') && transaction.get('settleDate').getFullYear() == year)
+				transactionsByAccountByMonth[transaction.get('settleAcc').id][transaction.get('settleDate').getMonth()].push(transaction);
+			
+			if (transaction.get('claimAcc') && transaction.get('claimDate').getFullYear() == year)
+				transactionsByAccountByMonth[transaction.get('claimAcc').id][transaction.get('claimDate').getMonth()].push(transaction);
+		}
+		
+		return transactionsByAccountByMonth;
 	},
 	
 	saveTransaction:function(transaction, cbSuccess, cbFailed) {
