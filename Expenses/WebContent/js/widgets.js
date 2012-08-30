@@ -42,6 +42,10 @@ View = Backbone.View.extend({
 			this.viewModel.set('content', this.options.value);
 			this.contentType = 2;
 		}
+		else if (typeof(this.options.checked) != 'undefined') {
+			this.viewModel.set('content', this.options.checked);
+			this.contentType = 3;
+		}
 		else if (this.model)
 			this.digestModel();
 	},
@@ -54,35 +58,37 @@ View = Backbone.View.extend({
 				this.$el.html(this.format(this.viewModel.get('content')));
 			else if (this.contentType == 2)	/* Value View Model */
 				this.$el.val(this.format(this.viewModel.get('content')));
+			else if (this.contentType == 3)	/* Checkbox View Model */
+				this.el.checked = this.viewModel.get('content');
 //		}
 //		else
 //			this.renderNonce = this.changeNonce;
 	},
 
 	digestModel:function() {
-		if (this.digestNonce == this.updateNonce) {
-			this.digestNonce++;
+//		if (this.digestNonce == this.updateNonce) {
+//			this.digestNonce++;
 			
 			if (this.options.formatFn)
 				this.viewModel.set('content', this.options.formatFn(this.model));
 			else if (this.options.fieldName)
 				this.viewModel.set('content', this.model.get(this.options.fieldName));
-		}
-		else
-			this.digestNonce = this.updateNonce;
+//		}
+//		else
+//			this.digestNonce = this.updateNonce;
 	},
 	
 	updateModel:function() {
-		if (this.updateNonce == this.digestNonce) {
-			this.updateNonce++;
-			
+//		if (this.updateNonce == this.digestNonce) {
+//			this.updateNonce++;
+//			
 			if (this.options.parseFn)
 				this.model.set(this.options.parseFn(this.viewModel.get('content')));
 			else if (this.options.fieldName)
 				this.model.set(this.options.fieldName, this.viewModel.get('content'));
-		}
-		else
-			this.updateNonce = this.digestNonce;
+//		}
+//		else
+//			this.updateNonce = this.digestNonce;
 	},
 	
 	get:function() {
@@ -218,7 +224,7 @@ View = Backbone.View.extend({
 	},
 	
 	cbChange:function(evt) {
-		if (evt.srcElement == this.el) {
+		if (evt.srcElement == this.el && this.viewModel) {
 //			this.changeNonce++;
 			
 			if (this.contentType == 0)
@@ -227,6 +233,8 @@ View = Backbone.View.extend({
 				this.viewModel.set('content', this.parse(this.$el.html()));
 			else if (this.contentType == 2)
 				this.viewModel.set('content', this.parse(this.$el.val()));
+			else if (this.contentType == 3)
+				this.viewModel.set('content', this.el.checked);
 		}
 	},
 	
@@ -525,7 +533,7 @@ Picker = View.extend({
 			var check = this.options.parseFn(this.collection.at(i), i);
 			var found = true;
 			for (var a in check)
-				if (this.model.get(a) != check[a]) {
+				if (JSON.stringify(this.model.get(a)) != JSON.stringify(check[a])) {
 					found = false;
 					break;
 				}

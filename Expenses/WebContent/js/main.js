@@ -448,6 +448,9 @@ Main = View.extend({
 					menu.append(TextView, {className:'Title', text:(this.model.has('id')?this.model.get('desc'):'New Transaction')});
 				}
 				
+				this.stagingModel = this.model.clone();
+				this.repeatDtl = new Model({times:0, months:0, auto:false});
+				
 				var body = this.append(Wrapper, {className:'EditArea'});
 				if (body) {
 					body.append(PickerField, {
@@ -455,57 +458,57 @@ Main = View.extend({
 						collection:datastore.getAccounts(),
 						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
 						withBlank:false,
-						model:this.model,
+						model:this.stagingModel,
 						parseFn:function(model) {return {tranxAcc:model.toJSON()};}
 					});
-					body.append(DateField, {label:'Transaction Date', model:this.model, fieldName:'tranDate'});
+					body.append(DateField, {label:'Transaction Date', model:this.stagingModel, fieldName:'tranDate'});
 					body.append(PickerField, {
 						label:'Transaction Type', 
 						options:bu.getTranTypes(), 
-						model:this.model, 
+						model:this.stagingModel, 
 						parseFn:function(model, idx) {return {tranType:idx};}
 					});
-					body.append(TextField, {label:'Category', model:this.model, fieldName:'tranxCatg'});
-					body.append(TextField, {label:'Description', model:this.model, fieldName:'desc'});
-					body.append(AmountField, {label:'Amount', model:this.model, fieldName:'amount'});
-					body.append(TextField, {label:'Remarks', model:this.model, fieldName:'remarks'});
+					body.append(TextField, {label:'Category', model:this.stagingModel, fieldName:'tranxCatg'});
+					body.append(TextField, {label:'Description', model:this.stagingModel, fieldName:'desc'});
+					body.append(AmountField, {label:'Amount', model:this.stagingModel, fieldName:'amount', dp:2, withSep:true});
+					body.append(TextField, {label:'Remarks', model:this.stagingModel, fieldName:'remarks'});
 					body.append(PickerField, {
 						label:'Settle Account', 
 						collection:datastore.getAccounts(), 
 						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
 						withBlank:true, 
-						model:this.model,
+						model:this.stagingModel,
 						parseFn:function(model) {return {settleAcc:model.toJSON()};}
 					})
-						.append(Label, {text:'Date'}).append(DateInput, {model:this.model, fieldName:'settleDate'});
+						.append(Label, {text:'Date'}).append(DateInput, {model:this.stagingModel, fieldName:'settleDate'});
 					body.append(PickerField, {
 						label:'Claim Account', 
 						collection:datastore.getAccounts(), 
 						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
 						withBlank:true, 
-						model:this.model,
-						parseFn:function(model) {return {settleAcc:model.toJSON()};}
+						model:this.stagingModel,
+						parseFn:function(model) {return {claimAcc:model.toJSON()};}
 					})
-						.append(Label, {text:'Date'}).append(DateInput, {model:this.model, fieldName:'claimDate'});
-					body.append(CheckboxField, {label:'Delete?', model:this.model, fieldName:'deleted'});
+						.append(Label, {text:'Date'}).append(DateInput, {model:this.stagingModel, fieldName:'claimDate'});
+					body.append(CheckboxField, {label:'Delete?', model:this.stagingModel, fieldName:'deleted'});
 					
 					body.append(Line);
 					
 					var repeatDiv = body.append(Wrapper, {className:'RepeatFields'});
 					if (repeatDiv) {
-						if (this.model.get('repeatKey')) 
-							repeatDiv.append(CheckboxField, {label:'Auto Repeat?', className:'AutoRepeat', checked:true, viewName:'fldAutoRepeat'});
+						if (this.stagingModel.get('repeatKey')) 
+							repeatDiv.append(CheckboxField, {label:'Auto Repeat?', className:'AutoRepeat', model:this.repeatDtl, fieldName:'auto', checked:true});
 
 						var repeatDtl = repeatDiv.append(Wrapper);
 						if (repeatDtl) {
 							repeatDtl.append(Label, {text:'Repeat:'});
-							repeatDtl.append(AmountInput, {className:'InputRepeatTimes', viewName:'fldRepeatTimes'});
+							repeatDtl.append(AmountInput, {className:'InputRepeatTimes', viewName:'fldRepeatTimes', model:this.repeatDtl, fieldName:'times'});
 							repeatDtl.append(Label, {text:'Times, Every'});
-							repeatDtl.append(AmountInput, {className:'InputRepeatMonths', viewName:'fldRepeatMonths'});
+							repeatDtl.append(AmountInput, {className:'InputRepeatMonths', viewName:'fldRepeatMonths', model:this.repeatDtl, fieldName:'months'});
 							repeatDtl.append(Label, {text:'Months'});
 						}
 
-						if (this.model.get('repeatKey')) {
+						if (this.repeatDtl.get('auto')) {
 							repeatDtl.findView('fldRepeatTimes').attr('disabled','disabled');
 							repeatDtl.findView('fldRepeatMonths').attr('disabled','disabled');
 						}
@@ -526,7 +529,7 @@ Main = View.extend({
 				if (this.validate()) {
 					this.save(
 						function /*success*/() {
-							_this.remove();
+							_this.parent.remove();
 						},
 						function /*failed*/(msg) {
 						}
@@ -535,12 +538,11 @@ Main = View.extend({
 			},
 			
 			cbClickCancel:function() {
-				this.remove();
+				this.parent.remove();
 			},
 			
 			cbClickAutoRepeat:function() {
-				var autoRepeat = this.findView('fldAutoRepeat').checked();
-				if (!autoRepeat) {
+				if (!this.repeatDtl.get('auto')) {
 					this.findView('fldRepeatTimes').$el.removeAttr('disabled');
 					this.findView('fldRepeatMonths').$el.removeAttr('disabled');
 				}
@@ -552,7 +554,7 @@ Main = View.extend({
 			
 			cbKeypress:function(evt) {
 				if (evt.keyCode == 27) {
-					this.remove();
+					this.parent.remove();
 				}
 			},
 			
@@ -561,32 +563,10 @@ Main = View.extend({
 			},
 			
 			save:function(cbSuccess, cbFailed) {
-				var editor = this.findView('editor');
-				var tranxAcc = editor.body.findView('fldTranxAcc').getSelectedModel();
-				var settleAcc = editor.body.findView('fldSettleAcc').getSelectedModel();
-				var claimAcc = editor.body.findView('fldClaimAcc').getSelectedModel();
-				var repeatTimes = editor.body.findView('fldRepeatTimes').val();
-				var repeatMonths = editor.body.findView('fldRepeatMonths').val();
-				var autoRepeat = editor.body.findView('fldAutoRepeat')?editor.body.findView('fldAutoRepeat').checked():false;
-				
-				this.model.set({
-					tranDate:editor.body.findView('fldTranDate').val(),
-					tranType:editor.body.findView('fldTranType').getSelectedIdx(),
-					amount:editor.body.findView('fldAmount').val(),
-					desc:editor.body.findView('fldDesc').val(),
-					tranxCatg:editor.body.findView('fldTranxCatg').val(),
-					remarks:editor.body.findView('fldRemarks').val(),
-	
-					tranxAcc:(tranxAcc?tranxAcc.toJSON():null),
-					settleAcc:(settleAcc?settleAcc.toJSON():null),
-					claimAcc:(claimAcc?claimAcc.toJSON():null),
-					deleted:editor.body.findView('fldDelete').checked()
-				});
+				this.model.set(this.stagingModel);
 							
-				if (autoRepeat)
-					datastore.saveTransactionRepeat(this.model, {auto:true}, cbSuccess, cbFailed);
-				else if (repeatTimes > 1)
-					datastore.saveTransactionRepeat(this.model, {times:repeatTimes, months:repeatMonths, auto:false}, cbSuccess, cbFailed);
+				if (this.repeatDtl.get('auto') || this.repeatDtl.get('times'))
+					datastore.saveTransactionRepeat(this.model, this.repeatDtl.toJSON(), cbSuccess, cbFailed);
 				else
 					datastore.saveTransaction(this.model, cbSuccess, cbFailed);
 			}
