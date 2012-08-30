@@ -24,6 +24,8 @@ View = Backbone.View.extend({
 	
 	initAttr:function() {
 		/* Override me when needed */
+		for (var a in this.options.attr)
+			this.$el.attr(a, this.options.attr[a]);
 	},
 	
 	initContent:function() {
@@ -45,16 +47,16 @@ View = Backbone.View.extend({
 	},
 	
 	render:function() {
-		if (this.renderNonce == this.changeNonce) {
+//		if (this.renderNonce == this.changeNonce) {
 			if (this.contentType == 0)	/* Text View Model */
 				this.$el.text(this.format(this.viewModel.get('content')));
 			else if (this.contentType == 1)	/* Html View Model */
 				this.$el.html(this.format(this.viewModel.get('content')));
 			else if (this.contentType == 2)	/* Value View Model */
 				this.$el.val(this.format(this.viewModel.get('content')));
-		}
-		else
-			this.renderNonce = this.changeNonce;
+//		}
+//		else
+//			this.renderNonce = this.changeNonce;
 	},
 
 	digestModel:function() {
@@ -211,12 +213,13 @@ View = Backbone.View.extend({
 	},
 	
 	events:{
-		'change':'cbChange'
+		'change':'cbChange',
+		'blur':'cbChange'
 	},
 	
 	cbChange:function(evt) {
 		if (evt.srcElement == this.el) {
-			this.changeNonce++;
+//			this.changeNonce++;
 			
 			if (this.contentType == 0)
 				this.viewModel.set('content', this.parse(this.$el.text()));
@@ -269,9 +272,11 @@ TextView = View.extend({
 AmountView = View.extend({
 	tagName:'span',
 	dp:0,
+	widthSep:false,
 	
 	initContent:function() {
 		if (this.options.dp) this.dp = this.options.dp;
+		if (this.options.withSep) this.withSep = this.options.withSep;
 		
 		if (typeof(this.options.amount) != 'undefined')
 			this.viewModel.set('content', this.options.amount);
@@ -279,8 +284,8 @@ AmountView = View.extend({
 			this.digestModel();
 	},
 	
-	format:function(date) {
-		return util.formatAmount(date, this.dp);
+	format:function(amount) {
+		return util.formatAmount(amount, this.dp, this.withSep);
 	},
 	
 	parse:function(text) {
@@ -729,6 +734,7 @@ Editor = View.extend({
 	body:null,
 	
 	initialize:function() {
+		this.viewModel = new ViewModel({title:''});
 		this.addClass('Editor');
 		
 		if (this.options.label) {

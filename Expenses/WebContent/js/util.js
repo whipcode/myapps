@@ -158,5 +158,17 @@ util = {
 		else if (data instanceof Array)
 			return data[idx];
 		return undefined;
+	},
+	
+	copyObj:function(srcObj, updObj) {
+		var newObj = {};
+		
+		for (var a in srcObj)
+			newObj[a] = srcObj[a];
+		
+		for (var a in updObj)
+			newObj[a] = updObj[a];
+		
+		return newObj;
 	}
 };

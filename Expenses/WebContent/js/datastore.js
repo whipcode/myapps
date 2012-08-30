@@ -61,7 +61,7 @@ datastore = {
 	},
 	
 	getAccount:function(id) {
-		return this.data.accounts.where({id:id});
+		return this.data.accounts.where({id:id})[0];
 	},
 	
 	locateAccount:function(account) {
@@ -138,6 +138,7 @@ datastore = {
 	
 	calcClosings:function() {
 		var accountsMonthlyTotal = this.getTotalsByAccountByMonth();
+		var closingCount = this.getClosings().length;
 		
 		var accounts = this.getAccounts();
 		for (var i=0; i<accounts.length; i++) {
@@ -148,7 +149,7 @@ datastore = {
 				var total = accountsMonthlyTotal[account.get('id')]?accountsMonthlyTotal[account.get('id')][m]:0;
 				var closing = this.getClosing(account, this.selectedYear, m);
 				if (closing.get('overriden') == false) {
-					closing.set({amount:opening.get('amount')+total});
+					closing.set({amount:opening.get('amount')+total, diff:0});
 				}
 				else {
 					closing.set({diff:opening.get('amount')+total-closing.get('amount')});
@@ -156,6 +157,9 @@ datastore = {
 				opening = closing;
 			}
 		}
+		
+		if (this.getClosings().length != closingCount)
+			this.getClosings().trigger('ready');
 	},
 	
 	/* Transactions */
