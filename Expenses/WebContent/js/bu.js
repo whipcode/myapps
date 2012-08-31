@@ -90,6 +90,35 @@ bu = {
 		);
 	},
 	
+	getTransactionAmount:function(transaction, accId, month) {
+		var _amount = 0;
+		var amount = transaction.get('amount');
+		var tranxAccId = transaction.get('tranxAcc')?transaction.get('tranxAcc').id:0;
+		var tranMonth = transaction.get('tranDate').getMonth();
+		var settleAccId = transaction.get('settleAcc')?transaction.get('settleAcc').id:0;
+		var settleMonth = transaction.get('settleDate')?transaction.get('settleDate').getMonth():tranMonth;
+		var claimAccId = transaction.get('claimAcc')?transaction.get('claimAcc').id:0;
+		var claimMonth = transaction.get('claimDate')?transaction.get('claimDate').getMonth():settleMonth;
+		var transferAccId = transaction.get('transferAcc')?transaction.get('transferAcc').id:0;
+		var transferMonth = tranMonth;
+		
+		if (accId == tranxAccId && tranMonth == month)
+			_amount = amount;
+		else if (accId == settleAccId && settleMonth == month)
+			_amount = amount;
+		else if (accId == claimAccId && claimMonth == month)
+			_amount = amount;
+		else if (accId == transferAccId && transferMonth == month)
+			_amount = -amount;
+		
+		if (claimAccId && month == claimMonth) {
+			if (accId == settleAccId || (accId == tranxAccId && !settleAccId))
+				_amount -= amount;
+		}
+
+		return _amount;
+	},
+	
 	getAmountsByAccountByMonth:function(transaction) {
 		var amountsByAccountByMonth = {};
 		
