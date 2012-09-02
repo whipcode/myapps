@@ -219,7 +219,6 @@ View = Backbone.View.extend({
 	},
 	
 	events:{
-		'change':'cbChange',
 		'blur':'cbChange'
 	},
 	
@@ -434,8 +433,8 @@ AmountInput = View.extend({
 			this.digestModel();
 	},
 	
-	format:function(date) {
-		return util.formatAmount(date, this.dp, this.withSep);
+	format:function(amount) {
+		return util.formatAmount(amount, this.dp, this.withSep);
 	},
 	
 	parse:function(text) {
@@ -462,6 +461,7 @@ Checkbox = View.extend({
 Picker = View.extend({
 	tagName:'select',
 	viewModel:null,
+	withBlank:false,
 	pickNonce:0,
 	changeNonce:0,
 	
@@ -470,12 +470,15 @@ Picker = View.extend({
 		if (!this.collection) this.collection = new Collection();
 
 		this.collection.bind('reset', this.refresh, this);
-		this.viewModel.bind('change', this.pick, this);
+		this.viewModel.bind('change:selectedIdx', this.pick, this);
 		
 		if (this.model) {
 			this.model.bind('change', this.digestModel, this);
-			this.viewModel.bind('change', this.updateModel, this);
+			this.viewModel.bind('change:selectedIdx', this.updateModel, this);
 		}
+		
+		if (this.options.withBlank)
+			this.withBlank = this.options.withBlank;
 		
 		if (this.options.options)
 			this.resetOptions(this.options.options);
@@ -492,6 +495,9 @@ Picker = View.extend({
 	
 	refresh:function() {
 		this.removeChild();
+		
+		if (this.withBlank)
+			this.append(Option);
 		
 		for (var i=0; i<this.collection.length; i++) {
 			var options = {
@@ -529,8 +535,8 @@ Picker = View.extend({
 	},
 	
 	digestModel:function() {
-		for (var i=0; i<this.collection.length; i++) {
-			var check = this.options.parseFn(this.collection.at(i), i);
+		if (this.withBlank) {
+			var check = this.options.parseFn(null, 0);
 			var found = true;
 			for (var a in check)
 				if (JSON.stringify(this.model.get(a)) != JSON.stringify(check[a])) {
@@ -539,14 +545,32 @@ Picker = View.extend({
 				}
 			
 			if (found) {
-				this.viewModel.set('selectedIdx', i);
+				this.viewModel.set('selectedIdx', 0);
+				return;
+			}
+		}
+		
+		for (var i=0; i<this.collection.length; i++) {
+			var check = this.options.parseFn(this.collection.at(i), i+(this.widthBlank?1:0));
+			var found = true;
+			for (var a in check)
+				if (JSON.stringify(this.model.get(a)) != JSON.stringify(check[a])) {
+					found = false;
+					break;
+				}
+			
+			if (found) {
+				this.viewModel.set('selectedIdx', i+(this.withBlank?1:0));
 				break;
 			}
 		}
 	},
 	
 	updateModel:function() {
-		this.model.set(this.options.parseFn(this.collection.at(this.viewModel.get('selectedIdx')), this.viewModel.get('selectedIdx')));
+		if (this.withBlank && this.viewModel.get('selectedIdx') == 0)
+			this.model.set(this.options.parseFn(null, 0));
+		else
+			this.model.set(this.options.parseFn(this.collection.at(this.viewModel.get('selectedIdx')-(this.withBlank?1:0)), this.viewModel.get('selectedIdx')));
 	},
 	
 	events:{

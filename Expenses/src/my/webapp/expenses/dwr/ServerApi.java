@@ -32,9 +32,25 @@ public class ServerApi {
 		return codes;
 	}
 	
+	public List<Account> loadAccounts() {
+		List<Account> accounts = null;
+		Session session = DbUtil.beginTranx();
+		
+		try {
+			accounts = session.createCriteria(Account.class).list();
+			
+			DbUtil.commit(session);
+		}
+		catch (Exception e) {
+			DbUtil.rollback(session);
+			e.printStackTrace();
+		}
+
+		return accounts;
+	}
+	
 	public Map load(int year) {
 		Map data = new HashMap();
-		List<Account> accounts = null;
 		List<Transaction> transactions = null;
 		List<Closing> closings = null;
 		List<Asset> assets = null;
@@ -45,8 +61,6 @@ public class ServerApi {
 		Session session = DbUtil.beginTranx();
 		
 		try {
-			accounts = session.createCriteria(Account.class).list();
-
 			transactions = session.createCriteria(Transaction.class)
 					.add(Restrictions.disjunction()
 							.add(Restrictions.sqlRestriction("YEAR(TRAN_DATE) = ?", new Integer(year), Hibernate.INTEGER))
@@ -66,7 +80,6 @@ public class ServerApi {
 
 			assetAmounts = session.createCriteria(AssetAmount.class).list();
 
-			data.put("accounts", accounts);
 			data.put("transactions", transactions);
 			data.put("closings", closings);
 			data.put("assets", assets);

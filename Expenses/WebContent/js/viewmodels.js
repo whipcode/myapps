@@ -10,8 +10,6 @@ PickerViewModel = Backbone.Model.extend({
 	validate:function(attr) {
 		if (attr.selectedIdx>=attr.numOptions) 
 			attr.selectedIdx=attr.numOptions-1; 
-		else if (attr.numOptions>0 && attr.selectedIdx<0) 
-			this.set('selectedIdx',0);
 	}
 });
 

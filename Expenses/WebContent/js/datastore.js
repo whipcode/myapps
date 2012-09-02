@@ -32,13 +32,27 @@ datastore = {
 		}
 	},
 	
+	loadAccounts:function(cbSuccess, cbFailed) {
+		var _this = this;
+		
+		ServerApi.loadAccounts({
+			callback:function(_accounts) {
+				_this.data.accounts.reset(_accounts);
+				if (cbSuccess) cbSuccess();
+			},
+			errorHandler:function(msg) {
+				util.showError(msg);
+				if (cbFailed) cbFailed(msg);
+			}
+		});
+	},
+	
 	load:function(year, cbSuccess, cbFailed) {
 		var _this = this;
 		
 		this.selectedYear = year;
 		ServerApi.load(this.selectedYear, {
 			callback:function (_data) {
-				_this.data.accounts.reset(_data.accounts);
 				_this.data.closings.reset(_data.closings);
 				_this.data.transactions.reset(_data.transactions);
 				_this.data.assets.reset(_data.assets);
@@ -72,7 +86,7 @@ datastore = {
 				var transactions = transactionsByMonth[m];
 				
 				for (var i=0; i<transactions.length; i++)
-					closingAmount += bu.getTransactionAmount(transactions[i], accId);
+					closingAmount += bu.getTransactionAmount(transactions[i], accId, m);
 				
 				if (!closing.get('overriden'))
 					closing.set({amount:closingAmount, diff:0});
@@ -142,7 +156,7 @@ datastore = {
 		
 		/* prep transaction accounts */
 		var accounts = this.getAccounts();
-		for (var i=0; i<account.length; i++) {
+		for (var i=0; i<accounts.length; i++) {
 			var account = accounts.at(i);
 			closingsByAccountByMonth[account.get('id')] = [null,null,null,null,null,null,null,null,null,null,null,null,null];
 		}
@@ -162,13 +176,16 @@ datastore = {
 		for (var i=0; i<accounts.length; i++) {
 			account = accounts.at(i);
 			
-			for (var j=0; j<13; i++)
-				if (!closingsByAccountByMonth[accounts.at(i).get('id')][j])
-					closingsByAccountByMonth[accounts.at(i).get('id')][j] = new Closing({
+			for (var j=0; j<13; j++)
+				if (!closingsByAccountByMonth[accounts.at(i).get('id')][j]) {
+					var closing = new Closing({
 						account:account.toJSON(),
 						amount:0,
 						date:new Date(year, j, 0)
 					});
+					closingsByAccountByMonth[accounts.at(i).get('id')][j] = closing;
+					this.data.closings.add(closing);
+				}
 		}
 		
 		return closingsByAccountByMonth;
@@ -194,7 +211,7 @@ datastore = {
 			callback:function(_data) {
 				if (!closing.get('deleted')) {
 					closing.set(_data, {silent:true});
-					_this.calcClosings();
+					_this.calcAccounts();
 				}
 				if (cbSuccess) cbSuccess(closing);
 			},
@@ -215,30 +232,38 @@ datastore = {
 		
 		/* prep transaction accounts */
 		var accounts = this.getAccounts();
-		for (var i=0; i<account.length; i++)
+		for (var i=0; i<accounts.length; i++)
 			transactionsByAccountByMonth[accounts.at(i).get('id')] = [[],[],[],[],[],[],[],[],[],[],[],[]];
 		
 		var transactions = this.getTransactions();
 		for (var i=0; i<transactions.length; i++) {
 			var transaction = transactions.at(i);
+			var tranxAccId = transaction.get('tranxAcc')?transaction.get('tranxAcc').id:0;
+			var tranDate = transaction.get('tranDate');
+			var settleAccId = transaction.get('settleAcc')?transaction.get('settleAcc').id:0;
+			var settleDate = transaction.get('settleDate')?transaction.get('settleDate'):tranDate;
+			var claimAccId = transaction.get('claimAcc')?transaction.get('claimAcc').id:0;
+			var claimDate = transaction.get('claimDate')?transaction.get('claimDate'):settleDate;
+			var transferAccId = transaction.get('transferAcc')?transaction.get('transferAcc').id:0;
+			var transferDate = tranDate;
 			
-			if (transaction.get('tranDate').getFullYear() == year)
-				transactionsByAccountByMonth[transaction.get('tranxAcc').id][transaction.get('tranDate').getMonth()].push(transaction);
+			if (tranDate.getFullYear() == year)
+				transactionsByAccountByMonth[tranxAccId][tranDate.getMonth()].push(transaction);
 			
-			if (transaction.get('settleAcc') && transaction.get('settleDate').getFullYear() == year)
-				transactionsByAccountByMonth[transaction.get('settleAcc').id][transaction.get('settleDate').getMonth()].push(transaction);
+			if (settleAccId && settleDate.getFullYear() == year)
+				transactionsByAccountByMonth[settleAccId][settleDate.getMonth()].push(transaction);
 			
-			if (transaction.get('claimAcc') && transaction.get('claimDate').getFullYear() == year) {
-				transactionsByAccountByMonth[transaction.get('claimAcc').id][transaction.get('claimDate').getMonth()].push(transaction);
+			if (claimAccId && claimDate.getFullYear() == year) {
+				transactionsByAccountByMonth[claimAccId][claimDate.getMonth()].push(transaction);
 				
-				if (transaction.get('settleAcc'))
-					transactionsByAccountByMonth[transaction.get('settleAcc').id][transaction.get('claimDate').getMonth()].push(transaction);
-				else
-					transactionsByAccountByMonth[transaction.get('tranxAcc').id][transaction.get('claimDate').getMonth()].push(transaction);
+				if (settleAccId && settleDate.getMonth() != claimDate.getMonth())
+					transactionsByAccountByMonth[settleAccId][claimDate.getMonth()].push(transaction);
+				else if (tranDate.getMonth() != claimDate.getMonth())
+					transactionsByAccountByMonth[tranxAccId][claimDate.getMonth()].push(transaction);
 			}
 			
-			if (transaction.get('transferAcc') && transaction.get('tranDate').getFullYear() == year)
-				transactionsByAccountByMonth[transaction.get('transferAcc').id][transaction.get('tranDate').getMonth()].push(transaction);
+			if (transferAccId && transferDate.getFullYear() == year)
+				transactionsByAccountByMonth[transferAccId][transferDate.getMonth()].push(transaction);
 		}
 		
 		return transactionsByAccountByMonth;
@@ -260,7 +285,7 @@ datastore = {
 				if (!transaction.get('deleted'))
 					transaction.set(_data, {silent:true});
 
-				_this.calcClosings();
+				_this.calcAccounts();
 				
 				if (cbSuccess) cbSuccess(transaction);
 			},

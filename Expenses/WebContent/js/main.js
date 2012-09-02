@@ -30,9 +30,17 @@ Main = View.extend({
 	
 	run:function() {
 		page.pagestate.bind('change:selectedYear', this.reload, this);
-		
-		page.pagestate.set('selectedYear', util.getToday().getFullYear());
-		page.pagestate.set('selectedMonth', util.getToday().getMonth());
+
+		datastore.loadAccounts(
+			function /*success*/() {
+				var selectAcc = datastore.getAccounts().at(0);
+				var selectAccId = selectAcc?selectAcc.get('id'):0;
+				
+				page.pagestate.set({
+					selectedYear:util.getToday().getFullYear(), 
+					selectedMonth:util.getToday().getMonth(),
+					selectedAccId:selectAccId});
+		});
 	},
 	
 	reload:function() {
@@ -71,6 +79,7 @@ Main = View.extend({
 					parseFn:function(model) {
 						return {selectedAccId:model.get('id')};
 					},
+					selectedIdx:0,
 					viewName:'accountPicker'
 				});
 			this.append(Button, {text:'New',className:'BtnNewAcc', viewName:'btnNewAcc'});
@@ -250,10 +259,10 @@ Main = View.extend({
 				var account = datastore.getAccount(page.pagestate.get('selectedAccId'));
 				var year = page.pagestate.get('selectedYear');
 				
-				var closing = datastore.getClosing(account, year-1, 11);
+				var closing = datastore.getClosingOfAccountOfYearOfMonth(account, year-1, 11);
 				for (var i=0; i<12; i++) {
 					_openings.push(closing);
-					closing = datastore.getClosing(account, year, i);
+					closing = datastore.getClosingOfAccountOfYearOfMonth(account, year, i);
 					_closings.push(closing);
 				}
 				
@@ -478,7 +487,9 @@ Main = View.extend({
 						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
 						withBlank:true, 
 						model:this.stagingModel,
-						parseFn:function(model) {return {settleAcc:model.toJSON()};}
+						parseFn:function(model) {
+							return {settleAcc:model?model.toJSON():null};
+						}
 					})
 						.append(Label, {text:'Date'}).append(DateInput, {model:this.stagingModel, fieldName:'settleDate'});
 					body.append(PickerField, {
@@ -487,7 +498,7 @@ Main = View.extend({
 						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
 						withBlank:true, 
 						model:this.stagingModel,
-						parseFn:function(model) {return {claimAcc:model.toJSON()};}
+						parseFn:function(model) {return {claimAcc:model?model.toJSON():null};}
 					})
 						.append(Label, {text:'Date'}).append(DateInput, {model:this.stagingModel, fieldName:'claimDate'});
 					body.append(CheckboxField, {label:'Delete?', model:this.stagingModel, fieldName:'deleted'});

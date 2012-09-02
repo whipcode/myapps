@@ -34,36 +34,41 @@ util = {
 	},
 	
 	formatDate:function(date, formatStr) {
-		var monthLabel = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-		var d = date.getDate();
-		var dd = date.getDate(); dd = dd<10?'0'+dd:dd;
-		var Mmm = monthLabel[date.getMonth()];
-		var yyyy = date.getFullYear();
-		var HH = date.getHours(); HH = HH<10?'0'+HH:HH;
-		var h = date.getHours() % 12 || 12;
-		var hh = date.getHours() % 12 || 12; hh = hh<10?'0'+hh:hh;
-		var ampm = date.getHours() < 12 ? 'am' : 'pm';
-		var AMPM = ampm.toUpperCase();
-		var mm = date.getMinutes(); mm = mm<10?'0'+mm:mm;
-		
-		formatStr = formatStr.replace('$(d)',d);
-		formatStr = formatStr.replace('$(dd)',dd);
-		formatStr = formatStr.replace('$(Mmm)',Mmm);
-		formatStr = formatStr.replace('$(yyyy)',yyyy);
-		formatStr = formatStr.replace('$(HH)',HH);
-		formatStr = formatStr.replace('$(h)',h);
-		formatStr = formatStr.replace('$(hh)',hh);
-		formatStr = formatStr.replace('$(ampm)',ampm);
-		formatStr = formatStr.replace('$(AMPM)',AMPM);
-		formatStr = formatStr.replace('$(mm)',mm);
+		if (date) {
+			var monthLabel = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+			var d = date.getDate();
+			var dd = date.getDate(); dd = dd<10?'0'+dd:dd;
+			var Mmm = monthLabel[date.getMonth()];
+			var yyyy = date.getFullYear();
+			var HH = date.getHours(); HH = HH<10?'0'+HH:HH;
+			var h = date.getHours() % 12 || 12;
+			var hh = date.getHours() % 12 || 12; hh = hh<10?'0'+hh:hh;
+			var ampm = date.getHours() < 12 ? 'am' : 'pm';
+			var AMPM = ampm.toUpperCase();
+			var mm = date.getMinutes(); mm = mm<10?'0'+mm:mm;
+			
+			formatStr = formatStr.replace('$(d)',d);
+			formatStr = formatStr.replace('$(dd)',dd);
+			formatStr = formatStr.replace('$(Mmm)',Mmm);
+			formatStr = formatStr.replace('$(yyyy)',yyyy);
+			formatStr = formatStr.replace('$(HH)',HH);
+			formatStr = formatStr.replace('$(h)',h);
+			formatStr = formatStr.replace('$(hh)',hh);
+			formatStr = formatStr.replace('$(ampm)',ampm);
+			formatStr = formatStr.replace('$(AMPM)',AMPM);
+			formatStr = formatStr.replace('$(mm)',mm);
+		}
+		else
+			formatStr = '';
 		
 		return formatStr;
 	},
 	
 	str2Date:function(str) {
-		var date = new Date();
+		var date = null;
 		var monthIdx = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 		if (str) {
+			date = new Date();
 			/* dd mmm yyyy */
 			var s = str.split(' ');
 			date.setFullYear(s[2]);
@@ -77,40 +82,46 @@ util = {
 			date.setSeconds(0);
 			date.setMilliseconds(0);
 		}
+		
+		return date;
 	},
 	
 	formatAmount:function(amount, dp, withSep) {
-		var rtn;
+		var rtn = '';
 		
-		if (dp == 0) {
-			rtn = '' + Math.round(amount);
-
-			if (withSep) {
-				var regexp = /(\d+)(\d{3})/;
-				while (regexp.test(rtn))
-					rtn = rtn.replace(regexp,'$1,$2');
+		if (typeof(amount) != 'undefined') {
+			if (dp == 0) {
+				rtn = '' + Math.round(amount);
+	
+				if (withSep) {
+					var regexp = /(\d+)(\d{3})/;
+					while (regexp.test(rtn))
+						rtn = rtn.replace(regexp,'$1,$2');
+				}
 			}
-		}
-		else if (Math.abs(amount) >= 1) {
-			rtn = '' + Math.round(amount*Math.pow(10,dp));
-			rtn = rtn.substr(0, rtn.length-dp) + '.' + rtn.substr(rtn.length-dp);
-
-			if (withSep) {
-				var regexp = /(\d+)(\d{3})/;
-				while (regexp.test(rtn))
-					rtn = rtn.replace(regexp,'$1,$2');
-			}
-		}
-		else {
-			if (amount < 0) {
-				rtn = '' + Math.round((amount-1)*Math.pow(10,dp));
-				rtn = '-0.' + rtn.substr(rtn.length-dp);
+			else if (Math.abs(amount) >= 1) {
+				rtn = '' + Math.round(amount*Math.pow(10,dp));
+				rtn = rtn.substr(0, rtn.length-dp) + '.' + rtn.substr(rtn.length-dp);
+	
+				if (withSep) {
+					var regexp = /(\d+)(\d{3})/;
+					while (regexp.test(rtn))
+						rtn = rtn.replace(regexp,'$1,$2');
+				}
 			}
 			else {
-				rtn = '' + Math.round((amount+1)*Math.pow(10,dp));
-				rtn = '0.' + rtn.substr(rtn.length-dp);
+				if (amount < 0) {
+					rtn = '' + Math.round((amount-1)*Math.pow(10,dp));
+					rtn = '-0.' + rtn.substr(rtn.length-dp);
+				}
+				else {
+					rtn = '' + Math.round((amount+1)*Math.pow(10,dp));
+					rtn = '0.' + rtn.substr(rtn.length-dp);
+				}
 			}
 		}
+		else
+			rtn = '';
 		
 		return rtn;
 	},

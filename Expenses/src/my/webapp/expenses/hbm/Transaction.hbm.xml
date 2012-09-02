@@ -20,11 +20,11 @@
 		<property name="repeatKey" column="REPEAT_KEY" />
 		
 		<many-to-one name="tranxAcc" column="TRANX_ACC_ID" class="Account" lazy="false" />
-		<many-to-one name="settleAcc" column="SETTLE_ACC_ID" class="Account" />
+		<many-to-one name="settleAcc" column="SETTLE_ACC_ID" class="Account" lazy="false" />
 		<property name="settleDate" column="SETTLE_DATE" />
-		<many-to-one name="claimAcc" column="CLAIM_ACC_ID" class="Account" />
+		<many-to-one name="claimAcc" column="CLAIM_ACC_ID" class="Account" lazy="false" />
 		<property name="claimDate" column="CLAIM_DATE" />
-		<many-to-one name="transferAcc" column="TRANSFER_ACC_ID" class="Account" />
+		<many-to-one name="transferAcc" column="TRANSFER_ACC_ID" class="Account" lazy="false" />
 		
 		<filter name="hideDeleted" />
 	</class>

@@ -102,6 +102,7 @@ bu = {
 		var transferAccId = transaction.get('transferAcc')?transaction.get('transferAcc').id:0;
 		var transferMonth = tranMonth;
 		
+		accId = parseInt(accId);
 		if (accId == tranxAccId && tranMonth == month)
 			_amount = amount;
 		else if (accId == settleAccId && settleMonth == month)
