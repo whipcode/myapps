@@ -219,6 +219,7 @@ View = Backbone.View.extend({
 	},
 	
 	events:{
+		'change':'cbChange',
 		'blur':'cbChange'
 	},
 	

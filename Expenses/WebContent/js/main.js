@@ -501,6 +501,14 @@ Main = View.extend({
 						parseFn:function(model) {return {claimAcc:model?model.toJSON():null};}
 					})
 						.append(Label, {text:'Date'}).append(DateInput, {model:this.stagingModel, fieldName:'claimDate'});
+					body.append(PickerField, {
+						label:'Transfer Account', 
+						collection:datastore.getAccounts(), 
+						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
+						withBlank:true, 
+						model:this.stagingModel,
+						parseFn:function(model) {return {transferAcc:model?model.toJSON():null};}
+					});
 					body.append(CheckboxField, {label:'Delete?', model:this.stagingModel, fieldName:'deleted'});
 					
 					body.append(Line);

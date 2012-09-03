@@ -28,7 +28,9 @@ Accounts = Collection.extend({model:Account});
 Closing = Model.extend({});
 Closings = Collection.extend({model:Closing});
 
-Transaction = Model.extend({});
+Transaction = Model.extend({
+	defaults:{amount:0,deleted:false}
+});
 Transactions = Collection.extend({model:Transaction});
 
 Asset = Model.extend({});
