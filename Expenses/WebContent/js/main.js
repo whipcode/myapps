@@ -82,8 +82,8 @@ Main = View.extend({
 					selectedIdx:0,
 					viewName:'accountPicker'
 				});
-			this.append(Button, {text:'New',className:'BtnNewAcc', viewName:'btnNewAcc'});
-			this.append(Button, {text:'Edit',className:'BtnEditAcc', viewName:'btnEditAcc'});
+			this.append(Button, {text:'New',className:'BtnNewAcc'});
+			this.append(Button, {text:'Edit',className:'BtnEditAcc'});
 		},
 		
 		events:{
@@ -100,8 +100,7 @@ Main = View.extend({
 		},
 		
 		cbBtnEditAccClick:function() {
-			var accountPicker = this.findView('accountPicker');
-			var account = accountPicker.getSelectedModel();
+			var account = datastore.getAccount(page.pagestate.get('selectedAccId'));
 			
 			page.editAccount(account);
 		}
