@@ -758,34 +758,3 @@ ViewsWrapper = View.extend({
 		return this.views[viewId];
 	}
 });
-
-Editor = View.extend({
-	tagName:'div',
-	lblSave:'Save',
-	lblCancel:'Cancel',
-	menu:null,
-	body:null,
-	
-	initialize:function() {
-		this.viewModel = new ViewModel({title:''});
-		this.addClass('Editor');
-		
-		if (this.options.label) {
-			if (this.options.label.save) this.lblSave = this.options.label.save;
-			if (this.options.label.cancel) this.lblSave = this.options.label.cancel;
-		}
-		
-		this.menu = this.append(Wrapper, {className:'Menu'}, 'menu');
-		if (this.menu) {
-			this.menu.append(Button, {className:'BtnCancel', text:this.lblCancel}, 'btnCancel');
-			this.menu.append(Button, {className:'BtnSave', text:this.lblSave}, 'btnSave');
-			this.menu.append(Paragraph, {tagName:'h2',className:'Title'}, 'title');
-		}
-		
-		this.body = this.append(Wrapper, {className:'EditArea'}, 'editArea');
-	},
-	
-	setTitle:function(text) {
-		this.findView('title').set(text);
-	}
-});

@@ -363,78 +363,87 @@ Main = View.extend({
 		})
 	}),
 	
-	AccountEditor:View.extend({
-		tagName:'div',
-		className:'AccountEditor DialogBackground',
+	AccountEditor:Wrapper.extend({
+		className:'DialogBackground',
 		
 		initialize:function() {
-			var _this = this;
+			this.attr('tabindex','99');
 			
-			var editor = this.append(Editor, {viewName:'editor'});
-			if (editor) {
-				if (!this.model.get('id'))
-					editor.setTitle('New Account');
-				else
-					editor.setTitle(this.model.get('name'));
+			this.append(this.Editor, util.copyObj(this.options, {viewName:'editor'}));
+		},
+		
+		Editor:Wrapper.extend({
+			className:'AccountEditor',
+			
+			initialize:function() {
+				var menu = this.append(Wrapper, {className:'Menu'}, 'menu');
+				if (menu) {
+					menu.append(Button, {className:'BtnCancel', text:'Cancel'});
+					menu.append(Button, {className:'BtnSave', text:'Save'});
+					menu.append(TextView, {className:'Title', text:(this.model.has('id')?this.model.get('name') + ' (' + this.model.get('accOwner') + ')':'New Account')});
+				}
 				
-				editor.body.append(TextField, {label:'Account Name', text:this.model.get('name'), viewName:'fldName'});
-				editor.body.append(TextField, {label:'Asset Type', text:this.model.get('assetType'), viewName:'fldAssetType'});
-				editor.body.append(TextField, {label:'Description', text:this.model.get('desc'), viewName:'fldDesc'});
-				editor.body.append(TextField, {label:'Owner', text:this.model.get('accOwner'), viewName:'fldAccOwner'});
-				editor.body.append(PickerField, 
-					{
-						label:'Default Payment Settle Account', 
-						collection:datastore.getAccounts(), 
-						displayField:'name', 
-						withBlank:true, 
-						selectModel:this.model.get('defSettleAcc')
-					}, 
-					'fldDefSettleAcc');
-				editor.body.append(CheckboxField, {label:'Delete?', checked:this.model.get('deleted'), viewName:'fldDelete'});
+				this.stagingModel = this.model.clone();
+				
+				var body = this.append(Wrapper, {className:'EditArea'});
+				if (body) {
+					body.append(TextField, {label:'Account Name', model:this.stagingModel, fieldName:'name'});
+					body.append(TextField, {label:'Asset Type', model:this.stagingModel, fieldName:'assetType'});
+					body.append(TextField, {label:'Description', del:this.stagingModel, fieldName:'desc'});
+					body.append(TextField, {label:'Owner', model:this.stagingModel, fieldName:'accOwner'});
+					body.append(PickerField, 
+						{
+							label:'Default Payment Settle Account', 
+							collection:datastore.getAccounts(), 
+							fieldName:'name', 
+							withBlank:true, 
+							model:this.stagingModel,
+							parseFn:function(model) {return {defSettleAcc:model?model.toJSON():null};}
+						});
+					body.append(CheckboxField, {label:'Delete?', model:this.stagingModel, fieldName:'deleted'});
+				}
+			},
+		
+			events:{
+				'click .BtnSave':'cbClickSave',
+				'click .BtnCancel':'cbClickCancel',
+				'keyup':'cbKeypress'
+			},
+			
+			cbClickSave:function() {
+				var _this = this;
+				
+				if (this.validate()) {
+					this.save(
+						function /*success*/() {
+							_this.parent.remove();
+						},
+						function /*failed*/(msg) {
+						}
+					);
+				}
+			},
+			
+			cbClickCancel:function() {
+				this.parent.remove();
+			},
+			
+			cbKeypress:function(evt) {
+				if (evt.keyCode == 27) {
+					this.parent.remove();
+				}
+			},
+			
+			validate:function(cbOk, cbFailed) {
+				return true;
+			},
+			
+			save:function(cbSuccess, cbFailed) {
+				this.model.set(this.stagingModel);
+							
+				datastore.saveAccount(this.model, cbSuccess, cbFailed);
 			}
-		},
-		
-		events:{
-			'click .BtnSave':'cbClickSave',
-			'click .BtnCancel':'cbClickCancel'
-		},
-		
-		cbClickSave:function() {
-			var _this = this;
-			
-			if (this.validate())
-				this.save(
-					function /*success*/() {
-						_this.remove();
-					},
-					function /*failed*/(msg) {
-					}
-				);
-		},
-		
-		cbClickCancel:function() {
-			this.remove();
-		},
-		
-		validate:function(cbOk, cbFailed) {
-			return true;
-		},
-		
-		save:function(cbSuccess, cbFailed) {
-			var editor = this.findView('editor');
-			var defSettleAcc = editor.findView('fldDefSettleAcc').getSelectedModel();
-			
-			this.model.set({
-				name:editor.findView('fldName').val(),
-				assetType:editor.findView('fldAssetType').val(),
-				desc:editor.findView('fldDesc').val(),
-				accOwner:editor.findView('fldAccOwner').val(),
-				defSettleAcc:(defSettleAcc?defSettleAcc.toJSON():null),
-				deleted:editor.findView('fldDelete').checked()
-			});
-			
-			datastore.saveAccount(this.model, cbSuccess, cbFailed);
-		}
+		})
 	}),
 	
 	TransactionEditor:Wrapper.extend({
@@ -538,7 +547,6 @@ Main = View.extend({
 			events:{
 				'click .BtnSave':'cbClickSave',
 				'click .BtnCancel':'cbClickCancel',
-				'click .AutoRepeat':'cbClickAutoRepeat',
 				'keyup':'cbKeypress'
 			},
 			
@@ -558,17 +566,6 @@ Main = View.extend({
 			
 			cbClickCancel:function() {
 				this.parent.remove();
-			},
-			
-			cbClickAutoRepeat:function() {
-				if (!this.repeatDtl.get('auto')) {
-					this.findView('fldRepeatTimes').$el.removeAttr('disabled');
-					this.findView('fldRepeatMonths').$el.removeAttr('disabled');
-				}
-				else {
-					this.findView('fldRepeatTimes').$el.attr('disabled','disabled');
-					this.findView('fldRepeatMonths').$el.attr('disabled','disabled');
-				}
 			},
 			
 			cbKeypress:function(evt) {
@@ -591,63 +588,76 @@ Main = View.extend({
 			}
 		})
 	}),
-	
-	AssetEditor:View.extend({
-		tagName:'div',
-		className:'AssetEditor DialogBackground',
+
+	AssetEditor:Wrapper.extend({
+		className:'DialogBackground',
 		
 		initialize:function() {
-			var _this = this;
+			this.attr('tabindex','99');
 			
-			var editor = this.append(Editor, {viewName:'editor'});
-			if (editor) {
-				if (!this.model.get('id'))
-					editor.setTitle('New Asset');
-				else
-					editor.setTitle(this.model.get('name'));
+			this.append(this.Editor, util.copyObj(this.options, {viewName:'editor'}));
+		},
+		
+		Editor:Wrapper.extend({
+			className:'AssetEditor',
+			
+			initialize:function() {
+				var menu = this.append(Wrapper, {className:'Menu'}, 'menu');
+				if (menu) {
+					menu.append(Button, {className:'BtnCancel', text:'Cancel'});
+					menu.append(Button, {className:'BtnSave', text:'Save'});
+					menu.append(TextView, {className:'Title', text:(this.model.has('id')?this.model.get('name'):'New Asset')});
+				}
 				
-				editor.body.append(TextField, {label:'Asset Type', text:this.model.get('type'), viewName:'fldAssetType'});
-				editor.body.append(TextField, {label:'Asset Name', text:this.model.get('name'), viewName:'fldName'});
-				editor.body.append(CheckboxField, {label:'Discontinue?', checked:this.model.get('discontinued'), viewName:'fldDiscontinued'});
+				this.stagingModel = this.model.clone();
+				
+				var body = this.append(Wrapper, {className:'EditArea'});
+				if (body) {
+					body.append(TextField, {label:'Asset Type', model:this.model, fieldName:'type'});
+					body.append(TextField, {label:'Asset Name', model:this.model, fieldName:'name'});
+					body.append(CheckboxField, {label:'Discontinue?', model:this.model, fieldName:'discontinued'});
+				}
+			},
+		
+			events:{
+				'click .BtnSave':'cbClickSave',
+				'click .BtnCancel':'cbClickCancel',
+				'keyup':'cbKeypress'
+			},
+			
+			cbClickSave:function() {
+				var _this = this;
+				
+				if (this.validate()) {
+					this.save(
+						function /*success*/() {
+							_this.parent.remove();
+						},
+						function /*failed*/(msg) {
+						}
+					);
+				}
+			},
+			
+			cbClickCancel:function() {
+				this.parent.remove();
+			},
+			
+			cbKeypress:function(evt) {
+				if (evt.keyCode == 27) {
+					this.parent.remove();
+				}
+			},
+			
+			validate:function(cbOk, cbFailed) {
+				return true;
+			},
+			
+			save:function(cbSuccess, cbFailed) {
+				this.model.set(this.stagingModel);
+							
+				datastore.saveAsset(this.model, cbSuccess, cbFailed);
 			}
-		},
-		
-		events:{
-			'click .BtnSave':'cbClickSave',
-			'click .BtnCancel':'cbClickCancel'
-		},
-		
-		cbClickSave:function() {
-			var _this = this;
-			
-			if (this.validate())
-				this.save(
-					function /*success*/() {
-						_this.remove();
-					},
-					function /*failed*/(msg) {
-					}
-				);
-		},
-		
-		cbClickCancel:function() {
-			this.remove();
-		},
-		
-		validate:function(cbOk, cbFailed) {
-			return true;
-		},
-		
-		save:function(cbSuccess, cbFailed) {
-			var editor = this.findView('editor');
-			
-			this.model.set({
-				type:editor.findView('fldAssetType').val(),
-				name:editor.findView('fldName').val(),
-				discontinued:editor.findView('fldDiscontinued').checked()
-			});
-						
-			datastore.saveAsset(this.model, cbSuccess, cbFailed);
-		}
+		})
 	})
 });

@@ -63,9 +63,23 @@ input {font-size:0.8em}
 .AssetSummary .Account td.Name {padding-left:1em}
 .AssetSummary .Asset td.Name {padding-left:1em}
 
-.DialogBackground > .TransactionEditor {height:28em;margin-top:-14em}
+div.AccountEditor {height:15em;margin-top:-7.5em}
+.AccountEditor > .Menu {position:absolute;left:0;right:0;top:0;height:2.5em;background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(245,246,246,1)), color-stop(25%,rgba(219,220,226,1)), color-stop(75%,rgba(221,223,227,1)), color-stop(100%,rgba(240,240,240,1)));border-top-left-radius:0.5em;border-top-right-radius:0.5em;box-shadow:1px 1px 5px rgba(0,0,0,0.3);text-align:left;overflow:hidden}
+.AccountEditor > .EditArea {position:absolute;left:0;right:0;top:2.5em;bottom:0;padding:0.5em;overflow:auto}
+
+.AccountEditor > .Menu > button {float:right}
+.AccountEditor > .Menu > .Title {line-height:1.8em;padding-left:1em;font-size:1.5em;text-align:left}
+
+div.TransactionEditor {height:28em;margin-top:-14em}
 .TransactionEditor > .Menu {position:absolute;left:0;right:0;top:0;height:2.5em;background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(245,246,246,1)), color-stop(25%,rgba(219,220,226,1)), color-stop(75%,rgba(221,223,227,1)), color-stop(100%,rgba(240,240,240,1)));border-top-left-radius:0.5em;border-top-right-radius:0.5em;box-shadow:1px 1px 5px rgba(0,0,0,0.3);text-align:left;overflow:hidden}
 .TransactionEditor > .EditArea {position:absolute;left:0;right:0;top:2.5em;bottom:0;padding:0.5em;overflow:auto}
 
 .TransactionEditor > .Menu > button {float:right}
 .TransactionEditor > .Menu > .Title {line-height:1.8em;padding-left:1em;font-size:1.5em;text-align:left}
+
+div.AssetEditor {height:15em;margin-top:-7.5em}
+.AssetEditor > .Menu {position:absolute;left:0;right:0;top:0;height:2.5em;background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(245,246,246,1)), color-stop(25%,rgba(219,220,226,1)), color-stop(75%,rgba(221,223,227,1)), color-stop(100%,rgba(240,240,240,1)));border-top-left-radius:0.5em;border-top-right-radius:0.5em;box-shadow:1px 1px 5px rgba(0,0,0,0.3);text-align:left;overflow:hidden}
+.AssetEditor > .EditArea {position:absolute;left:0;right:0;top:2.5em;bottom:0;padding:0.5em;overflow:auto}
+
+.AssetEditor > .Menu > button {float:right}
+.AssetEditor > .Menu > .Title {line-height:1.8em;padding-left:1em;font-size:1.5em;text-align:left}

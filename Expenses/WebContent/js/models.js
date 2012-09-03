@@ -22,7 +22,9 @@ Model = Backbone.Model.extend({
 Collection = Backbone.Collection.extend({
 });
 
-Account = Model.extend({});
+Account = Model.extend({
+	defaults:{amount:0,deleted:false}
+});
 Accounts = Collection.extend({model:Account});
 
 Closing = Model.extend({});
@@ -33,7 +35,9 @@ Transaction = Model.extend({
 });
 Transactions = Collection.extend({model:Transaction});
 
-Asset = Model.extend({});
+Asset = Model.extend({
+	defaults:{discontinued:false,deleted:false}
+});
 Assets = Collection.extend({modle:Asset});
 
 AssetRate = Model.extend({});
