@@ -240,6 +240,7 @@ Main = View.extend({
 				this.viewModel = new ViewModel({openings:new Collection(), tranTypes:new Collection(), closings:new Collection()});
 				
 				datastore.bind('closings', 'ready', this.digestClosings, this);
+				datastore.bind('transactions', 'reset', this.digestTransactions, this);
 				datastore.bind('transactions', 'change', this.digestTransactions, this);
 				
 				var table = this.append(Table);
@@ -270,6 +271,34 @@ Main = View.extend({
 			},
 			
 			digestTransactions:function() {
+				var selectedYear = page.pagestate.get('selectedYear');
+				var selectedAccId = page.pagestate.get('selectedAccId');
+				var transactionsByTranTypeByTranxCatg = datastore.getTransactionsOfYearOfAccountByTranTypeByTranxCatg(selectedYear, selectedAccId);
+				var _tranTypes = [];
+				
+				/* Digest Income Transaction */
+				var tranType = new Model({name:bu.getTranType(bu.TRANTYPE.INCOME), subtotals:new Collection(), tranxCatgs:new Collection()});
+				if (tranType) {
+					var _subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
+					var _tranxCatgs = [];
+					
+					for (var catg in transactionsByTranTypeByTranxCatg[bu.TRANTYPE.INCOME]) {
+						var tranxCatg = new Model({name:catg, subtotals:new Collection(), transactions:new Collection()});
+						
+						var transactions = transactionsByTranTypeByTranxCatg[bu.TRANTYPE.INCOME][catg];
+						for (var i=0; i<transactions.length; i++) {
+							var transaction = transactions[i];
+						}
+						
+						_tranxCatgs.push(tranxCatg);
+					}
+					
+					tranType.get('subtotals').reset(_subtotals);
+					tranType.get('tranxCatgs').reset(_tranxCatgs);
+				}
+				_tranTypes.push(tranType);
+				
+				this.viewModel.get('tranTypes').reset(_tranTypes);
 			},
 			
 			Header:TableHeader.extend({

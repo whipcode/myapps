@@ -11,8 +11,31 @@ datastore = {
 		this.data.assetAmounts = new AssetAmounts();
 	},
 	
-	bind:function(model, event, callback, caller) {
-		return this.data[model].bind(event, callback, caller);
+	bind:function(collection, event, callback, caller) {
+		return this.data[collection].bind(event, callback, caller);
+	},
+	
+	query:function(collectionName, options) {
+		var resultSet = null;
+		var collection = this.data[collectionName];
+		
+		if (options.preSortFn) {
+		}
+		
+		if (options.groupBy)
+			resultSet = {};
+		else
+			resultSet = [];
+		
+		for (var i=0; i<collection.length; i++) {
+			if (!options.filterFn || options.filterFn(collection.at(i)))
+				util.pushResult(resultSet, collection.at(i), options.groupBy);
+		}
+		
+		if (options.postSortFn) {
+		}
+		
+		return resultSet;
 	},
 	
 	set:function(items, values, refDateFields, collection) {
@@ -267,6 +290,36 @@ datastore = {
 		}
 		
 		return transactionsByAccountByMonth;
+	},
+	
+	getTransactionsOfYearOfAccountByTranTypeByTranxCatg:function(year, accountId) {
+		return this.query('transactions', {
+			filterFn:function(model) {
+				var tranxAccId = model.get('tranxAcc')?model.get('tranxAcc').id:0;
+				var tranDate = model.get('tranDate');
+				var settleAccId = model.get('settleAcc')?model.get('settleAcc').id:0;
+				var settleDate = model.get('settleDate')?model.get('settleDate'):tranDate;
+				var claimAccId = model.get('claimAcc')?model.get('claimAcc').id:0;
+				var claimDate = model.get('claimDate')?model.get('claimDate'):settleDate;
+				var transferAccId = model.get('transferAcc')?model.get('transferAcc').id:0;
+				var transferDate = tranDate;
+
+				if (tranxAccId == accountId && tranDate.getFullYear() == year)
+					return true;
+				if (settleAccId == accountId && settleDate.getFullYear() == year)
+					return true;
+				if (claimAccId == accountId && claimDate.getFullYear() == year)
+					return true;
+				if (transferAccId == accountId && transferDate.getFullYear() == year)
+					return true;
+				if (claimAccId && settleAccId == accountId && claimDate.getFullYear() == year)
+					return true;
+				if (claimAccId && !settleAccId && tranxAccId == accountId && claimDate.getFullYear() == year)
+					return true;
+				return false;
+			},
+			groupBy:['tranType', 'tranxCatg']
+		});
 	},
 	
 	saveTransaction:function(transaction, cbSuccess, cbFailed) {

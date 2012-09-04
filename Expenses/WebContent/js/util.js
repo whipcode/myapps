@@ -181,5 +181,24 @@ util = {
 			newObj[a] = updObj[a];
 		
 		return newObj;
+	},
+	
+	pushResult:function(resultSet, record, groupBy) {
+		var list = resultSet;
+		for (var i=0; i<groupBy.length; i++) {
+			var field = groupBy[i];
+			var key = util.get(record, field);
+			
+			if (!list[key]) {
+				if (groupBy.length > i+1)
+					list[key] = {};
+				else
+					list[key] = [];
+			}
+
+			list = list[key];
+		}
+		
+		list.push(record);
 	}
 };
