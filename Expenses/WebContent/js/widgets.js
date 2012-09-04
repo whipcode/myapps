@@ -486,7 +486,7 @@ Picker = View.extend({
 		else
 			this.refresh();
 		
-		if (this.options.selectedIdx)
+		if (typeof(this.options.selectedIdx) != 'undefined')
 			this.viewModel.set('selectedIdx', this.options.selectedIdx);
 		else if (this.model)
 			this.digestModel();

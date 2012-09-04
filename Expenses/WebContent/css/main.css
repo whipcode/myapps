@@ -50,9 +50,9 @@ input {font-size:0.8em}
 
 .AccountSummary .Section > tr {border-bottom:1px solid rgba(240,240,240,0.5)}
 .AccountSummary .Section > tr td.Name {padding-left:1em}
-.AccountSummary .Section > tr:first-child {border-bottom:none;background:-webkit-linear-gradient(top, rgba(197,222,234,0.5) 0%,rgba(138,187,215,0.5) 31%,rgba(6,109,171,0.5) 90%,rgba(138,187,215,0.5) 100%)}
-.AccountSummary .Section > tr:first-child td.Name {padding-left:0}
-.AccountSummary .Section > tr:first-child td.Month {font-style:italic;color:rgba(150,150,150,1)}
+.AccountSummary .SectionSubtotal {border-bottom:none;background:-webkit-linear-gradient(top, rgba(197,222,234,0.5) 0%,rgba(138,187,215,0.5) 31%,rgba(6,109,171,0.5) 90%,rgba(138,187,215,0.5) 100%)}
+.AccountSummary .SectionSubtotal td.Name {padding-left:0}
+.AccountSummary .SectionSubtotal td.Month {font-style:italic;color:rgba(150,150,150,1)}
 .AccountSummary .Section > tr:last-child {border-bottom:none}
 
 .AssetSummary > table {width:100%}

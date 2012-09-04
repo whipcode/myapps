@@ -77,7 +77,7 @@ Main = View.extend({
 					}, 
 					model:page.pagestate,
 					parseFn:function(model) {
-						return {selectedAccId:model.get('id')};
+						return {selectedAccId:model?model.get('id'):0};
 					},
 					selectedIdx:0,
 					viewName:'accountPicker'
@@ -254,12 +254,20 @@ Main = View.extend({
 				datastore.bind('closings', 'ready', this.digestClosings, this);
 				datastore.bind('transactions', 'reset', this.digestTransactions, this);
 				datastore.bind('transactions', 'change', this.digestTransactions, this);
+				datastore.bind('transactions', 'add', this.digestTransactions, this);
+				datastore.bind('transactions', 'remove', this.digestTransactions, this);
 				
 				var table = this.append(Table);
 				if (table) {
 					table.append(this.Header);
 					table.append(this.Opening, {viewModel:this.viewModel.get('openings')});
-					table.append(this.TranTypeSections, {viewModel:this.viewModel.get('tranTypes')});
+
+					var tranTypeSeq = [bu.TRANTYPE.INCOME, bu.TRANTYPE.EXPENDITURE, bu.TRANTYPE.INVESTMENT, bu.TRANTYPE.TRANSFER];
+					for (var i=0; i<tranTypeSeq.length; i++) {
+						var tranType = new Model({name:bu.getTranType(tranTypeSeq[i]), subtotals:null, tranxCatgs:null});
+						this.viewModel.get('tranTypes').add(tranType);
+						table.append(this.TranTypeSection, {viewModel:tranType});
+					}
 					table.append(this.Closing, {viewModel:this.viewModel.get('closings')});
 					table.append(this.Difference, {viewModel:this.viewModel.get('closings')});
 				}
@@ -286,31 +294,42 @@ Main = View.extend({
 				var selectedYear = page.pagestate.get('selectedYear');
 				var selectedAccId = page.pagestate.get('selectedAccId');
 				var transactionsByTranTypeByTranxCatg = datastore.getTransactionsOfYearOfAccountByTranTypeByTranxCatg(selectedYear, selectedAccId);
-				var _tranTypes = [];
 				
-				/* Digest Income Transaction */
-				var tranType = new Model({name:bu.getTranType(bu.TRANTYPE.INCOME), subtotals:new Collection(), tranxCatgs:new Collection()});
-				if (tranType) {
-					var _subtotals = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00];
+				var tranTypeSeq = [bu.TRANTYPE.INCOME, bu.TRANTYPE.EXPENDITURE, bu.TRANTYPE.INVESTMENT, bu.TRANTYPE.TRANSFER];
+				
+				for (var s=0; s<tranTypeSeq.length; s++) {
+					var _tranTypeSubtotals = [{amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}];
 					var _tranxCatgs = [];
 					
-					for (var catg in transactionsByTranTypeByTranxCatg[bu.TRANTYPE.INCOME]) {
-						var tranxCatg = new Model({name:catg, subtotals:new Collection(), transactions:new Collection()});
-						
-						var transactions = transactionsByTranTypeByTranxCatg[bu.TRANTYPE.INCOME][catg];
-						for (var i=0; i<transactions.length; i++) {
-							var transaction = transactions[i];
+					for (var catg in transactionsByTranTypeByTranxCatg[tranTypeSeq[s]]) {
+						var tranxCatg = new Model({name:catg, subtotals:new Collection(), faceTransactions:new Collection()});
+						if (tranxCatg) {
+							var _tranxCatgSubtotals = [{amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}, {amount:0.00}];
+							var _faceTransactions = [];
+
+							var transactions = transactionsByTranTypeByTranxCatg[tranTypeSeq[s]][catg];
+							for (var i=0; i<transactions.length; i++) {
+								var transaction = transactions[i];
+								var __faceTransactions = bu.getFaceTransactions(transaction, selectedAccId, selectedYear);
+								
+								for (var j=0; j<__faceTransactions.length; j++) {
+									var temp = __faceTransactions[j];
+									var month = temp.date.getMonth();
+									_tranTypeSubtotals[month].amount += temp.amount;
+									_tranxCatgSubtotals[month].amount += temp.amount;
+									var faceTransaction = new Model({date:temp.date, desc:temp.desc, amount:temp.amount, transaction:transaction});
+									_faceTransactions.push(faceTransaction);
+								}
+							}
+							
+							tranxCatg.get('subtotals').reset(_tranxCatgSubtotals);
+							tranxCatg.get('faceTransactions').reset(_faceTransactions);
+							_tranxCatgs.push(tranxCatg);
 						}
-						
-						_tranxCatgs.push(tranxCatg);
 					}
 					
-					tranType.get('subtotals').reset(_subtotals);
-					tranType.get('tranxCatgs').reset(_tranxCatgs);
+					this.viewModel.get('tranTypes').at(s).set({subtotals:new Collection(_tranTypeSubtotals), tranxCatgs:new Collection(_tranxCatgs)});
 				}
-				_tranTypes.push(tranType);
-				
-				this.viewModel.get('tranTypes').reset(_tranTypes);
 			},
 			
 			Header:TableHeader.extend({
@@ -339,26 +358,39 @@ Main = View.extend({
 				}
 			}),
 			
-			TranTypeSections:TableBody.extend({
+			TranTypeSection:TableBody.extend({
 				initialize:function() {
 					this.viewModel = this.options.viewModel;
 					
-					this.viewModel.bind('reset', this.refresh, this);
+					this.viewModel.bind('change', this.refresh, this);
 				},
 				
 				refresh:function() {
 					this.removeChild();
 					
-					for (var i=0; i<this.viewModel.length; i++) {
-						this.append(this.TranTypeSection, {viewModel:this.viewModel.at(i)});
+					var tr = this.append(TableRow, {className:'SectionSubtotal'});
+					if (tr) {
+						tr.append(TableCell, {className:'Name'}).append(TextView, {model:this.viewModel, fieldName:'name'});
+						
+						for (var i=0; i<this.viewModel.get('subtotals').length; i++) {
+							tr.append(TableCell, {className:'Month'}).append(AmountView, {model:this.viewModel.get('subtotals').at(i), fieldName:'amount', dp:2, withSep:true});
+						}
+					}
+					
+					for (var i=0; i<this.viewModel.get('tranxCatgs').length; i++) {
+						this.append(this.TranxCatg, {viewModel:this.viewModel.get('tranxCatgs').at(i)});
 					}
 				},
 				
-				TranTypeSection:TableBody.extend({
+				TranxCatg:TableRow.extend({
 					initialize:function() {
 						this.viewModel = this.options.viewModel;
 						
 						this.append(TableCell, {className:'Name'}).append(TextView, {model:this.viewModel, fieldName:'name'});
+						
+						for (var i=0; i<this.viewModel.get('subtotals').length; i++) {
+							this.append(TableCell, {className:'Month'}).append(AmountView, {model:this.viewModel.get('subtotals').at(i), fieldName:'amount', dp:2, withSep:true});
+						}
 					}
 				})
 			}),
@@ -517,14 +549,17 @@ Main = View.extend({
 						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
 						withBlank:false,
 						model:this.stagingModel,
-						parseFn:function(model) {return {tranxAcc:model.toJSON()};}
+						parseFn:function(model) {return {tranxAcc:model?model.toJSON():null};}
 					});
 					body.append(DateField, {label:'Transaction Date', model:this.stagingModel, fieldName:'tranDate'});
 					body.append(PickerField, {
 						label:'Transaction Type', 
 						options:bu.getTranTypes(), 
 						model:this.stagingModel, 
-						parseFn:function(model, idx) {return {tranType:idx};}
+						parseFn:function(model, idx) {
+							return {tranType:idx};
+							},
+						selectedIdx:0
 					});
 					body.append(TextField, {label:'Category', model:this.stagingModel, fieldName:'tranxCatg'});
 					body.append(TextField, {label:'Description', model:this.stagingModel, fieldName:'desc'});
@@ -551,7 +586,7 @@ Main = View.extend({
 					})
 						.append(Label, {text:'Date'}).append(DateInput, {model:this.stagingModel, fieldName:'claimDate'});
 					body.append(PickerField, {
-						label:'Transfer Account', 
+						label:'Transfer to Account', 
 						collection:datastore.getAccounts(), 
 						formatFn:function(model) {return model.get('name') + ' (' + model.get('accOwner') + ')';}, 
 						withBlank:true, 

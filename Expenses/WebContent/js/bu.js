@@ -102,18 +102,18 @@ bu = {
 		var transferAccId = transaction.get('transferAcc')?transaction.get('transferAcc').id:0;
 		var transferDate = tranDate;
 		
-		if (tranxAccId == accId && tranDate.getFullYear() == year && tranDate.getMonth() == month)
-			faceTransactions.push({date:tranDate, desc:transaction.get('desc'), amount:transaction.get('amount'), transaction:transaction});
-		if (settleAccId == accId && settleDate.getFullYear() == year && settleDate.getMonth() == month)
-			faceTransactions.push({date:settleDate, desc:transaction.get('desc'), amount:transaction.get('amount'), transaction:transaction});
-		if (claimAccId == accId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
-			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:transaction.get('amount'), transaction:transaction});
-		if (transferAccId == accId && transferDate.getFullYear() == year && transferDate.getMonth() == month)
-			faceTransactions.push({date:transferDate, desc:transaction.get('desc'), amount:-transaction.get('amount'), transaction:transaction});
-		if (claimAccId && settleAccId == accId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
+		if (tranxAccId == accId && tranDate.getFullYear() == year && (tranDate.getMonth() == month || typeof(month) == 'undefined'))
+			faceTransactions.push({date:tranDate, desc:transaction.get('desc'), amount:transaction.get('amount')});
+		if (settleAccId == accId && settleDate.getFullYear() == year && (settleDate.getMonth() == month || typeof(month) == 'undefined'))
+			faceTransactions.push({date:settleDate, desc:transaction.get('desc'), amount:transaction.get('amount')});
+		if (claimAccId == accId && claimDate.getFullYear() == year && (claimDate.getMonth() == month || typeof(month) == 'undefined'))
+			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:transaction.get('amount')});
+		if (transferAccId == accId && transferDate.getFullYear() == year && (transferDate.getMonth() == month || typeof(month) == 'undefined'))
+			faceTransactions.push({date:transferDate, desc:transaction.get('desc'), amount:-transaction.get('amount')});
+		if (claimAccId && settleAccId == accId && claimDate.getFullYear() == year && (claimDate.getMonth() == month || typeof(month) == 'undefined'))
 			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:-transaction.get('amount'), transaction:transaction});
-		if (claimAccId && !settleAccId && tranxAccId == accId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
-			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:-transaction.get('amount'), transaction:transaction});
+		if (claimAccId && !settleAccId && tranxAccId == accId && claimDate.getFullYear() == year && (claimDate.getMonth() == month || typeof(month) == 'undefined'))
+			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:-transaction.get('amount')});
 		
 		return faceTransactions;
 	},
