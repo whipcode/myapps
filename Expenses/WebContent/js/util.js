@@ -183,20 +183,46 @@ util = {
 		return newObj;
 	},
 	
+	comp:function(objA, objB, exactMatch) {
+		if (objA == objB)
+			return true;
+		else if (typeof(objA) == 'object' && typeof(objB) == 'object') {
+			if (objA instanceof Date && objB instanceof Date)
+				return objB.valueOf() == objA.valueOf();
+			else if (!(objA instanceof Date) && !(objB instanceof Date)) {
+				for (var a in objB)
+					if (!objA || !util.comp(objA[a], objB[a], exactMatch))
+						return false;
+				
+				if (exactMatch) {
+					for (var a in objA)
+						if (!objB || !util.comp(objA[a], objB[a], exactMatch))
+							return false;
+				}
+				
+				return true;
+			}
+		}
+		
+		return false;
+	},
+	
 	pushResult:function(resultSet, record, groupBy) {
 		var list = resultSet;
-		for (var i=0; i<groupBy.length; i++) {
-			var field = groupBy[i];
-			var key = util.get(record, field);
-			
-			if (!list[key]) {
-				if (groupBy.length > i+1)
-					list[key] = {};
-				else
-					list[key] = [];
+		if (groupBy) {
+			for (var i=0; i<groupBy.length; i++) {
+				var field = groupBy[i];
+				var key = util.get(record, field);
+				
+				if (!list[key]) {
+					if (groupBy.length > i+1)
+						list[key] = {};
+					else
+						list[key] = [];
+				}
+	
+				list = list[key];
 			}
-
-			list = list[key];
 		}
 		
 		list.push(record);

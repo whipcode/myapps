@@ -127,42 +127,54 @@ Main = View.extend({
 			className:'TransactionList',
 			
 			initialize:function() {
-				this.collection = datastore.getTransactions();
+				this.viewModel = new Collection();
 				
-				this.collection.bind('reset', this.refresh, this);
-				this.collection.bind('add', this.refresh, this);
-				this.collection.bind('remove', this.refresh, this);
+				this.viewModel.bind('reset', this.refresh, this);
+				
+				datastore.bind('transactions', 'reset', this.digestTransactions, this);
+				datastore.bind('transactions', 'change', this.digestTransactions, this);
+				datastore.bind('transactions', 'add', this.digestTransactions, this);
+				datastore.bind('transactions', 'remove', this.digestTransactions, this);
 			},
 			
 			refresh:function() {
 				this.removeChild();
 
-				for (var i=0; i<this.collection.length; i++) {
-					this.add(this.collection.at(i));
+				for (var i=0; i<this.viewModel.length; i++) {
+					this.append(this.TransactionItem, {viewModel:this.viewModel.at(i)});
 				}
 			},
 			
-			add:function(transaction) {
-				if (bu.isSelectedMonthAccount(transaction, page.pagestate.get('selectedAccId'), page.pagestate.get('selectedMonth')))
-					this.append(this.TransactionItem, {model:transaction});
+			digestTransactions:function() {
+				var selectedYear = page.pagestate.get('selectedYear');
+				var selectedAccId = page.pagestate.get('selectedAccId');
+				var selectedMonth = page.pagestate.get('selectedMonth');
+				
+				var transactions = datastore.getTransactionsOfYearOfAccountOfMonth(selectedYear, selectedAccId, selectedMonth);
+				var _faceTransactions = [];
+				for (var i=0; i<transactions.length; i++) {
+					var transaction = transactions[i];
+					var __faceTransactions = bu.getFaceTransactions(transaction, selectedAccId, selectedYear, selectedMonth);
+					
+					for (var j=0; j<__faceTransactions.length; j++) {
+						var temp = __faceTransactions[j];
+						var faceTransaction = new Model({date:temp.date, desc:temp.desc, amount:temp.amount, transaction:transaction});
+						_faceTransactions.push(faceTransaction);
+					}
+				}
+				
+				this.viewModel.reset(_faceTransactions);
 			},
 			
 			TransactionItem:ListItem.extend({
 				className:'Transaction',
 				
 				initialize:function() {
-					this.model.bind('change', this.refresh, this);
+					this.viewModel = this.options.viewModel;
 					
-					this.refresh();
-				},
-				
-				refresh:function() {
-					this.removeChild();
-					
-					var displayDate = bu.getTranDateOfSelectedAcc(this.model, page.pagestate.get('selectedAccId'));
-					this.append(DateView, {className:'Date', date:displayDate, dateFormat:'$(dd) $(Mmm)', viewName:'tranDate'});
-					this.append(TextView, {className:'Desc', text:this.model.get('desc'), viewName:'desc'});
-					this.append(AmountView, {className:'Amount', amount:this.model.get('amount'), dp:2, viewName:'amount'});
+					this.append(TextView, {className:'Date', model:this.viewModel, formatFn:function(model) {return util.formatDate(model.get('date'), '$(dd) $(Mmm)');}});
+					this.append(TextView, {className:'Desc', model:this.viewModel, fieldName:'desc'});
+					this.append(AmountView, {className:'Amount', model:this.viewModel, fieldName:'amount', dp:2});
 				},
 				
 				events:{
@@ -170,7 +182,7 @@ Main = View.extend({
 				},
 				
 				cbClick:function() {
-					page.editTransaction(this.model);
+					page.editTransaction(this.viewModel.get('transaction'));
 				}
 			})
 		}),

@@ -90,6 +90,34 @@ bu = {
 		);
 	},
 	
+	getFaceTransactions:function(transaction, accId, year, month) {
+		var faceTransactions = [];
+		
+		var tranxAccId = transaction.get('tranxAcc')?transaction.get('tranxAcc').id:0;
+		var tranDate = transaction.get('tranDate');
+		var settleAccId = transaction.get('settleAcc')?transaction.get('settleAcc').id:0;
+		var settleDate = transaction.get('settleDate')?transaction.get('settleDate'):tranDate;
+		var claimAccId = transaction.get('claimAcc')?transaction.get('claimAcc').id:0;
+		var claimDate = transaction.get('claimDate')?transaction.get('claimDate'):settleDate;
+		var transferAccId = transaction.get('transferAcc')?transaction.get('transferAcc').id:0;
+		var transferDate = tranDate;
+		
+		if (tranxAccId == accId && tranDate.getFullYear() == year && tranDate.getMonth() == month)
+			faceTransactions.push({date:tranDate, desc:transaction.get('desc'), amount:transaction.get('amount'), transaction:transaction});
+		if (settleAccId == accId && settleDate.getFullYear() == year && settleDate.getMonth() == month)
+			faceTransactions.push({date:settleDate, desc:transaction.get('desc'), amount:transaction.get('amount'), transaction:transaction});
+		if (claimAccId == accId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
+			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:transaction.get('amount'), transaction:transaction});
+		if (transferAccId == accId && transferDate.getFullYear() == year && transferDate.getMonth() == month)
+			faceTransactions.push({date:transferDate, desc:transaction.get('desc'), amount:-transaction.get('amount'), transaction:transaction});
+		if (claimAccId && settleAccId == accId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
+			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:-transaction.get('amount'), transaction:transaction});
+		if (claimAccId && !settleAccId && tranxAccId == accId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
+			faceTransactions.push({date:claimDate, desc:transaction.get('desc'), amount:-transaction.get('amount'), transaction:transaction});
+		
+		return faceTransactions;
+	},
+	
 	getTransactionAmount:function(transaction, accId, month) {
 		var _amount = 0;
 		var amount = transaction.get('amount');

@@ -540,7 +540,7 @@ Picker = View.extend({
 			var check = this.options.parseFn(null, 0);
 			var found = true;
 			for (var a in check)
-				if (JSON.stringify(this.model.get(a)) != JSON.stringify(check[a])) {
+				if (!util.comp(this.model.get(a), check[a], true)) {
 					found = false;
 					break;
 				}
@@ -555,7 +555,7 @@ Picker = View.extend({
 			var check = this.options.parseFn(this.collection.at(i), i+(this.widthBlank?1:0));
 			var found = true;
 			for (var a in check)
-				if (JSON.stringify(this.model.get(a)) != JSON.stringify(check[a])) {
+				if (!util.comp(this.model.get(a), check[a], true)) {
 					found = false;
 					break;
 				}

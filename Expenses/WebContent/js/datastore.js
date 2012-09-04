@@ -250,6 +250,36 @@ datastore = {
 		return this.data.transactions;
 	},
 	
+	getTransactionsOfYearOfAccountOfMonth:function(year, accountId, month) {
+		return this.query('transactions', {
+			filterFn:function(model) {
+				var tranxAccId = model.get('tranxAcc')?model.get('tranxAcc').id:0;
+				var tranDate = model.get('tranDate');
+				var settleAccId = model.get('settleAcc')?model.get('settleAcc').id:0;
+				var settleDate = model.get('settleDate')?model.get('settleDate'):tranDate;
+				var claimAccId = model.get('claimAcc')?model.get('claimAcc').id:0;
+				var claimDate = model.get('claimDate')?model.get('claimDate'):settleDate;
+				var transferAccId = model.get('transferAcc')?model.get('transferAcc').id:0;
+				var transferDate = tranDate;
+
+				if (tranxAccId == accountId && tranDate.getFullYear() == year && tranDate.getMonth() == month)
+					return true;
+				if (settleAccId == accountId && settleDate.getFullYear() == year && settleDate.getMonth() == month)
+					return true;
+				if (claimAccId == accountId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
+					return true;
+				if (transferAccId == accountId && transferDate.getFullYear() == year && transferDate.getMonth() == month)
+					return true;
+				if (claimAccId && settleAccId == accountId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
+					return true;
+				if (claimAccId && !settleAccId && tranxAccId == accountId && claimDate.getFullYear() == year && claimDate.getMonth() == month)
+					return true;
+				
+				return false;
+			}
+		});
+	},
+	
 	getTransactionsOfYearByAccountByMonth:function(year) {
 		var transactionsByAccountByMonth = {};
 		

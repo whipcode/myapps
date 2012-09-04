@@ -23,7 +23,7 @@ Collection = Backbone.Collection.extend({
 });
 
 Account = Model.extend({
-	defaults:{amount:0,deleted:false}
+	defaults:{deleted:false}
 });
 Accounts = Collection.extend({model:Account});
 
