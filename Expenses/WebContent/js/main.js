@@ -431,7 +431,37 @@ Main = View.extend({
 		}),
 		
 		AssetSummary:Wrapper.extend({
-			className:'AssetSummary'
+			className:'AssetSummary',
+			
+			initialize:function() {
+				this.viewModel = new ViewModel({grandTotal:0.00, ownerTotals:new Model({'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00}), accountAssetTypes:new Collection(), individualAssetTypes:new Collection()});
+				
+				datastore.bind('accounts', 'reset', this.digestAccounts, this);
+				datastore.bind('accounts', 'add', this.digestAccounts, this);
+				datastore.bind('accounts', 'change', this.digestAccounts, this);
+				datastore.bind('accounts', 'remove', this.digestAccounts, this);
+				datastore.bind('closings', 'ready', this.digestAccounts, this);
+				
+				var table = this.append(Table);
+				if (table) {
+					table.append(this.Header, {viewModel:this.viewModel.get('ownerTotals')});
+					table.append(this.AccountAssetTypes, {viewModel:this.viewModel.get('accountAssetTypes')});
+					table.append(this.IndividualAssetTypes, {viewModel:this.viewModel.get('individualAssetTypes')});
+					table.append(this.Total, {viewModel:this.viewModel});
+				}
+			},
+			
+			Header:TableHeader.extend({
+			}),
+			
+			AccountAssetTypes:TableBody.extend({
+			}),
+			
+			IndividualAssetTypes:TableBody.extend({
+			}),
+			
+			Total:TableFooter.extend({
+			})
 		})
 	}),
 	
