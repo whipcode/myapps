@@ -226,5 +226,22 @@ util = {
 		}
 		
 		list.push(record);
+	},
+	
+	newModel:function(obj) {
+		if (obj instanceof Array) {
+			var _array = [];
+			for (var i=0; i<obj.length; i++)
+				_array[i] = util.newModel(obj[i]);
+			return new Collection(_array);
+		}
+		else if (typeof(obj) == 'object' && !(obj instanceof Date)) {
+			var _obj = {};
+			for (var a in obj)
+				_obj[a] = util.newModel(obj[a]);
+			return new Model(_obj);
+		}
+		else
+			return obj;
 	}
 };

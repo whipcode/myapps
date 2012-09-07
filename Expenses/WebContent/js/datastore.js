@@ -94,7 +94,6 @@ datastore = {
 	
 	calcAccounts:function() {
 		var transactionsByAccountByMonth = this.getTransactionsOfYearByAccountByMonth(this.selectedYear);
-		var closingCount = this.getClosings().length;
 		var closingsByAccountByMonth = this.getClosingsOfYearByAccountByMonth(this.selectedYear);
 		
 		/* Calculate closings */
@@ -120,13 +119,21 @@ datastore = {
 			}
 		}
 		
-		if (this.getClosings().length > closingCount)
-			this.getClosings().trigger('ready');
+		this.getClosings().trigger('ready');
 	},
 	
 	/* Accounts */
 	getAccounts:function() {
 		return this.data.accounts;
+	},
+	
+	getAccountsByAssetType:function() {
+		return this.query('accounts', {
+			filterFn:function(model) {
+				return model.get('assetType') != '';
+			},
+			groupBy:['assetType']
+		});
 	},
 	
 	getAccount:function(id) {
@@ -212,6 +219,15 @@ datastore = {
 		}
 		
 		return closingsByAccountByMonth;
+	},
+	
+	getClosingsOfYearOfMonthByAssetTypeByAccName:function(year, month) {
+		return this.query('closings', {
+			filterFn:function(model) {
+				return util.get(model, 'date').getFullYear() == year && util.get(model, 'date').getMonth() == month;
+			},
+			groupBy:['account.assetType', 'account.name']
+		});
 	},
 	
 	getClosingOfAccountOfYearOfMonth:function(account, year, month) {

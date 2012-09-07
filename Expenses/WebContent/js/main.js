@@ -434,13 +434,9 @@ Main = View.extend({
 			className:'AssetSummary',
 			
 			initialize:function() {
-				this.viewModel = new ViewModel({grandTotal:0.00, ownerTotals:new Model({'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00}), accountAssetTypes:new Collection(), individualAssetTypes:new Collection()});
+				this.viewModel = new AssetSummaryViewModel({});
 				
-				datastore.bind('accounts', 'reset', this.digestAccounts, this);
-				datastore.bind('accounts', 'add', this.digestAccounts, this);
-				datastore.bind('accounts', 'change', this.digestAccounts, this);
-				datastore.bind('accounts', 'remove', this.digestAccounts, this);
-				datastore.bind('closings', 'ready', this.digestAccounts, this);
+				datastore.bind('closings', 'ready', this.viewModel.digestClosings, this.viewModel);
 				
 				var table = this.append(Table);
 				if (table) {
@@ -452,15 +448,86 @@ Main = View.extend({
 			},
 			
 			Header:TableHeader.extend({
+				initialize:function() {
+					this.viewModel = this.options.viewModel;
+					
+					var tr = this.append(TableRow);
+					if (tr) {
+						tr.append(TableCell).append(Button, {className:'BtnNew', text:'New'});
+						tr.append(TableCell).append(TextView, {text:'Home'});
+						tr.append(TableCell).append(TextView, {text:'Papa'});
+						tr.append(TableCell).append(TextView, {text:'Mama'});
+						tr.append(TableCell).append(TextView, {text:'Lok Lok'});
+						tr.append(TableCell, {text:'Total'});
+					}
+				}
 			}),
 			
 			AccountAssetTypes:TableBody.extend({
+				initialize:function() {
+					this.viewModel = this.options.viewModel;
+					
+					this.viewModel.bind('reset', this.refresh, this);
+					this.refresh();
+				},
+			
+				refresh:function() {
+					this.removeChild();
+					
+					for (var i=0; i<this.viewModel.length; i++) {
+						var accountAssetType = this.viewModel.at(i);
+						
+						/* append assetType row */
+						var tr = this.append(TableRow);
+						if (tr) {
+							tr.append(TableCell, {model:accountAssetType, fieldName:'name'});
+							tr.append(TableCell).append(AmountView, {model:accountAssetType.get('ownerTotals'), fieldName:'Home', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:accountAssetType.get('ownerTotals'), fieldName:'Papa', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:accountAssetType.get('ownerTotals'), fieldName:'Mama', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:accountAssetType.get('ownerTotals'), fieldName:'Lok Lok', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:accountAssetType, fieldName:'total', dp:2, withSep:true});
+						}
+						
+						/* append assets row of the assetType */
+						for (var j=0; j<accountAssetType.get('assets').length; j++) {
+							var asset = accountAssetType.get('assets').at(j);
+							
+							var tr = this.append(TableRow);
+							if (tr) {
+								tr.append(TableCell, {model:asset, fieldName:'name'});
+								tr.append(TableCell).append(AmountView, {model:asset.get('ownerTotals'), fieldName:'Home', dp:2, withSep:true});
+								tr.append(TableCell).append(AmountView, {model:asset.get('ownerTotals'), fieldName:'Papa', dp:2, withSep:true});
+								tr.append(TableCell).append(AmountView, {model:asset.get('ownerTotals'), fieldName:'Mama', dp:2, withSep:true});
+								tr.append(TableCell).append(AmountView, {model:asset.get('ownerTotals'), fieldName:'Lok Lok', dp:2, withSep:true});
+								tr.append(TableCell).append(AmountView, {model:asset, fieldName:'total', dp:2, withSep:true});
+							}
+						}
+					}
+				}
 			}),
 			
 			IndividualAssetTypes:TableBody.extend({
+				initialize:function() {
+					this.viewModel = this.options.viewModel;
+				}
 			}),
 			
 			Total:TableFooter.extend({
+				initialize:function() {
+					this.viewModel = this.options.viewModel;
+					
+					var tr = this.append(TableRow);
+					if (tr) {
+						tr.append(TableCell).append(TextView, {text:'Total'});
+						
+						var ownerTotals = this.viewModel.get('ownerTotals');
+						for (var owner in ownerTotals.attributes) {
+							tr.append(TableCell).append(AmountView, {model:ownerTotals, fieldName:owner, dp:2, withSep:true});
+						}
+						
+						tr.append(TableCell).append(AmountView, {model:this.viewModel, fieldName:'grandTotal', dp:2, withSep:true});
+					}
+				}
 			})
 		})
 	}),
