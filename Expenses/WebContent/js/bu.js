@@ -229,6 +229,10 @@ bu = {
 		return null;
 	},
 	
+	getAssetOwners:function() {
+		return ['Home', 'Papa', 'Mama', 'Lok Lok'];
+	},
+	
 	getOwnerBlanks:function() {
 		return {'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00};
 	}

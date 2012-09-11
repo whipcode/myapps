@@ -3,7 +3,7 @@ package my.webapp.expenses.entity;
 import java.util.Date;
 
 public class AssetAmount extends Base {
-	private AssetRate rate;
+	private Asset asset;
 	private Date date;
 	private String assetOwner;
 	private double units;
@@ -26,10 +26,10 @@ public class AssetAmount extends Base {
 	public void setUnits(double units) {
 		this.units = units;
 	}
-	public AssetRate getRate() {
-		return rate;
+	public Asset getAsset() {
+		return asset;
 	}
-	public void setRate(AssetRate rate) {
-		this.rate = rate;
+	public void setAsset(Asset asset) {
+		this.asset = asset;
 	}
 }

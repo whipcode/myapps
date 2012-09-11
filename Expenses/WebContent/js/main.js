@@ -437,6 +437,8 @@ Main = View.extend({
 				this.viewModel = new AssetSummaryViewModel({});
 				
 				datastore.bind('closings', 'ready', this.viewModel.digestClosings, this.viewModel);
+				datastore.bind('assets', 'reset', this.viewModel.digestAssets, this.viewModel);
+				datastore.bind('assets', 'change', this.viewModel.digestAssets, this.viewModel);
 				
 				var table = this.append(Table);
 				if (table) {
@@ -460,6 +462,14 @@ Main = View.extend({
 						tr.append(TableCell).append(TextView, {text:'Lok Lok'});
 						tr.append(TableCell, {text:'Total'});
 					}
+				},
+				
+				events:{
+					'click .BtnNew':'cbClickBtnNew'
+				},
+				
+				cbClickBtnNew:function() {
+					page.editAsset(new Asset());
 				}
 			}),
 			
@@ -509,7 +519,50 @@ Main = View.extend({
 			IndividualAssetTypes:TableBody.extend({
 				initialize:function() {
 					this.viewModel = this.options.viewModel;
-				}
+					
+					this.viewModel.bind('reset', this.refresh, this);
+					this.refresh();
+				},
+			
+				refresh:function() {
+					this.removeChild();
+					
+					for (var i=0; i<this.viewModel.length; i++) {
+						var individualAssetType = this.viewModel.at(i);
+						
+						/* append assetType row */
+						var tr = this.append(TableRow);
+						if (tr) {
+							tr.append(TableCell, {model:individualAssetType, fieldName:'name'});
+							tr.append(TableCell).append(AmountView, {model:individualAssetType.get('ownerTotals'), fieldName:'Home', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:individualAssetType.get('ownerTotals'), fieldName:'Papa', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:individualAssetType.get('ownerTotals'), fieldName:'Mama', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:individualAssetType.get('ownerTotals'), fieldName:'Lok Lok', dp:2, withSep:true});
+							tr.append(TableCell).append(AmountView, {model:individualAssetType, fieldName:'total', dp:2, withSep:true});
+						}
+						
+						/* append assets row of the assetType */
+						for (var j=0; j<individualAssetType.get('assets').length; j++) {
+							var asset = individualAssetType.get('assets').at(j);
+							
+							var tr = this.append(TableRow);
+							if (tr) {
+								tr.append(TableCell).append(this.Asset, {model:asset.get('model')});
+								tr.append(TableCell).append(this.AssetAmount, {model:util.get(asset, 'ownerTotals.Home.model')});
+								tr.append(TableCell).append(this.AssetAmount, {model:util.get(asset, 'ownerTotals.Papa.model')});
+								tr.append(TableCell).append(this.AssetAmount, {model:util.get(asset, 'ownerTotals.Mama.model')});
+								tr.append(TableCell).append(this.AssetAmount, {model:util.get(asset, 'ownerTotals.Lok Lok.model')});
+								tr.append(TableCell).append(AmountView, {model:asset, fieldName:'total', dp:2, withSep:true});
+							}
+						}
+					}
+				},
+				
+				Asset:Span.extend({
+				}),
+				
+				AssetAmount:Span.extend({
+				})
 			}),
 			
 			Total:TableFooter.extend({

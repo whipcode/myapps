@@ -53,7 +53,38 @@ AssetSummaryViewModel = ViewModel.extend({
 		this.get('accountAssetTypes').reset(_accountAssetTypes);
 	},
 	
-	digestIndividaulAssetTypes:function() {
+	digestAssets:function() {
+		var _individualAssetTypes = [];
+		var year = page.pagestate.get('selectedYear');
+		var month = page.pagestate.get('selectedMonth');
+		
+		var assetsByAssetType = datastore.getAssetsByAssetType();
+
+		for (var assetType in assetsByAssetType) {
+			var _individualAssetType = {name:assetType, total:0.00, ownerTotals:{'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00}, assets:[]};
+			
+			var assets = assetsByAssetType[assetType];
+			for (var i=0; i<assets.length; i++) {
+				var asset = assets[i];
+				var assetRate = datastore.getAssetRate(asset, year, month);
+				var assetAmounts = datastore.getAssetAmountsOfYearOfMonth(asset, year, month);
+				
+				var _asset = {name:assets[i].get('name'), model:assets[i], assetRate:datastore.getAssetRate(assets[i], year, month), total:0.00, ownerTotals:{'Home':0.00, 'Papa':0.00, 'Mama':0.00, 'Lok Lok':0.00}};
+				for (var j=0; j<assetAmounts; j++) {
+					var assetAmount = assetAmounts[j];
+					
+					_asset.total += assetRate.get('rate') * assetAmount.get('units');
+					_asset.ownerTotals[assetAmount.get('assetOwner')].amount = assetRate.get('rate') * assetAmount.get('units');
+					_asset.ownerTotals[assetAmount.get('assetOwner')].model = assetAmount.get('units');
+				}
+				
+				_individualAssetType.assets.push(_asset);
+			}
+			
+			_individualAssetTypes.push(util.newModel(_individualAssetType));
+		}
+		
+		this.get('individualAssetTypes').reset(_individualAssetTypes);
 	},
 	
 	AccountAssetType:ViewModel.extend({

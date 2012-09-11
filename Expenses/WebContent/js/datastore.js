@@ -446,6 +446,12 @@ datastore = {
 		return this.data.assets;
 	},
 	
+	getAssetsByAssetType:function(year, month) {
+		return this.query('assets', {
+			groupBy:['type']
+		});
+	},
+	
 	getAssetRates:function() {
 		return this.data.assetRates;
 	},
@@ -465,6 +471,36 @@ datastore = {
 	
 	getAssetAmounts:function() {
 		return this.data.assetAmounts;
+	},
+	
+	getAssetAmountsOfYearOfMonth:function(asset, year, month) {
+		var assetAmounts = [];
+		
+		var assetAmountsByOwner = this.query('assetAmounts', {
+			filterFn:function(model) {
+				return model.get('asset').id == util.get(asset, 'id') && model.get('date').getFullYear() == year && model.get('date').getMonth() == month;
+			},
+			groupBy:['asset.assetOwner']
+		});
+		
+		var owners = bu.getAssetOwners();
+		for (var i=0; i<owners.length; i++) {
+			if (assetAmountsByOwner[owners[i]])
+				assetAmounts.push(assetAmountsByOwner[owners[i]]);
+			else
+				assetAmounts.push(new AssetAmount({asset:asset}));
+		}
+		
+		return assetAmounts;
+	},
+	
+	getAssetAmountsOfYearOfMonthByAsset:function(year, month) {
+		return this.query('assets', {
+			filterFn:function(model) {
+				return model.get('date').getFullYear() == year && model.get('date').getMonth() == month;
+			},
+			groupBy:['assetRate.asset.name']
+		});
 	},
 	
 	getAssetAmount:function(assetRate, owner) {
