@@ -34,8 +34,13 @@ LivePlayer = View.extend({
 		loadingPoolSize:1,
 		showingPoolSize:1,
 		
+		playModel:1,
+		
 		initialize:function() {
 			this.queue = this.options.queue;
+			
+			if (this.options.playMode) this.playMode = this.options.playMode;
+
 			this.showingPool.bind('remove', this.show, this);
 			this.stagingPool.bind('remove', this.load, this);
 			this.queue.bind('add', this.load, this);
@@ -70,19 +75,55 @@ LivePlayer = View.extend({
 		},
 		
 		show:function() {
-			var _this = this;
-			if (this.showingPool.length < this.showingPoolSize && this.stagingPool.length > 0) {
-				var imgModel = this.stagingPool.shift();
-				this.showingPool.add(imgModel);
+			if (this.playMode == 1) {
+				if (this.showingPool.length < 1 && this.stagingPool.length > 0) {
+					var imgModel = this.stagingPool.shift();
+					this.showingPool.add(imgModel);
+					
+					this.append(this.SinglePanTilZoom, {el:imgModel.get('img'), pool:this.showingPool, imgModel:imgModel});
+				}
+			}
+		},
+		
+		SinglePanTilZoom:View.extend({
+			className:'SinglePanTilZoom',
+			duration:5000,
+			transitionLength:1500,
+			rotateManager:{clockwise:true},
+			
+			initialize:function() {
+				var _this = this;
+				this.$el.attr('class', this.className);
 				
-				var img = this.append(ImageView, {el:imgModel.get('img')});
 				setTimeout(
 					function() {
-						img.remove();
-						_this.showingPool.shift();
-					}, 
-					2000);
+						_this.$el.addClass('FadeIn ZoomIn');
+						
+						if (_this.rotateManager.clockwise) {
+							_this.$el.addClass('RotateC10');
+							_this.rotateManager.clockwise = false;
+						}
+						else {
+							_this.$el.addClass('RotateA10');
+							_this.rotateManager.clockwise = true;
+						}
+
+						setTimeout(
+							function() {
+								_this.$el.removeClass('FadeIn');
+								
+								setTimeout(
+									function() {
+										_this.options.pool.remove(_this.options.imgModel);
+										_this.remove();
+									}, 
+									_this.transitionLength);
+							}, 
+							_this.duration-_this.transitionLength);
+					},
+					1);
+				
 			}
-		}
+		})
 	})
 });
